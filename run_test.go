@@ -5,7 +5,13 @@ import (
 )
 
 func TestRunCmd(t *testing.T) {
-	if c := runCmd("test"); c != "test" {
-		t.Fatalf("%v, want tst", c)
+	cmd := "foo"
+	args := []string{}
+	if err := runCmd(cmd, args...); err == nil {
+		t.Fatal("want: <fail>")
+	}
+	cmd = "true"
+	if err := runCmd(cmd, args...); err != nil {
+		t.Fatal(err)
 	}
 }
