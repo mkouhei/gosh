@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	tmpname = "tmpcode"
+	tmpname = "gosh_tmp.go"
 )
 
 type cnt struct {

@@ -10,7 +10,7 @@ import (
 func TestWatch(t *testing.T) {
 
 	blddir := bldDir()
-	tmpFile := fmt.Sprintf("%s/%s", blddir, "tmpcode")
+	tmpFile := fmt.Sprintf("%s/%s", blddir, "gosh_tmp.go")
 
 	go func() {
 		if err := watch(blddir); err != nil {
@@ -18,7 +18,7 @@ func TestWatch(t *testing.T) {
 		}
 	}()
 
-	fmt.Println("[test create]")
+	fmt.Println("[test create] ")
 	f, err := os.OpenFile(tmpFile, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		t.Fatal("creating test file faild: %s", err)
@@ -26,7 +26,7 @@ func TestWatch(t *testing.T) {
 	f.Sync()
 
 	time.Sleep(time.Microsecond)
-	fmt.Println("[test modify]")
+	fmt.Println("[test modify] ")
 	f.WriteString("dummy")
 	f.Sync()
 	f.Close()
