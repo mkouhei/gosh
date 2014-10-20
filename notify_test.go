@@ -10,6 +10,7 @@ import (
 func TestWatch(t *testing.T) {
 
 	blddir := bldDir()
+	os.Chdir(blddir)
 	tmpFile := fmt.Sprintf("%s/%s", blddir, "gosh_tmp.go")
 
 	go func() {
@@ -27,7 +28,15 @@ func TestWatch(t *testing.T) {
 
 	time.Sleep(time.Microsecond)
 	fmt.Println("[test modify] ")
-	f.WriteString("dummy")
+	var dummycode = `
+package main
+import "fmt"
+
+func main() {
+fmt.Println("hello")
+}
+`
+	f.WriteString(dummycode)
 	f.Sync()
 	f.Close()
 

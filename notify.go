@@ -39,6 +39,12 @@ func watch(targetDir string) error {
 				fmt.Printf("event recieved: %s", event)
 				if event.IsModify() {
 					modifyRecieved.incremant()
+					cmd := "go"
+					args := []string{"build", tmpFile}
+					if err := runCmd(cmd, args...); err != nil {
+						fmt.Println(err)
+						break
+					}
 				}
 			} else {
 				fmt.Printf("unexpected event recieved: %s", event)
