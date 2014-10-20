@@ -10,7 +10,6 @@ import (
 func TestWatch(t *testing.T) {
 
 	blddir := bldDir()
-	os.Chdir(blddir)
 	tmpFile := fmt.Sprintf("%s/%s", blddir, "gosh_tmp.go")
 
 	go func() {

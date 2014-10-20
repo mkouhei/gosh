@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"sync/atomic"
 
+	"os"
+
 	"github.com/howeyc/fsnotify"
 )
 
@@ -19,6 +21,16 @@ type cnt struct {
 
 func (c *cnt) incremant() {
 	atomic.AddInt32(&c.val, 1)
+}
+
+func goBuild(bldDir, codePath string) error {
+	os.Chdir(bldDir)
+	cmd := "go"
+	args := []string{"build", codePath}
+	if err := runCmd(cmd, args...); err != nil {
+		return err
+	}
+	return nil
 }
 
 func watch(targetDir string) error {
@@ -39,12 +51,7 @@ func watch(targetDir string) error {
 				fmt.Printf("event recieved: %s", event)
 				if event.IsModify() {
 					modifyRecieved.incremant()
-					cmd := "go"
-					args := []string{"build", tmpFile}
-					if err := runCmd(cmd, args...); err != nil {
-						fmt.Println(err)
-						break
-					}
+					goBuild(targetDir, tmpFile)
 				}
 			} else {
 				fmt.Printf("unexpected event recieved: %s", event)
