@@ -8,6 +8,7 @@ import (
 
 const (
 	dirPerm = 0755
+	prefix  = "gosh-"
 )
 
 func cleanDirs(targetDir string) error {
@@ -18,7 +19,7 @@ func cleanDirs(targetDir string) error {
 }
 
 func bldDir() string {
-	f, err := ioutil.TempDir("", "gosh-")
+	f, err := ioutil.TempDir("", prefix)
 	if err != nil {
 		log.Fatal(err)
 	}
