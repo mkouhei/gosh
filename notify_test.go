@@ -26,17 +26,39 @@ func TestWatch(t *testing.T) {
 	f.Sync()
 
 	time.Sleep(time.Microsecond)
-	fmt.Println("[test modify] ")
-	var dummycode = `
-package main
-import "fmt"
 
-func main() {
-fmt.Println("hello")
-}
-`
-	f.WriteString(dummycode)
+	f.WriteString("package main")
 	f.Sync()
 	f.Close()
 
+	f, err = os.OpenFile(tmpFile, os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		t.Fatal("open test file failed: %s", err)
+	}
+	time.Sleep(time.Microsecond)
+
+	fmt.Println("[test modify] ")
+	var content = `
+import "fmt"
+
+func main() {
+msg := "hello"
+`
+
+	f.WriteString(content)
+	f.Sync()
+	f.Close()
+
+	f, err = os.OpenFile(tmpFile, os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var content2 = `
+fmt.Println(msg)
+}
+`
+	f.WriteString(content2)
+	f.Sync()
+	f.Close()
 }
