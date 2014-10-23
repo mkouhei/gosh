@@ -38,7 +38,6 @@ func watch(targetDir string) error {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Println("new watcher error:", err)
 		return err
 	}
 	var modifyRecieved cnt
@@ -48,13 +47,13 @@ func watch(targetDir string) error {
 		for event := range watcher.Event {
 			fmt.Println(event)
 			if event.Name == filepath.Clean(tmpFile) {
-				fmt.Printf("event recieved: %s", event)
 				if event.IsModify() {
 					modifyRecieved.incremant()
 					goBuild(targetDir, tmpFile)
 				}
 			} else {
 				fmt.Printf("unexpected event recieved: %s", event)
+				break
 			}
 		}
 		done <- true
@@ -62,13 +61,9 @@ func watch(targetDir string) error {
 
 	err = watcher.Watch(targetDir)
 	if err != nil {
-		fmt.Println("watch error:", err)
 		return err
 	}
-
 	<-done
-
-	fmt.Print("finished")
 
 	watcher.Close()
 	return nil

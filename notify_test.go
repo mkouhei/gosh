@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"testing"
-	"time"
 )
 
 func TestWatch(t *testing.T) {
@@ -19,25 +17,12 @@ func TestWatch(t *testing.T) {
 	}()
 
 	fmt.Println("[test create] ")
-	f, err := os.OpenFile(tmpFile, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		t.Fatal("creating test file faild: %s", err)
+	if err := writeFile(tmpFile, "package main"); err != nil {
+		t.Fatal(err)
 	}
-	f.Sync()
-
-	time.Sleep(time.Microsecond)
-
-	f.WriteString("package main")
-	f.Sync()
-	f.Close()
-
-	f, err = os.OpenFile(tmpFile, os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		t.Fatal("open test file failed: %s", err)
-	}
-	time.Sleep(time.Microsecond)
 
 	fmt.Println("[test modify] ")
+
 	var content = `
 import "fmt"
 
@@ -45,12 +30,7 @@ func main() {
 msg := "hello"
 `
 
-	f.WriteString(content)
-	f.Sync()
-	f.Close()
-
-	f, err = os.OpenFile(tmpFile, os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
+	if err := writeFile(tmpFile, content); err != nil {
 		t.Fatal(err)
 	}
 
@@ -58,7 +38,7 @@ msg := "hello"
 fmt.Println(msg)
 }
 `
-	f.WriteString(content2)
-	f.Sync()
-	f.Close()
+	if err := writeFile(tmpFile, content2); err != nil {
+		t.Fatal(err)
+	}
 }
