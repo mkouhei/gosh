@@ -14,4 +14,5 @@ func main() {
 		fmt.Printf("version: %s\n", version)
 		return
 	}
+	shell()
 }
