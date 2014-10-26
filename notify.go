@@ -11,10 +11,6 @@ import (
 	"github.com/howeyc/fsnotify"
 )
 
-const (
-	tmpname = "gosh_tmp.go"
-)
-
 type cnt struct {
 	val int32
 }

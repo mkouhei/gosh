@@ -6,11 +6,6 @@ import (
 	"os"
 )
 
-const (
-	dirPerm = 0755
-	prefix  = "gosh-"
-)
-
 func cleanDirs(targetDir string) error {
 	if err := os.RemoveAll(targetDir); err != nil {
 		return err
