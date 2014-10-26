@@ -15,13 +15,3 @@ func reader() ([]byte, error) {
 	}
 	return text, nil
 }
-
-func shell() {
-	for {
-		text, err := reader()
-		if err != nil {
-			break
-		}
-		fmt.Print(string(text))
-	}
-}

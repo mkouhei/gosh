@@ -15,5 +15,6 @@ func writeFile(codePath string, content string) error {
 	f.WriteString(content)
 	f.Sync()
 	f.Close()
+
 	return nil
 }
