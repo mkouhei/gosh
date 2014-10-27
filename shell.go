@@ -32,13 +32,14 @@ func writeFile(codePath string, content string) error {
 }
 
 func shell() {
+	p := fmt.Sprintf("%s/%s", bldDir(), tmpname)
 	for {
 		text, err := reader()
 		if err != nil {
 			break
 		}
 		fmt.Print(string(text))
-		if err := writeFile(tmpname, string(text)); err != nil {
+		if err := writeFile(p, string(text)); err != nil {
 			fmt.Printf("[error] %v", err)
 			break
 		}
