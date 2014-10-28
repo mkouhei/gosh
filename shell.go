@@ -17,8 +17,25 @@ func reader() ([]byte, error) {
 	return text, nil
 }
 
+func initFile(codePath string) error {
+	if _, err := os.Stat(codePath); err == nil {
+		return nil
+	}
+	f, err := os.OpenFile(codePath, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	time.Sleep(time.Millisecond)
+
+	f.WriteString("package main\n")
+	f.Sync()
+	f.Close()
+
+	return nil
+}
+
 func writeFile(codePath string, content string) error {
-	f, err := os.OpenFile(codePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(codePath, os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return err
 	}
@@ -33,6 +50,11 @@ func writeFile(codePath string, content string) error {
 
 func shell() {
 	p := fmt.Sprintf("%s/%s", bldDir(), tmpname)
+	fmt.Println(p)
+	if err := initFile(p); err != nil {
+		fmt.Printf("[error] %v", err)
+		return
+	}
 	for {
 		text, err := reader()
 		if err != nil {

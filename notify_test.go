@@ -17,7 +17,7 @@ func TestWatch(t *testing.T) {
 	}()
 
 	fmt.Println("[test create] ")
-	if err := writeFile(tmpFile, "package main"); err != nil {
+	if err := initFile(tmpFile); err != nil {
 		t.Fatal(err)
 	}
 
