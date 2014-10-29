@@ -41,4 +41,5 @@ fmt.Println(msg)
 	if err := writeFile(tmpFile, content2); err != nil {
 		t.Fatal(err)
 	}
+	cleanDirs(blddir)
 }
