@@ -50,6 +50,7 @@ func writeFile(codePath string, content string) error {
 
 func shell() {
 	tmpDir := bldDir()
+	l := lines{}
 	p := fmt.Sprintf("%s/%s", tmpDir, tmpname)
 	fmt.Println(p)
 	if err := initFile(p); err != nil {
@@ -63,6 +64,7 @@ func shell() {
 			break
 		}
 		fmt.Print(string(text))
+		l.parserImport(string(text))
 		if err := writeFile(p, string(text)); err != nil {
 			fmt.Printf("[error] %v", err)
 			break
