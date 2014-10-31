@@ -7,12 +7,15 @@ import (
 	"time"
 )
 
-func reader() ([]byte, error) {
-	reader := bufio.NewReader(os.Stdin)
+func reader(in *os.File) (string, error) {
+	if in == nil {
+		in = os.Stdin
+	}
+	reader := bufio.NewReader(in)
 	fmt.Print(">>> ")
-	text, err := reader.ReadSlice('\n')
+	text, err := reader.ReadString('\n')
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return text, nil
 }
@@ -50,22 +53,22 @@ func writeFile(codePath string, content string) error {
 
 func shell() {
 	tmpDir := bldDir()
+
 	l := lines{}
 	p := fmt.Sprintf("%s/%s", tmpDir, tmpname)
-	fmt.Println(p)
 	if err := initFile(p); err != nil {
 		fmt.Printf("[error] %v", err)
 		return
 	}
+
 	for {
-		text, err := reader()
+		text, err := reader(nil)
 		if err != nil {
 			cleanDirs(tmpDir)
 			break
 		}
-		fmt.Print(string(text))
-		l.parserImport(string(text))
-		if err := writeFile(p, string(text)); err != nil {
+		l.parserImport(text)
+		if err := writeFile(p, text); err != nil {
 			fmt.Printf("[error] %v", err)
 			break
 		}
