@@ -22,8 +22,9 @@ func (p *parser) parserImport(line string) {
 		if strings.Contains(line, "(") {
 			p.importFlag = true
 		} else {
-			p.importPkgs = append(p.importPkgs,
-				pkgName(strings.Split(line, " ")[1]))
+			pkg := pkgName(strings.Split(line, " ")[1])
+			goGet(pkg)
+			p.importPkgs = append(p.importPkgs, pkg)
 		}
 	} else if p.importFlag {
 		if strings.HasPrefix(line, ")") {
@@ -31,6 +32,7 @@ func (p *parser) parserImport(line string) {
 		} else {
 			r := strings.NewReader(line)
 			if r.Len() > 0 {
+				goGet(pkgName(line))
 				p.importPkgs = append(p.importPkgs, pkgName(line))
 			}
 		}

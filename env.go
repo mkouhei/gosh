@@ -17,6 +17,7 @@ func NewEnv() env {
 	e.BldDir = bldDir()
 	e.TmpPath = fmt.Sprintf("%s/%s", e.BldDir, tmpname)
 	e.GoPath = e.BldDir
+	setGOPATH(e.BldDir)
 	return e
 }
 
