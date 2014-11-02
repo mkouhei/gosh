@@ -64,7 +64,7 @@ func (e *env) shell() {
 			cleanDirs(e.BldDir)
 			break
 		}
-		p.parserImport(text)
+		p.parseLine(text)
 		if err := e.write(text); err != nil {
 			fmt.Printf("[error] %v", err)
 			break

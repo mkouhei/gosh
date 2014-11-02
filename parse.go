@@ -16,7 +16,7 @@ func pkgName(p string) string {
 	return string(group[1])
 }
 
-func (p *parser) parserImport(line string) {
+func (p *parser) parseLine(line string) {
 
 	if strings.HasPrefix(line, "import ") {
 		if strings.Contains(line, "(") {
