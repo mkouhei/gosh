@@ -6,18 +6,16 @@ import (
 )
 
 func TestWatch(t *testing.T) {
-
-	blddir := bldDir()
-	tmpFile := fmt.Sprintf("%s/%s", blddir, "gosh_tmp.go")
+	e := NewEnv()
 
 	go func() {
-		if err := watch(blddir); err != nil {
+		if err := e.watch(); err != nil {
 			t.Fatal(err)
 		}
 	}()
 
 	fmt.Println("[test create] ")
-	if err := initFile(tmpFile); err != nil {
+	if err := e.initFile(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -30,7 +28,7 @@ func main() {
 msg := "hello"
 `
 
-	if err := writeFile(tmpFile, content); err != nil {
+	if err := e.write(content); err != nil {
 		t.Fatal(err)
 	}
 
@@ -38,8 +36,8 @@ msg := "hello"
 fmt.Println(msg)
 }
 `
-	if err := writeFile(tmpFile, content2); err != nil {
+	if err := e.write(content2); err != nil {
 		t.Fatal(err)
 	}
-	cleanDirs(blddir)
+	cleanDirs(e.BldDir)
 }

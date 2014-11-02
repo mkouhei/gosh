@@ -14,5 +14,6 @@ func main() {
 		fmt.Printf("version: %s\n", version)
 		return
 	}
-	shell()
+	e := NewEnv()
+	e.shell()
 }

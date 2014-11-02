@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func reader(in *os.File) (string, error) {
+func read(in *os.File) (string, error) {
 	if in == nil {
 		in = os.Stdin
 	}
@@ -20,11 +20,11 @@ func reader(in *os.File) (string, error) {
 	return text, nil
 }
 
-func initFile(codePath string) error {
-	if _, err := os.Stat(codePath); err == nil {
+func (e *env) initFile() error {
+	if _, err := os.Stat(e.TmpPath); err == nil {
 		return nil
 	}
-	f, err := os.OpenFile(codePath, os.O_WRONLY|os.O_CREATE, 0600)
+	f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
@@ -37,8 +37,8 @@ func initFile(codePath string) error {
 	return nil
 }
 
-func writeFile(codePath string, content string) error {
-	f, err := os.OpenFile(codePath, os.O_WRONLY|os.O_APPEND, 0600)
+func (e *env) write(content string) error {
+	f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return err
 	}
@@ -51,24 +51,21 @@ func writeFile(codePath string, content string) error {
 	return nil
 }
 
-func shell() {
-	tmpDir := bldDir()
-
-	l := lines{}
-	p := fmt.Sprintf("%s/%s", tmpDir, tmpname)
-	if err := initFile(p); err != nil {
+func (e *env) shell() {
+	if err := e.initFile(); err != nil {
 		fmt.Printf("[error] %v", err)
 		return
 	}
 
+	p := parser{}
 	for {
-		text, err := reader(nil)
+		text, err := read(nil)
 		if err != nil {
-			cleanDirs(tmpDir)
+			cleanDirs(e.BldDir)
 			break
 		}
-		l.parserImport(text)
-		if err := writeFile(p, text); err != nil {
+		p.parserImport(text)
+		if err := e.write(text); err != nil {
 			fmt.Printf("[error] %v", err)
 			break
 		}

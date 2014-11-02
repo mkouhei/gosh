@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-type lines struct {
-	Import     []string
+type parser struct {
+	importPkgs []string
 	importFlag bool
 }
 
@@ -16,21 +16,22 @@ func pkgName(p string) string {
 	return string(group[1])
 }
 
-func (l *lines) parserImport(line string) {
+func (p *parser) parserImport(line string) {
 
 	if strings.HasPrefix(line, "import ") {
 		if strings.Contains(line, "(") {
-			l.importFlag = true
+			p.importFlag = true
 		} else {
-			l.Import = append(l.Import, pkgName(strings.Split(line, " ")[1]))
+			p.importPkgs = append(p.importPkgs,
+				pkgName(strings.Split(line, " ")[1]))
 		}
-	} else if l.importFlag {
+	} else if p.importFlag {
 		if strings.HasPrefix(line, ")") {
-			l.importFlag = false
+			p.importFlag = false
 		} else {
 			r := strings.NewReader(line)
 			if r.Len() > 0 {
-				l.Import = append(l.Import, pkgName(line))
+				p.importPkgs = append(p.importPkgs, pkgName(line))
 			}
 		}
 	}
