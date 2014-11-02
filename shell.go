@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"time"
 )
@@ -56,6 +57,11 @@ func (e *env) shell() {
 		fmt.Printf("[error] %v", err)
 		return
 	}
+	go func() {
+		if err := e.watch(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	p := parser{}
 	for {

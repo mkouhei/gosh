@@ -17,10 +17,13 @@ func goGet(p string) error {
 	return nil
 }
 
-func goBuild(bldDir, codePath string) error {
-	os.Chdir(bldDir)
+func (e *env) goBuild() error {
+	log.Printf("goBuild bldDir: %v\n", e.BldDir)
+	log.Printf("goBuild codePath: %v\n", e.TmpPath)
+	os.Chdir(e.BldDir)
+	log.Printf("GOPATH: %v", os.Getenv("GOPATH"))
 	cmd := "go"
-	args := []string{"build", codePath}
+	args := []string{"build", tmpname}
 	if err := runCmd(cmd, args...); err != nil {
 		return err
 	}
