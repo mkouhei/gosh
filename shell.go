@@ -51,10 +51,16 @@ func (e *env) write(content string) error {
 	return nil
 }
 
-func (e *env) shell() {
+func (e env) WriteFile(lines []string) {
+	for _, l := range lines {
+		e.write(l)
+	}
+}
+
+func (e *env) shell() bool {
 	if err := e.initFile(); err != nil {
 		e.logger("initFile", "", err)
-		return
+		return false
 	}
 	go func() {
 		if err := e.watch(); err != nil {
@@ -62,17 +68,24 @@ func (e *env) shell() {
 		}
 	}()
 
-	p := parser{}
+	p := parser{[]string{}, false, []string{}, false, 0, []string{}, false}
 	for {
 		text, err := read(nil)
 		if err != nil {
 			cleanDirs(e.BldDir)
-			break
+			return false
 		}
 		p.parseLine(text)
-		if err := e.write(text); err != nil {
-			e.logger("write", "", err)
+		e.logger("read", text, nil)
+		if p.mainClosed {
+			e.logger("mainClosed", "true", nil)
 			break
+		} else {
+			e.logger("mainClosed", "false", nil)
 		}
 	}
+	e.WriteFile(convertImport(p.importPkgs))
+	e.WriteFile(p.body)
+	e.WriteFile(p.main)
+	return true
 }
