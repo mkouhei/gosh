@@ -15,6 +15,8 @@ func (e *env) watch() error {
 	}
 	done := make(chan bool)
 
+	bin := strings.Split(filepath.Clean(e.TmpPath), ".")[0]
+
 	go func() {
 		for event := range watcher.Event {
 			e.logger("watch", fmt.Sprintf("detect event: %s", event), nil)
@@ -24,9 +26,12 @@ func (e *env) watch() error {
 						e.logger("go build", "", err)
 					}
 				}
-			} else if event.Name == strings.Split(filepath.Clean(e.TmpPath), ".")[0] {
+			} else if event.Name == bin {
 				if event.IsCreate() {
-					e.logger("go build", strings.Split(tmpname, ".")[0], nil)
+
+					e.logger("go build", bin, nil)
+					err := runCmd(bin, []string{}...)
+					e.logger(bin, fmt.Sprintf("execute %s", bin), err)
 				}
 			} else {
 				e.logger("watch", fmt.Sprintf("unexpected event recieved: %s", event), nil)
