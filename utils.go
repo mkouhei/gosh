@@ -18,10 +18,7 @@ func goGet(p string) error {
 }
 
 func (e *env) goBuild() error {
-	log.Printf("goBuild bldDir: %v\n", e.BldDir)
-	log.Printf("goBuild codePath: %v\n", e.TmpPath)
 	os.Chdir(e.BldDir)
-	log.Printf("GOPATH: %v", os.Getenv("GOPATH"))
 	cmd := "go"
 	args := []string{"build", tmpname}
 	if err := runCmd(cmd, args...); err != nil {
@@ -82,4 +79,14 @@ func compare(A, B []string) []string {
 		ret = append(ret, a)
 	}
 	return ret
+}
+
+func (e *env) logger(facility, msg string, err error) {
+	if e.Debug {
+		if err == nil {
+			log.Printf("[info] %s: %s\n", facility, msg)
+		} else {
+			log.Fatalf("[error] %s: %s %v\n", facility, msg, err)
+		}
+	}
 }

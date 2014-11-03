@@ -1,11 +1,9 @@
 package main
 
 import (
-	"log"
-
-	"strings"
-
+	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/howeyc/fsnotify"
 )
@@ -19,19 +17,19 @@ func (e *env) watch() error {
 
 	go func() {
 		for event := range watcher.Event {
-			log.Println(event)
+			e.logger("watch", fmt.Sprintf("detect event: %s", event), nil)
 			if event.Name == filepath.Clean(e.TmpPath) {
 				if event.IsModify() {
 					if err := e.goBuild(); err != nil {
-						log.Println("[error] go build: %v\n", err)
+						e.logger("go build", "", err)
 					}
 				}
 			} else if event.Name == strings.Split(filepath.Clean(e.TmpPath), ".")[0] {
 				if event.IsCreate() {
-					log.Println("[success] go build: %v\n", strings.Split(tmpname, ".")[0])
+					e.logger("go build", strings.Split(tmpname, ".")[0], nil)
 				}
 			} else {
-				log.Printf("unexpected event recieved: %s", event)
+				e.logger("watch", fmt.Sprintf("unexpected event recieved: %s", event), nil)
 				break
 			}
 		}

@@ -6,7 +6,7 @@ import (
 )
 
 func TestWatch(t *testing.T) {
-	e := NewEnv()
+	e := NewEnv(false)
 
 	go func() {
 		if err := e.watch(); err != nil {

@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"time"
 )
@@ -54,12 +53,12 @@ func (e *env) write(content string) error {
 
 func (e *env) shell() {
 	if err := e.initFile(); err != nil {
-		fmt.Printf("[error] %v", err)
+		e.logger("initFile", "", err)
 		return
 	}
 	go func() {
 		if err := e.watch(); err != nil {
-			log.Fatal(err)
+			e.logger("watch", "", err)
 		}
 	}()
 
@@ -72,7 +71,7 @@ func (e *env) shell() {
 		}
 		p.parseLine(text)
 		if err := e.write(text); err != nil {
-			fmt.Printf("[error] %v", err)
+			e.logger("write", "", err)
 			break
 		}
 	}
