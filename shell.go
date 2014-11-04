@@ -55,21 +55,7 @@ func (e *env) resetFile() error {
 	return nil
 }
 
-func (e *env) write(content string) error {
-	f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_APPEND, 0600)
-	if err != nil {
-		return err
-	}
-	time.Sleep(time.Microsecond)
-
-	f.WriteString(content)
-	f.Sync()
-	f.Close()
-
-	return nil
-}
-
-func (e env) WriteFile(lines []string) error {
+func (e *env) write(lines []string) error {
 	f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
 		return err
@@ -120,7 +106,7 @@ func (e *env) shell() error {
 		lines = append(lines, convertImport(e.parser.importPkgs)...)
 		lines = append(lines, e.parser.body...)
 		lines = append(lines, e.parser.main...)
-		e.WriteFile(lines)
+		e.write(lines)
 	}
 	e.parser.mainClosed = false
 	e.parser.main = nil

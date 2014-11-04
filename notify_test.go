@@ -21,22 +21,15 @@ func TestWatch(t *testing.T) {
 
 	fmt.Println("[test modify] ")
 
-	var content = `
-import "fmt"
-
-func main() {
-msg := "hello"
-`
-
-	if err := e.write(content); err != nil {
+	lines := []string{"import \"fmt\"\n",
+		"func main() {\n",
+		"msg := \"hello\"\n"}
+	if err := e.write(lines); err != nil {
 		t.Fatal(err)
 	}
 
-	var content2 = `
-fmt.Println(msg)
-}
-`
-	if err := e.write(content2); err != nil {
+	var lines2 = []string{"fmt.Println(msg)\n", "}\n"}
+	if err := e.write(lines2); err != nil {
 		t.Fatal(err)
 	}
 	cleanDirs(e.BldDir)
