@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -57,7 +58,7 @@ func runCmd(command string, args ...string) error {
 		if n, err = stdout.Read(buf); err != nil {
 			break
 		}
-		log.Print(string(buf[0:n]))
+		fmt.Print(string(buf[0:n]))
 	}
 	if err == io.EOF {
 		err = nil
