@@ -28,10 +28,12 @@ func (e *env) watch() error {
 				}
 			} else if event.Name == bin {
 				if event.IsCreate() {
-
 					e.logger("go build", bin, nil)
 					err := runCmd(bin, []string{}...)
 					e.logger(bin, fmt.Sprintf("execute %s", bin), err)
+					if err == nil {
+						e.resetFile()
+					}
 				}
 			} else {
 				e.logger("watch", fmt.Sprintf("unexpected event recieved: %s", event), nil)

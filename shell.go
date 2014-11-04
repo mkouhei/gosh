@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 )
@@ -37,6 +38,23 @@ func (e *env) initFile() error {
 	return nil
 }
 
+func (e *env) resetFile() error {
+	if err := ioutil.WriteFile(e.TmpPath, []byte{}, 0600); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(e.TmpPath, os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	time.Sleep(time.Microsecond)
+
+	f.WriteString("package main\n")
+	f.Sync()
+	f.Close()
+
+	return nil
+}
+
 func (e *env) write(content string) error {
 	f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_APPEND, 0600)
 	if err != nil {
@@ -51,16 +69,25 @@ func (e *env) write(content string) error {
 	return nil
 }
 
-func (e env) WriteFile(lines []string) {
-	for _, l := range lines {
-		e.write(l)
+func (e env) WriteFile(lines []string) error {
+	f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		return err
 	}
+	time.Sleep(time.Microsecond)
+	for _, l := range lines {
+		f.WriteString(l)
+	}
+	f.Sync()
+	f.Close()
+	return nil
 }
 
-func (e *env) shell() bool {
+func (e *env) shell() error {
 	if err := e.initFile(); err != nil {
 		e.logger("initFile", "", err)
-		return false
+		e.parser.continuous = false
+		return err
 	}
 	go func() {
 		if err := e.watch(); err != nil {
@@ -68,24 +95,34 @@ func (e *env) shell() bool {
 		}
 	}()
 
-	p := parser{[]string{}, false, []string{}, false, 0, []string{}, false}
+	if e.parser.continuous == false {
+		e.parser = parser{[]string{}, false, []string{}, false, 0, []string{}, false, false}
+	}
 	for {
 		text, err := read(nil)
 		if err != nil {
 			cleanDirs(e.BldDir)
-			return false
+			e.parser.continuous = false
+			return err
 		}
-		p.parseLine(text)
+		e.parser.parseLine(text)
 		e.logger("read", text, nil)
-		if p.mainClosed {
+		if e.parser.mainClosed {
 			e.logger("mainClosed", "true", nil)
+			e.parser.continuous = true
 			break
 		} else {
 			e.logger("mainClosed", "false", nil)
 		}
 	}
-	e.WriteFile(convertImport(p.importPkgs))
-	e.WriteFile(p.body)
-	e.WriteFile(p.main)
-	return true
+	if e.parser.continuous {
+		lines := []string{}
+		lines = append(lines, convertImport(e.parser.importPkgs)...)
+		lines = append(lines, e.parser.body...)
+		lines = append(lines, e.parser.main...)
+		e.WriteFile(lines)
+	}
+	e.parser.mainClosed = false
+	e.parser.main = nil
+	return nil
 }

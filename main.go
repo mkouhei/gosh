@@ -17,7 +17,7 @@ func main() {
 	}
 	e := NewEnv(*d)
 	for {
-		if e.shell() == false {
+		if e.shell() != nil {
 			break
 		}
 	}

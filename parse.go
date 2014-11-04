@@ -15,6 +15,7 @@ type parser struct {
 	mainBlackets int32
 	main         []string
 	mainClosed   bool
+	continuous   bool
 }
 
 func (p *parser) increment() {

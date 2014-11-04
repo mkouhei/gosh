@@ -10,6 +10,7 @@ type env struct {
 	TmpName string
 	TmpPath string
 	GoPath  string
+	parser  parser
 	Debug   bool
 }
 
