@@ -7,25 +7,20 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"time"
 )
 
-func goGet(p string) error {
-	cmd := "go"
-	args := []string{"get", p}
-	if err := runCmd(cmd, args...); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (e *env) goBuild() error {
-	os.Chdir(e.BldDir)
-	cmd := "go"
-	args := []string{"build", tmpname}
-	if err := runCmd(cmd, args...); err != nil {
-		return err
-	}
-	return nil
+func goGet(p string) {
+	go func() {
+		for {
+			cmd := "go"
+			args := []string{"get", p}
+			if err := runCmd(cmd, args...); err != nil {
+				return
+			}
+			time.Sleep(time.Nanosecond)
+		}
+	}()
 }
 
 func bldDir() string {

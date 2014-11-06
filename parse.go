@@ -14,7 +14,6 @@ type parser struct {
 	mainFlag     bool
 	mainBlackets int32
 	main         []string
-	mainClosed   bool
 	continuous   bool
 }
 
@@ -32,15 +31,15 @@ func pkgName(p string) string {
 	return string(group[1])
 }
 
-func (p *parser) parseLine(line string) {
+func (p *parser) parseLine(line string, iq chan<- string) bool {
 
 	if strings.HasPrefix(line, "import ") {
 		if strings.Contains(line, "(") {
 			p.importFlag = true
 		} else {
 			pkg := pkgName(strings.Split(line, " ")[1])
-			goGet(pkg)
 			p.importPkgs = append(p.importPkgs, pkg)
+			iq <- pkg
 		}
 	} else if p.importFlag {
 		if strings.HasPrefix(line, ")") {
@@ -48,8 +47,9 @@ func (p *parser) parseLine(line string) {
 		} else {
 			r := strings.NewReader(line)
 			if r.Len() > 0 {
-				goGet(pkgName(line))
-				p.importPkgs = append(p.importPkgs, pkgName(line))
+				pkg := pkgName(line)
+				p.importPkgs = append(p.importPkgs, pkg)
+				iq <- pkg
 			}
 		}
 	} else if strings.HasPrefix(line, "func ") {
@@ -71,12 +71,13 @@ func (p *parser) parseLine(line string) {
 			if p.mainBlackets == 0 {
 				// closing func main
 				p.mainFlag = false
-				p.mainClosed = true
+				return true
 			}
 		}
 	} else {
 		p.body = append(p.body, line)
 	}
+	return false
 }
 
 func convertImport(pkgs []string) []string {
@@ -87,4 +88,12 @@ func convertImport(pkgs []string) []string {
 	}
 	imports = append(imports, ")\n")
 	return imports
+}
+
+func (p *parser) convertLines() []string {
+	lines := []string{"package main\n"}
+	lines = append(lines, convertImport(p.importPkgs)...)
+	lines = append(lines, p.body...)
+	lines = append(lines, p.main...)
+	return lines
 }
