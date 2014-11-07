@@ -79,16 +79,16 @@ func (e *env) shell() {
 	ec := make(chan bool)
 	iq := make(chan string, 10)
 
-	go e.read(nil, wc, qc, iq)
-	go goGet(<-iq)
+	e.read(nil, wc, qc, iq)
+	goGet(<-iq)
 
 loop:
 	for {
 		select {
 		case <-wc:
-			go e.write(ec)
+			e.write(ec)
 		case <-ec:
-			go e.goRun(rc)
+			e.goRun(rc)
 		case <-qc:
 			cleanDir(e.BldDir)
 			fmt.Println("[gosh] terminated")
