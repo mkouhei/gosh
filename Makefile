@@ -4,7 +4,7 @@
 BIN := gosh
 SRC := *.go
 GOPKG := github.com/mkouhei/gosh/
-GOPATH := $(CURDIR)/_build:$(GOPATH)
+GOPATH := $(CURDIR)/_build
 export GOPATH
 
 
