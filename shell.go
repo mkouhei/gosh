@@ -64,7 +64,7 @@ func (e *env) goRun(rc chan<- bool) {
 		cmd := "go"
 		args := []string{"run", tmpname}
 		if err := runCmd(cmd, args...); err != nil {
-			e.logger("build", "", err)
+			e.logger("go run", "", err)
 			return
 		}
 		rc <- true
