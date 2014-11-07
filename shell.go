@@ -23,7 +23,9 @@ func (e *env) read(in *os.File, wc, qc chan<- bool, iq chan<- string) {
 			text, err := reader.ReadString('\n')
 			if err != nil {
 				e.logger("read", "", err)
+				cleanDir(e.BldDir)
 				qc <- true
+				return
 			}
 			if e.parser.parseLine(text, iq) {
 				wc <- true
@@ -80,14 +82,20 @@ func (e *env) shell() {
 	go e.read(nil, wc, qc, iq)
 	go goGet(<-iq)
 
+loop:
 	for {
 		select {
 		case <-wc:
 			go e.write(ec)
 		case <-ec:
 			go e.goRun(rc)
+		case <-qc:
+			cleanDir(e.BldDir)
+			fmt.Println("[gosh] terminated")
+			break loop
 		}
 	}
 
 	time.Sleep(time.Nanosecond)
+	return
 }

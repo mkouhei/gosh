@@ -18,5 +18,4 @@ func main() {
 	e := NewEnv(*d)
 
 	e.shell()
-	e.logger("gosh", "terminated", nil)
 }
