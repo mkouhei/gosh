@@ -31,7 +31,7 @@ func bldDir() string {
 	return f
 }
 
-func cleanDirs(targetDir string) error {
+func cleanDir(targetDir string) error {
 	if err := os.RemoveAll(targetDir); err != nil {
 		return err
 	}
