@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -35,7 +33,7 @@ func (e *env) read(in *os.File, wc, qc chan<- bool, iq chan<- string) {
 	}()
 }
 
-func (e *env) write(bc chan<- bool) {
+func (e *env) write(ec chan<- bool) {
 
 	go func() {
 		f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
@@ -52,28 +50,21 @@ func (e *env) write(bc chan<- bool) {
 			e.logger("writer", "", err)
 			return
 		}
-		bc <- true
+		ec <- true
 		e.parser.main = []string{}
 	}()
 }
 
-func (e *env) build(ec chan<- bool) {
+func (e *env) goRun(rc chan<- bool) {
 
 	go func() {
 		os.Chdir(e.BldDir)
 		cmd := "go"
-		args := []string{"build", tmpname}
+		args := []string{"run", tmpname}
 		if err := runCmd(cmd, args...); err != nil {
 			e.logger("build", "", err)
 			return
 		}
-		ec <- true
-	}()
-}
-
-func (e *env) exec(rc chan<- bool) {
-	go func() {
-		runCmd(strings.Split(filepath.Clean(e.TmpPath), ".")[0], []string{}...)
 		rc <- true
 	}()
 }
@@ -83,7 +74,6 @@ func (e *env) shell() {
 	qc := make(chan bool)
 	rc := make(chan bool)
 	wc := make(chan bool)
-	bc := make(chan bool)
 	ec := make(chan bool)
 	iq := make(chan string, 10)
 
@@ -93,11 +83,9 @@ func (e *env) shell() {
 	for {
 		select {
 		case <-wc:
-			go e.write(bc)
-		case <-bc:
-			go e.build(ec)
+			go e.write(ec)
 		case <-ec:
-			go e.exec(rc)
+			go e.goRun(rc)
 		}
 	}
 
