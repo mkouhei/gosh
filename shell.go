@@ -35,7 +35,7 @@ func (e *env) read(in *os.File, wc, qc chan<- bool, iq chan<- string) {
 	}()
 }
 
-func (e *env) write(ec chan<- bool) {
+func (e *env) write(ic chan<- bool) {
 
 	go func() {
 		f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
@@ -52,7 +52,7 @@ func (e *env) write(ec chan<- bool) {
 			e.logger("writer", "", err)
 			return
 		}
-		ec <- true
+		ic <- true
 		e.parser.main = []string{}
 	}()
 }
@@ -76,6 +76,7 @@ func (e *env) shell() {
 	qc := make(chan bool)
 	rc := make(chan bool)
 	wc := make(chan bool)
+	ic := make(chan bool)
 	ec := make(chan bool)
 	iq := make(chan string, 10)
 
@@ -86,7 +87,9 @@ loop:
 	for {
 		select {
 		case <-wc:
-			e.write(ec)
+			e.write(ic)
+		case <-ic:
+			e.goImports(ec)
 		case <-ec:
 			e.goRun(rc)
 		case <-qc:

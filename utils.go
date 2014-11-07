@@ -24,6 +24,19 @@ func goGet(p string) {
 	}()
 }
 
+func (e *env) goImports(ec chan<- bool) {
+	go func() {
+		cmd := "goimports"
+		args := []string{"-w", e.TmpPath}
+		if err := runCmd(cmd, args...); err != nil {
+			return
+		}
+		time.Sleep(time.Nanosecond)
+		ec <- true
+
+	}()
+}
+
 func bldDir() string {
 	f, err := ioutil.TempDir("", prefix)
 	if err != nil {
