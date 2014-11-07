@@ -16,9 +16,7 @@ func main() {
 		return
 	}
 	e := NewEnv(*d)
-	for {
-		if e.shell() != nil {
-			break
-		}
-	}
+
+	e.shell()
+	e.logger("gosh", "terminated", nil)
 }

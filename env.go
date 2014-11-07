@@ -10,8 +10,9 @@ type env struct {
 	TmpName string
 	TmpPath string
 	GoPath  string
-	parser  parser
 	Debug   bool
+
+	parser parser
 }
 
 func NewEnv(debug bool) env {
@@ -20,6 +21,8 @@ func NewEnv(debug bool) env {
 	e.TmpPath = fmt.Sprintf("%s/%s", e.BldDir, tmpname)
 	e.GoPath = e.BldDir
 	e.Debug = debug
+	e.parser = parser{}
+
 	setGOPATH(e.BldDir)
 	e.logger("GOPATH", os.Getenv("GOPATH"), nil)
 	return e
