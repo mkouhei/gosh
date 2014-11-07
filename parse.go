@@ -38,8 +38,10 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 			p.importFlag = true
 		} else {
 			pkg := pkgName(strings.Split(line, " ")[1])
-			p.importPkgs = append(p.importPkgs, pkg)
-			iq <- pkg
+			if !searchString(pkg, p.importPkgs) {
+				p.importPkgs = append(p.importPkgs, pkg)
+				iq <- pkg
+			}
 		}
 	} else if p.importFlag {
 		if strings.HasPrefix(line, ")") {
@@ -48,8 +50,10 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 			r := strings.NewReader(line)
 			if r.Len() > 0 {
 				pkg := pkgName(line)
-				p.importPkgs = append(p.importPkgs, pkg)
-				iq <- pkg
+				if !searchString(pkg, p.importPkgs) {
+					p.importPkgs = append(p.importPkgs, pkg)
+					iq <- pkg
+				}
 			}
 		}
 	} else if strings.HasPrefix(line, "func ") {

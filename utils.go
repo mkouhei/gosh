@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sort"
 	"time"
 )
 
@@ -75,6 +76,12 @@ func compare(A, B []string) []string {
 		ret = append(ret, a)
 	}
 	return ret
+}
+
+func searchString(s string, list []string) bool {
+	sort.Strings(list)
+	i := sort.SearchStrings(list, s)
+	return i < len(list) && list[i] == s
 }
 
 func (e *env) logger(facility, msg string, err error) {
