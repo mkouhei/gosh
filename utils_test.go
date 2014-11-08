@@ -30,3 +30,13 @@ func TestBldDirAndCleanDir(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestSearchString(t *testing.T) {
+	list := []string{"foo", "bar", "baz"}
+	if !searchString("foo", list) {
+		t.Fatal("expecting true")
+	}
+	if searchString("hoge", list) {
+		t.Fatal("expecting false")
+	}
+}

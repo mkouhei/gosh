@@ -11,9 +11,6 @@ func (e *env) read(in *os.File, wc, qc chan<- bool, iq chan<- string) {
 	go func() {
 		o := true
 		for {
-			if in == nil {
-				in = os.Stdin
-			}
 			reader := bufio.NewReader(in)
 			if o {
 				fmt.Print(">>> ")
@@ -71,7 +68,11 @@ func (e *env) goRun(rc chan<- bool) {
 	}()
 }
 
-func (e *env) shell() {
+func (e *env) shell(in *os.File) {
+
+	if in == nil {
+		in = os.Stdin
+	}
 
 	qc := make(chan bool)
 	rc := make(chan bool)
@@ -80,7 +81,7 @@ func (e *env) shell() {
 	ec := make(chan bool)
 	iq := make(chan string, 10)
 
-	e.read(nil, wc, qc, iq)
+	e.read(in, wc, qc, iq)
 	goGet(<-iq)
 
 loop:

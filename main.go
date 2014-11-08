@@ -17,5 +17,5 @@ func main() {
 	}
 	e := NewEnv(*d)
 
-	e.shell()
+	e.shell(nil)
 }
