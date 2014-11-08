@@ -10,8 +10,8 @@ import (
 func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- string) {
 	go func() {
 		o := true
+		reader := bufio.NewReader(fp)
 		for {
-			reader := bufio.NewReader(fp)
 			if o {
 				fmt.Print(">>> ")
 			} else {
