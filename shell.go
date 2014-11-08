@@ -7,11 +7,11 @@ import (
 	"time"
 )
 
-func (e *env) read(in *os.File, wc, qc chan<- bool, iq chan<- string) {
+func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- string) {
 	go func() {
 		o := true
 		for {
-			reader := bufio.NewReader(in)
+			reader := bufio.NewReader(fp)
 			if o {
 				fmt.Print(">>> ")
 			} else {
@@ -68,10 +68,10 @@ func (e *env) goRun(rc chan<- bool) {
 	}()
 }
 
-func (e *env) shell(in *os.File) {
+func (e *env) shell(fp *os.File) {
 
-	if in == nil {
-		in = os.Stdin
+	if fp == nil {
+		fp = os.Stdin
 	}
 
 	qc := make(chan bool)
@@ -81,7 +81,7 @@ func (e *env) shell(in *os.File) {
 	ec := make(chan bool)
 	iq := make(chan string, 10)
 
-	e.read(in, wc, qc, iq)
+	e.read(fp, wc, qc, iq)
 	goGet(<-iq)
 
 loop:
