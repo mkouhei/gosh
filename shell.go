@@ -17,14 +17,14 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- string) {
 			} else {
 				o = true
 			}
-			text, err := reader.ReadString('\n')
+			line, _, err := reader.ReadLine()
 			if err != nil {
 				e.logger("read", "", err)
 				cleanDir(e.BldDir)
 				qc <- true
 				return
 			}
-			if e.parser.parseLine(text, iq) {
+			if e.parser.parseLine(string(line), iq) {
 				wc <- true
 				o = false
 			}
