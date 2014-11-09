@@ -26,9 +26,22 @@ Requirements
 Installation
 ------------
 
-Set GOPATH, and execute follows.::
+Debian
+~~~~~~
+
+Install the follow packages::
+
+* golang
+* golang-go.tools
+
+
+In the case using Golang not-distribution package,
+execute next command.::
 
   $ go get code.google.com/p/go.tools/cmd/goimports
+
+Set GOPATH, and execute follows.::
+
   $ go get github.com/mkouhei/gosh
   
 Usage
