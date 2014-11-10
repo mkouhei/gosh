@@ -40,7 +40,7 @@ execute next command.::
 
   $ go get code.google.com/p/go.tools/cmd/goimports
 
-Set GOPATH, and execute follows.::
+Set ``GOPATH``, and execute follows.::
 
   $ go get github.com/mkouhei/gosh
   
@@ -63,6 +63,20 @@ Roadmap
 
 * Omitting the main function
 * Tab completion
+
+HISTORY
+-------
+
+0.1.1 (2014-11-10)
+~~~~~~~~~~~~~~~~~~
+
+* Fixed deadlock occurs when typing ``Ctrl+D`` immediately after gosh start.
+* Fixed fail override tmp code file.
+
+0.1.0 (2014-11-09)
+~~~~~~~~~~~~~~~~~~
+
+* First release
 
 
 License
