@@ -40,6 +40,7 @@ func (e *env) write(ic chan<- bool) {
 			return
 		}
 		time.Sleep(time.Microsecond)
+		f.Truncate(0)
 
 		for _, l := range e.parser.convertLines() {
 			f.WriteString(l)
@@ -49,8 +50,9 @@ func (e *env) write(ic chan<- bool) {
 			e.logger("writer", "", err)
 			return
 		}
+
 		ic <- true
-		e.parser.main = []string{}
+		e.parser.main = nil
 	}()
 }
 
