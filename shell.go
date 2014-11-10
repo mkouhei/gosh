@@ -83,6 +83,7 @@ func (e *env) shell(fp *os.File) {
 	ec := make(chan bool)
 	iq := make(chan string, 10)
 
+	iq <- ""
 	e.read(fp, wc, qc, iq)
 	goGet(<-iq)
 
