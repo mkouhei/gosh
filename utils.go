@@ -12,12 +12,13 @@ import (
 	"time"
 )
 
-func goGet(p string) {
+func (e *env) goGet(p string) {
 	go func() {
 		for {
 			cmd := "go"
 			args := []string{"get", p}
 			if err := runCmd(cmd, args...); err != nil {
+				e.logger("go get", "", err)
 				return
 			}
 			time.Sleep(time.Nanosecond)
@@ -30,6 +31,7 @@ func (e *env) goImports(ec chan<- bool) {
 		cmd := "goimports"
 		args := []string{"-w", e.TmpPath}
 		if err := runCmd(cmd, args...); err != nil {
+			e.logger("goimports", "", err)
 			e.parser.body = nil
 			return
 		}

@@ -20,7 +20,8 @@ func TestRunCmd(t *testing.T) {
 }
 
 func ExampleGoGet() {
-	goGet("foo")
+	e := NewEnv(false)
+	e.goGet("foo")
 	// Output:
 	//
 }

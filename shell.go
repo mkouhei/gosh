@@ -86,7 +86,7 @@ func (e *env) shell(fp *os.File) {
 
 	iq <- ""
 	e.read(fp, wc, qc, iq)
-	goGet(<-iq)
+	e.goGet(<-iq)
 
 loop:
 	for {
