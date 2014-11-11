@@ -31,6 +31,13 @@ func pkgName(p string) string {
 	return string(group[1])
 }
 
+func (p *parser) putPackages(pkg string, iq chan<- string) {
+	if !searchString(pkg, p.importPkgs) {
+		p.importPkgs = append(p.importPkgs, pkg)
+		iq <- pkg
+	}
+}
+
 func (p *parser) parseLine(line string, iq chan<- string) bool {
 
 	if strings.HasPrefix(line, "import ") {
@@ -38,10 +45,7 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 			p.importFlag = true
 		} else {
 			pkg := pkgName(strings.Split(line, " ")[1])
-			if !searchString(pkg, p.importPkgs) {
-				p.importPkgs = append(p.importPkgs, pkg)
-				iq <- pkg
-			}
+			p.putPackages(pkg, iq)
 		}
 	} else if p.importFlag {
 		if strings.HasPrefix(line, ")") {
@@ -50,10 +54,7 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 			r := strings.NewReader(line)
 			if r.Len() > 0 {
 				pkg := pkgName(line)
-				if !searchString(pkg, p.importPkgs) {
-					p.importPkgs = append(p.importPkgs, pkg)
-					iq <- pkg
-				}
+				p.putPackages(pkg, iq)
 			}
 		}
 	} else if strings.HasPrefix(line, "func ") {
