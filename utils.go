@@ -30,6 +30,7 @@ func (e *env) goImports(ec chan<- bool) {
 		cmd := "goimports"
 		args := []string{"-w", e.TmpPath}
 		if err := runCmd(cmd, args...); err != nil {
+			e.parser.body = nil
 			return
 		}
 		time.Sleep(time.Nanosecond)
