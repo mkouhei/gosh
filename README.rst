@@ -67,6 +67,13 @@ Roadmap
 HISTORY
 -------
 
+0.1.2 (2014-11-12)
+~~~~~~~~~~~~~~~~~~
+
+* Changed to print error of runCmd.
+* Suppressed "go install: no install location".
+* Fixed lacking newline when writing.
+
 0.1.1 (2014-11-10)
 ~~~~~~~~~~~~~~~~~~
 
