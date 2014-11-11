@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -54,24 +54,16 @@ func cleanDir(targetDir string) error {
 
 func runCmd(command string, args ...string) error {
 	cmd := exec.Command(command, args...)
-	stdout, err := cmd.StdoutPipe()
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
 	if err != nil {
+		fmt.Print(stderr.String())
 		return err
 	}
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-	buf := make([]byte, 1024)
-	var n int
-	for {
-		if n, err = stdout.Read(buf); err != nil {
-			break
-		}
-		fmt.Print(string(buf[0:n]))
-	}
-	if err == io.EOF {
-		err = nil
-	}
+	fmt.Print(stdout.String())
 	return nil
 }
 
