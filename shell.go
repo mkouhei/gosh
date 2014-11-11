@@ -43,7 +43,7 @@ func (e *env) write(ic chan<- bool) {
 		f.Truncate(0)
 
 		for _, l := range e.parser.convertLines() {
-			f.WriteString(l)
+			f.WriteString(fmt.Sprintf("%s\n", l))
 		}
 		f.Sync()
 		if err := f.Close(); err != nil {
