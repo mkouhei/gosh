@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -52,6 +53,12 @@ func cleanDir(targetDir string) error {
 	return nil
 }
 
+func suppressError(m string) {
+	if !strings.HasPrefix(m, "go install: no install location") {
+		fmt.Printf("[error] %s", m)
+	}
+}
+
 func runCmd(command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	var stdout bytes.Buffer
@@ -60,7 +67,7 @@ func runCmd(command string, args ...string) error {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Print(stderr.String())
+		suppressError(stderr.String())
 		return err
 	}
 	fmt.Print(stdout.String())
