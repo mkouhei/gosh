@@ -86,6 +86,14 @@ Known issues
 HISTORY
 -------
 
+0.1.3 (2014-11-13)
+~~~~~~~~~~~~~~~~~~
+
+* Fixed runtime error occurs when invalid import statement.
+* Fixes issue infinite loop of go get.
+* Cleanup all working directories on boot.
+* Cleard parser.body when non-declaration statement.
+
 0.1.2 (2014-11-12)
 ~~~~~~~~~~~~~~~~~~
 
