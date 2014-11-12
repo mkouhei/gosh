@@ -12,8 +12,9 @@ Features
 --------
 
 * Interactive shell
-* Ommiting package statement
-* Importing libraries of non-standard library
+* Enable to omit package statement
+* Enable to omit the import statement of standard library
+* Enable to Import libraries of non-standard library
 * Ignoring duplicate import package
 * Ignoring unused import package
 
@@ -57,6 +58,18 @@ Examples::
   hello
   
   >>>
+
+or::
+
+  $ $GOPATH/bin/gosh
+  >>> func main() {
+  >>> fmt.Println("hello")
+  >>> }
+  hello
+  
+  >>>
+
+Enable to omit import statement related with standard libraries.
 
 Roadmap
 -------
