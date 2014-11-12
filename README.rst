@@ -82,7 +82,6 @@ Known issues
 ------------
 
 * Not work go run when noexistent package in parser.importPkgs
-* Remains working directory when runtime error occurs
 
 HISTORY
 -------
