@@ -76,6 +76,7 @@ Roadmap
 
 * Omitting the main function
 * Tab completion
+* Enable to omit import statement of system global installed packages
 
 HISTORY
 -------
