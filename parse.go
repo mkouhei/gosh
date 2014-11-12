@@ -28,7 +28,10 @@ func (p *parser) decrement() {
 func pkgName(p string) string {
 	re, _ := regexp.Compile("\"([\\S\\s/\\\\]+)\"")
 	group := re.FindStringSubmatch(p)
-	return string(group[1])
+	if len(group) != 0 {
+		return string(group[1])
+	}
+	return ""
 }
 
 func (p *parser) putPackages(pkg string, iq chan<- string) {
@@ -45,7 +48,9 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 			p.importFlag = true
 		} else {
 			pkg := pkgName(strings.Split(line, " ")[1])
-			p.putPackages(pkg, iq)
+			if pkg != "" {
+				p.putPackages(pkg, iq)
+			}
 		}
 	} else if p.importFlag {
 		if strings.HasPrefix(line, ")") {
@@ -54,7 +59,9 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 			r := strings.NewReader(line)
 			if r.Len() > 0 {
 				pkg := pkgName(line)
-				p.putPackages(pkg, iq)
+				if pkg != "" {
+					p.putPackages(pkg, iq)
+				}
 			}
 		}
 	} else if strings.HasPrefix(line, "func ") {
