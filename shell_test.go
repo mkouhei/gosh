@@ -86,3 +86,12 @@ func main() {
 
 	os.Remove("dummy_code")
 }
+
+func ExampleGoGet() {
+	e := NewEnv(false)
+	iq := make(chan string, 1)
+	iq <- "foo"
+	e.goGet(iq)
+	// Output:
+	//
+}

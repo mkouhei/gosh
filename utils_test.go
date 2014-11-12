@@ -19,13 +19,6 @@ func TestRunCmd(t *testing.T) {
 	}
 }
 
-func ExampleGoGet() {
-	e := NewEnv(false)
-	e.goGet("foo")
-	// Output:
-	//
-}
-
 func TestBldDirAndCleanDir(t *testing.T) {
 	d := bldDir()
 	f, err := os.Stat(d)

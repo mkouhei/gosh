@@ -71,14 +71,13 @@ func (e *env) goRun(rc chan<- bool) {
 	}()
 }
 
-func (e *env) goGet(p string) {
+func (e *env) goGet(p <-chan string) {
 	go func() {
 		for {
 			cmd := "go"
-			args := []string{"get", p}
+			args := []string{"get", <-p}
 			if err := runCmd(cmd, args...); err != nil {
 				e.logger("go get", "", err)
-				return
 			}
 			time.Sleep(time.Nanosecond)
 		}
@@ -113,9 +112,8 @@ func (e *env) shell(fp *os.File) {
 	ec := make(chan bool)
 	iq := make(chan string, 10)
 
-	iq <- ""
 	e.read(fp, wc, qc, iq)
-	e.goGet(<-iq)
+	e.goGet(iq)
 
 loop:
 	for {
