@@ -78,6 +78,13 @@ Roadmap
 * Tab completion
 * Enable to omit import statement of system global installed packages
 
+Known issues
+------------
+
+* Not work go run when noexistent package in parser.importPkgs
+* Runtime error occurs when invalid import statement
+* Remains working directory when runtime error occurs
+
 HISTORY
 -------
 
