@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -35,6 +37,11 @@ func TestBldDirAndCleanDir(t *testing.T) {
 	}
 	if err := cleanDir(d); err != nil {
 		t.Fatal(err)
+	}
+	cleanDirs()
+	lists, _ := filepath.Glob(fmt.Sprintf("/tmp/%s*", prefix))
+	if lists != nil {
+		t.Fatal("FAILURE cleanDirs()")
 	}
 }
 

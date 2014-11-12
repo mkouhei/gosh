@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strings"
 )
@@ -24,6 +25,13 @@ func cleanDir(targetDir string) error {
 		return err
 	}
 	return nil
+}
+
+func cleanDirs() {
+	lists, _ := filepath.Glob(fmt.Sprintf("/tmp/%s*", prefix))
+	for _, l := range lists {
+		cleanDir(l)
+	}
 }
 
 func suppressError(m string) {

@@ -15,6 +15,7 @@ func main() {
 		fmt.Printf("version: %s\n", version)
 		return
 	}
+	cleanDirs()
 	e := NewEnv(*d)
 
 	e.shell(nil)
