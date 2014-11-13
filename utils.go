@@ -40,7 +40,7 @@ func suppressError(m string) {
 	}
 }
 
-func runCmd(command string, args ...string) error {
+func runCmd(command string, args ...string) (string, error) {
 	cmd := exec.Command(command, args...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -49,10 +49,10 @@ func runCmd(command string, args ...string) error {
 	err := cmd.Run()
 	if err != nil {
 		suppressError(stderr.String())
-		return err
+		return stderr.String(), err
 	}
 	fmt.Print(stdout.String())
-	return nil
+	return stdout.String(), nil
 }
 
 func compare(A, B []string) []string {

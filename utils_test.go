@@ -10,12 +10,12 @@ import (
 func TestRunCmd(t *testing.T) {
 	cmd := "foo"
 	args := []string{}
-	if err := runCmd(cmd, args...); err == nil {
-		t.Fatal("want: <fail>")
+	if msg, err := runCmd(cmd, args...); err == nil {
+		t.Fatal("want: <fail>: %s", msg)
 	}
 	cmd = "true"
-	if err := runCmd(cmd, args...); err != nil {
-		t.Fatal(err)
+	if msg, err := runCmd(cmd, args...); err != nil {
+		t.Fatal(msg)
 	}
 }
 
