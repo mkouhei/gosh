@@ -82,7 +82,7 @@ func (e *env) logger(facility, msg string, err error) {
 		if err == nil {
 			log.Printf("[info] %s: %s\n", facility, msg)
 		} else {
-			log.Fatalf("[error] %s: %s %v\n", facility, msg, err)
+			log.Printf("[error] %s: %s %v\n", facility, msg, err)
 		}
 	}
 }
