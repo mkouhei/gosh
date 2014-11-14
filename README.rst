@@ -78,13 +78,15 @@ Roadmap
 * Tab completion
 * Enable to omit import statement of system global installed packages
 
-Known issues
-------------
-
-* Not work go run when noexistent package in parser.importPkgs
-
 HISTORY
 -------
+
+0.1.4 (2014-11-15)
+~~~~~~~~~~~~~~~~~~
+
+* Fixed not work go run when noexistent package in parser.importPkgs.
+* Changed log.Printf instead of log.Fatalf when error case at logger().
+* Changed appending message string to returns of runCmd().
 
 0.1.3 (2014-11-13)
 ~~~~~~~~~~~~~~~~~~
