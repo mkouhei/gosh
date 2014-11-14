@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -44,6 +45,7 @@ func (e *env) write(ic chan<- bool) {
 
 		for _, l := range e.parser.convertLines() {
 			f.WriteString(fmt.Sprintf("%s\n", l))
+			e.logger("write", l, nil)
 		}
 		f.Sync()
 		if err := f.Close(); err != nil {
@@ -71,12 +73,20 @@ func (e *env) goRun(rc chan<- bool) {
 	}()
 }
 
+func (e *env) removeImport(msg, pkg string) {
+	if strings.Contains(msg, fmt.Sprintf("package %s: unrecognized import path \"%s\"", pkg, pkg)) {
+		removeItem(&e.parser.importPkgs, pkg)
+	}
+}
+
 func (e *env) goGet(p <-chan string) {
 	go func() {
 		for {
+			pkg := <-p
 			cmd := "go"
-			args := []string{"get", <-p}
+			args := []string{"get", pkg}
 			if msg, err := runCmd(cmd, args...); err != nil {
+				e.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
 			time.Sleep(time.Nanosecond)

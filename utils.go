@@ -71,6 +71,16 @@ func compare(A, B []string) []string {
 	return ret
 }
 
+func removeItem(slice *[]string, key string) {
+	s := *slice
+	for i, item := range s {
+		if item == key {
+			s = append(s[:i], s[i+1:]...)
+		}
+	}
+	*slice = s
+}
+
 func searchString(s string, list []string) bool {
 	sort.Strings(list)
 	i := sort.SearchStrings(list, s)
