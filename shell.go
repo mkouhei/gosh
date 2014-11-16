@@ -75,7 +75,7 @@ func (e *env) write(ic chan<- bool) {
 	}()
 }
 
-func (e *env) goRun(rc chan<- bool) {
+func (e *env) goRun() {
 
 	go func() {
 		os.Chdir(e.BldDir)
@@ -86,7 +86,6 @@ func (e *env) goRun(rc chan<- bool) {
 			e.parser.body = nil
 			return
 		}
-		rc <- true
 	}()
 }
 
@@ -133,7 +132,6 @@ func (e *env) shell(fp *os.File) {
 	}
 
 	qc := make(chan bool)
-	rc := make(chan bool)
 	wc := make(chan bool)
 	ic := make(chan bool)
 	ec := make(chan bool)
@@ -150,7 +148,7 @@ loop:
 		case <-ic:
 			e.goImports(ec)
 		case <-ec:
-			e.goRun(rc)
+			e.goRun()
 		case <-qc:
 			cleanDir(e.BldDir)
 			fmt.Println("[gosh] terminated")
