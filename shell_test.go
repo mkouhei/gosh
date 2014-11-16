@@ -19,6 +19,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -110,10 +111,37 @@ func main() {
 func ExampleGoGet() {
 	e := NewEnv(false)
 	iq := make(chan string, 1)
-	iq <- "foo"
+	iq <- "fmt"
 	e.goGet(iq)
 	// Output:
 	//
+}
+
+func ExampleGoRun() {
+	dummy := `package main
+import "fmt"
+func main() {
+fmt.Println("hello")
+}
+`
+	e := NewEnv(true)
+	fp, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		fmt.Println(err)
+	}
+	time.Sleep(time.Microsecond)
+	fp.WriteString(dummy)
+	fp.Sync()
+	fp.Close()
+
+	_, err = os.Stat(e.TmpPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	e.goRun()
+	// Output:
+	// hello
+
 }
 
 func TestRemoveImport(t *testing.T) {

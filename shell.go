@@ -76,17 +76,14 @@ func (e *env) write(ic chan<- bool) {
 }
 
 func (e *env) goRun() {
-
-	go func() {
-		os.Chdir(e.BldDir)
-		cmd := "go"
-		args := []string{"run", tmpname}
-		if msg, err := runCmd(true, cmd, args...); err != nil {
-			e.logger("go run", msg, err)
-			e.parser.body = nil
-			return
-		}
-	}()
+	os.Chdir(e.BldDir)
+	cmd := "go"
+	args := []string{"run", tmpname}
+	if msg, err := runCmd(true, cmd, args...); err != nil {
+		e.logger("go run", msg, err)
+		e.parser.body = nil
+		return
+	}
 }
 
 func (e *env) removeImport(msg, pkg string) {
