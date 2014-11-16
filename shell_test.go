@@ -35,6 +35,7 @@ fmt.Println("hello")
 }
 `
 	expectLines := []string{"package main",
+		"",
 		"import \"fmt\"",
 		"",
 		"func main() {",
@@ -42,32 +43,34 @@ fmt.Println("hello")
 		"}",
 	}
 
-	fp, _ := os.OpenFile("dummy_code", os.O_WRONLY|os.O_CREATE, 0600)
-	defer fp.Close()
+	e := NewEnv(true)
+	fp, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
 	fp.WriteString(dummy)
+	fp.Sync()
+	fp.Close()
+
+	time.Sleep(time.Microsecond)
 
 	ec := make(chan bool)
-
-	e := NewEnv(false)
-	e.TmpPath = "dummy_code"
 	e.goImports(ec)
 
 	time.Sleep(time.Microsecond)
 
 	lines := []string{}
-	go func() {
-		<-ec
-		fp2, err := os.Open("dummy_code")
+	if <-ec {
+		fp2, err := os.Open(e.TmpPath)
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer fp2.Close()
 		s := bufio.NewScanner(fp2)
 		for s.Scan() {
 			lines = append(lines, s.Text())
 		}
-
-	}()
+		fp2.Close()
+	}
 
 	if len(compare(lines, expectLines)) != 0 {
 		t.Fatal("goimports error")
@@ -111,4 +114,26 @@ func ExampleGoGet() {
 	e.goGet(iq)
 	// Output:
 	//
+}
+
+func TestRemoveImport(t *testing.T) {
+	e := NewEnv(false)
+	pkgs := []string{"fmt", "os", "hoge", "io"}
+	pkgs2 := []string{"fmt", "os", "io"}
+	e.parser.importPkgs = pkgs
+
+	e.removeImport("dummy message", "hoge")
+	if len(compare(e.parser.importPkgs, pkgs)) != 0 {
+		t.Fatal("fail filtering")
+	}
+
+	e.removeImport("package moge: unrecognized import path \"moge\"", "hoge")
+	if len(compare(e.parser.importPkgs, pkgs)) != 0 {
+		t.Fatal("fail filtering")
+	}
+
+	e.removeImport("package hoge: unrecognized import path \"hoge\"", "hoge")
+	if len(compare(e.parser.importPkgs, pkgs2)) != 0 {
+		t.Fatal("fail remove package")
+	}
 }

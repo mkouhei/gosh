@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -62,5 +63,52 @@ func TestSearchString(t *testing.T) {
 	}
 	if searchString("hoge", list) {
 		t.Fatal("expecting false")
+	}
+}
+
+func TestRemoveItem(t *testing.T) {
+
+	slc := []string{"foo"}
+	slc2 := []string{}
+	removeItem(&slc, "foo")
+	if len(compare(slc, slc2)) != 0 {
+		t.Fatal("fail remove item.")
+	}
+
+	if !searchString("foo", slc) {
+		slc = append(slc, "foo")
+	}
+	slc2 = []string{}
+	removeItem(&slc, "foo")
+	if len(compare(slc, slc2)) != 0 {
+		t.Fatal("fail remove item.")
+	}
+
+	slc = []string{"foo", "bar", "baz"}
+	slc2 = []string{"foo", "baz"}
+	removeItem(&slc, "bar")
+	if len(compare(slc, slc2)) != 0 {
+		t.Fatal("fail remove item.")
+	}
+
+	slc = []string{"foo", "bar", "baz", "qux", "quux"}
+	slc2 = []string{"bar", "baz", "qux", "quux"}
+	removeItem(&slc, "foo")
+	if len(compare(slc, slc2)) != 0 {
+		t.Fatal("fail remove item.")
+	}
+
+	slc = []string{"foo", "bar", "baz", "qux", "quux"}
+	slc2 = []string{"foo", "bar", "baz", "qux"}
+	removeItem(&slc, "quux")
+	if len(compare(slc, slc2)) != 0 {
+		t.Fatal("fail remove item.")
+	}
+
+}
+
+func TestGoVersion(t *testing.T) {
+	if !strings.HasPrefix(goVersion(), "go version go") {
+		t.Fatal("expecting 'go version goX.X.X os/arch'")
 	}
 }
