@@ -108,7 +108,7 @@ func TestRemoveItem(t *testing.T) {
 }
 
 func TestGoVersion(t *testing.T) {
-	if !strings.HasPrefix(goVersion(), "go version go") {
+	if !strings.HasPrefix(goVersion(), "go version") {
 		t.Fatal("expecting 'go version goX.X.X os/arch'")
 	}
 }
