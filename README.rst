@@ -21,7 +21,7 @@ Features
 Requirements
 ------------
 
-* Golang >= 1.1
+* Golang >= 1.2
 * `goimports <http://godoc.org/code.google.com/p/go.tools/cmd/goimports>`_ command
 
 Installation
