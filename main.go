@@ -25,6 +25,13 @@ import (
 var version string
 var show_version = flag.Bool("version", false, "show_version")
 
+var license = `Gosh %s
+Copyright (C) 2014 Kouhei Maeda
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software, and you are welcome to redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+`
+
 func main() {
 	d := flag.Bool("d", false, "debug mode")
 	flag.Parse()
@@ -34,6 +41,7 @@ func main() {
 	}
 	cleanDirs()
 	e := NewEnv(*d)
-
+	fmt.Println(goVersion())
+	fmt.Printf(license, version)
 	e.shell(nil)
 }
