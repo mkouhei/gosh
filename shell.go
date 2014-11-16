@@ -64,7 +64,7 @@ func (e *env) goRun(rc chan<- bool) {
 		os.Chdir(e.BldDir)
 		cmd := "go"
 		args := []string{"run", tmpname}
-		if msg, err := runCmd(cmd, args...); err != nil {
+		if msg, err := runCmd(true, cmd, args...); err != nil {
 			e.logger("go run", msg, err)
 			e.parser.body = nil
 			return
@@ -85,7 +85,7 @@ func (e *env) goGet(p <-chan string) {
 			pkg := <-p
 			cmd := "go"
 			args := []string{"get", pkg}
-			if msg, err := runCmd(cmd, args...); err != nil {
+			if msg, err := runCmd(true, cmd, args...); err != nil {
 				e.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
@@ -98,7 +98,7 @@ func (e *env) goImports(ec chan<- bool) {
 	go func() {
 		cmd := "goimports"
 		args := []string{"-w", e.TmpPath}
-		if msg, err := runCmd(cmd, args...); err != nil {
+		if msg, err := runCmd(true, cmd, args...); err != nil {
 			e.logger("goimports", msg, err)
 			e.parser.body = nil
 			return

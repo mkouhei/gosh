@@ -40,7 +40,7 @@ func suppressError(m string) {
 	}
 }
 
-func runCmd(command string, args ...string) (string, error) {
+func runCmd(printFlag bool, command string, args ...string) (string, error) {
 	cmd := exec.Command(command, args...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -51,7 +51,9 @@ func runCmd(command string, args ...string) (string, error) {
 		suppressError(stderr.String())
 		return stderr.String(), err
 	}
-	fmt.Print(stdout.String())
+	if printFlag {
+		fmt.Print(stdout.String())
+	}
 	return stdout.String(), nil
 }
 
