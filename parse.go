@@ -64,42 +64,46 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 		return false
 	}
 
-	if strings.HasPrefix(line, "import ") {
-		if strings.Contains(line, "(") {
+	switch {
+	case strings.HasPrefix(line, "import "):
+		switch {
+		case strings.Contains(line, "("):
 			p.importFlag = true
-		} else {
-			pkg := pkgName(strings.Split(line, " ")[1])
-			if pkg != "" {
+		default:
+			if pkg := pkgName(strings.Split(line, " ")[1]); pkg != "" {
 				p.putPackages(pkg, iq)
 			}
 		}
-	} else if p.importFlag {
-		if strings.HasPrefix(line, ")") {
+
+	case p.importFlag:
+		switch {
+		case strings.HasPrefix(line, ")"):
 			p.importFlag = false
-		} else {
-			r := strings.NewReader(line)
-			if r.Len() > 0 {
-				pkg := pkgName(line)
-				if pkg != "" {
+		default:
+			if strings.NewReader(line).Len() > 0 {
+				if pkg := pkgName(line); pkg != "" {
 					p.putPackages(pkg, iq)
 				}
 			}
 		}
-	} else if strings.HasPrefix(line, "func ") {
-		if strings.Contains(line, "main") {
+
+	case strings.HasPrefix(line, "func "):
+		switch {
+		case strings.Contains(line, "main"):
 			// func main
 			p.mainFlag = true
 			p.increment()
 			p.main = append(p.main, line)
-		} else {
+		default:
 			// func other than main
 			p.body = append(p.body, line)
 		}
-	} else if p.mainFlag {
+	case p.mainFlag:
 		p.main = append(p.main, line)
-		if strings.Contains(line, "{") {
+		switch {
+		case strings.Contains(line, "{"):
 			p.increment()
-		} else if strings.Contains(line, "}") {
+		case strings.Contains(line, "}"):
 			p.decrement()
 			if p.mainBlackets == 0 {
 				// closing func main
@@ -107,7 +111,7 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 				return true
 			}
 		}
-	} else {
+	default:
 		p.body = append(p.body, line)
 	}
 	return false
