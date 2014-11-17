@@ -59,6 +59,10 @@ func (p *parser) putPackages(pkg string, iq chan<- string) {
 }
 
 func (p *parser) parseLine(line string, iq chan<- string) bool {
+	// Ignore `package main' etc.
+	if ignoreStatement(line) {
+		return false
+	}
 
 	if strings.HasPrefix(line, "import ") {
 		if strings.Contains(line, "(") {
@@ -125,4 +129,12 @@ func (p *parser) convertLines() []string {
 	lines = append(lines, p.body...)
 	lines = append(lines, p.main...)
 	return lines
+}
+
+func ignoreStatement(line string) bool {
+	switch {
+	case strings.HasPrefix(line, "package "):
+		return true
+	}
+	return false
 }

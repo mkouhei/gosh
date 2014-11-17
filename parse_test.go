@@ -90,7 +90,8 @@ func TestParseLine(t *testing.T) {
 	p := parser{}
 	iq := make(chan string, 10)
 
-	lines := []string{"import (",
+	lines := []string{"package main",
+		"import (",
 		"\"fmt\"",
 		"\"os\"",
 		")",
