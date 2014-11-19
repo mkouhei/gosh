@@ -127,7 +127,7 @@ func convertImport(pkgs []string) []string {
 	return imports
 }
 
-func (p *parser) convertLines() []string {
+func (p *parser) mergeLines() []string {
 	lines := []string{"package main\n"}
 	lines = append(lines, convertImport(p.importPkgs)...)
 	lines = append(lines, p.body...)

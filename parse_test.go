@@ -136,7 +136,7 @@ func TestParseLine(t *testing.T) {
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
 	}
-	if len(p.convertLines()) != 15 {
+	if len(p.mergeLines()) != 15 {
 		t.Fatal("parse error")
 	}
 }

@@ -60,7 +60,7 @@ func (e *env) write(ic chan<- bool) {
 		time.Sleep(time.Microsecond)
 		f.Truncate(0)
 
-		for _, l := range e.parser.convertLines() {
+		for _, l := range e.parser.mergeLines() {
 			f.WriteString(fmt.Sprintf("%s\n", l))
 			e.logger("write", l, nil)
 		}
