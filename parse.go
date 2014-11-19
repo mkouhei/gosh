@@ -43,6 +43,7 @@ func (p *parser) decrement() {
 }
 
 func pkgName(p string) string {
+	// extract 'foo' from '"foo"'
 	re, _ := regexp.Compile("\"([\\S\\s/\\\\]+)\"")
 	group := re.FindStringSubmatch(p)
 	if len(group) != 0 {
@@ -52,6 +53,7 @@ func pkgName(p string) string {
 }
 
 func (p *parser) putPackages(pkg string, iq chan<- string) {
+	// put package to queue of `go get'
 	if !searchString(pkg, p.importPkgs) {
 		p.importPkgs = append(p.importPkgs, pkg)
 		iq <- pkg
@@ -59,13 +61,14 @@ func (p *parser) putPackages(pkg string, iq chan<- string) {
 }
 
 func (p *parser) parseLine(line string, iq chan<- string) bool {
-	// Ignore `package main' etc.
+	// Ignore `package main', etc.
 	if ignoreStatement(line) {
 		return false
 	}
 
 	switch {
 	case strings.HasPrefix(line, "import "):
+		// parser "import"
 		switch {
 		case strings.Contains(line, "("):
 			p.importFlag = true
@@ -88,6 +91,7 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 		}
 
 	case strings.HasPrefix(line, "func "):
+		// parser "func"
 		switch {
 		case strings.Contains(line, "main"):
 			// func main
@@ -118,6 +122,7 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 }
 
 func convertImport(pkgs []string) []string {
+	// convert packages list to "import" statement
 
 	imports := []string{"import (\n"}
 	for _, pkg := range pkgs {
@@ -128,6 +133,7 @@ func convertImport(pkgs []string) []string {
 }
 
 func (p *parser) mergeLines() []string {
+	// merge "package", "import", "func", "func main".
 	lines := []string{"package main\n"}
 	lines = append(lines, convertImport(p.importPkgs)...)
 	lines = append(lines, p.body...)
@@ -136,6 +142,7 @@ func (p *parser) mergeLines() []string {
 }
 
 func ignoreStatement(line string) bool {
+	// ignore statement
 	switch {
 	case strings.HasPrefix(line, "package "):
 		return true

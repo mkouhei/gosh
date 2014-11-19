@@ -33,6 +33,7 @@ type env struct {
 }
 
 func NewEnv(debug bool) env {
+	// New shell environment
 	e := env{}
 	e.BldDir = bldDir()
 	e.TmpPath = fmt.Sprintf("%s/%s", e.BldDir, tmpname)
@@ -46,5 +47,6 @@ func NewEnv(debug bool) env {
 }
 
 func setGOPATH(p string) {
+	// set GOPATH
 	os.Setenv("GOPATH", p)
 }

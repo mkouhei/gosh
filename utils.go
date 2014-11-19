@@ -30,6 +30,7 @@ import (
 )
 
 func bldDir() string {
+	// mkdir build directory
 	f, err := ioutil.TempDir("", prefix)
 	if err != nil {
 		log.Fatal(err)
@@ -38,6 +39,7 @@ func bldDir() string {
 }
 
 func cleanDir(targetDir string) error {
+	// cleanup build directory
 	if err := os.RemoveAll(targetDir); err != nil {
 		return err
 	}
@@ -45,6 +47,7 @@ func cleanDir(targetDir string) error {
 }
 
 func cleanDirs() {
+	// cleanup all build directories
 	lists, _ := filepath.Glob(fmt.Sprintf("/tmp/%s*", prefix))
 	for _, l := range lists {
 		cleanDir(l)
@@ -52,12 +55,14 @@ func cleanDirs() {
 }
 
 func suppressError(m string) {
+	// suppress error message
 	if !strings.HasPrefix(m, "go install: no install location") {
 		fmt.Printf("[error] %s", m)
 	}
 }
 
 func runCmd(printFlag bool, command string, args ...string) (string, error) {
+	// execute command
 	cmd := exec.Command(command, args...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -75,6 +80,7 @@ func runCmd(printFlag bool, command string, args ...string) (string, error) {
 }
 
 func compare(A, B []string) []string {
+	// compare two []string slices
 	m := make(map[string]int)
 	for _, b := range B {
 		m[b]++
@@ -91,6 +97,7 @@ func compare(A, B []string) []string {
 }
 
 func removeItem(slice *[]string, key string) {
+	// remove item from []string slice
 	s := *slice
 	for i, item := range s {
 		if item == key {
@@ -101,6 +108,7 @@ func removeItem(slice *[]string, key string) {
 }
 
 func searchString(s string, list []string) bool {
+	// search item from []string
 	sort.Strings(list)
 	i := sort.SearchStrings(list, s)
 	return i < len(list) && list[i] == s
@@ -117,6 +125,7 @@ func (e *env) logger(facility, msg string, err error) {
 }
 
 func goVersion() string {
+	// get `go version'
 	cmd := "go"
 	args := []string{"version"}
 	msg, _ := runCmd(false, cmd, args...)

@@ -26,6 +26,7 @@ import (
 )
 
 func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- string) {
+	// read from shell prompt
 	go func() {
 		o := true
 		reader := bufio.NewReader(fp)
@@ -51,7 +52,7 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- string) {
 }
 
 func (e *env) write(ic chan<- bool) {
-
+	// write tmporary source code file
 	go func() {
 		f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
@@ -76,6 +77,7 @@ func (e *env) write(ic chan<- bool) {
 }
 
 func (e *env) goRun() {
+	// execute `go run'
 	os.Chdir(e.BldDir)
 	cmd := "go"
 	args := []string{"run", tmpname}
@@ -87,12 +89,14 @@ func (e *env) goRun() {
 }
 
 func (e *env) removeImport(msg, pkg string) {
+	// remove package from env.parser.importPkg
 	if strings.Contains(msg, fmt.Sprintf("package %s: unrecognized import path \"%s\"", pkg, pkg)) {
 		removeItem(&e.parser.importPkgs, pkg)
 	}
 }
 
 func (e *env) goGet(p <-chan string) {
+	// execute `go get'
 	go func() {
 		for {
 			pkg := <-p
@@ -108,6 +112,7 @@ func (e *env) goGet(p <-chan string) {
 }
 
 func (e *env) goImports(ec chan<- bool) {
+	// execute `goimports'
 	go func() {
 		cmd := "goimports"
 		args := []string{"-w", e.TmpPath}
@@ -123,15 +128,21 @@ func (e *env) goImports(ec chan<- bool) {
 }
 
 func (e *env) shell(fp *os.File) {
+	// main shell loop
 
 	if fp == nil {
 		fp = os.Stdin
 	}
 
+	// quit channel
 	qc := make(chan bool)
+	// write channel
 	wc := make(chan bool)
+	// import channel
 	ic := make(chan bool)
+	// execute channel
 	ec := make(chan bool)
+	// package queue for go get
 	iq := make(chan string, 10)
 
 	e.read(fp, wc, qc, iq)
