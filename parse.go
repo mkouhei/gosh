@@ -60,6 +60,30 @@ func (p *parser) putPackages(pkg string, iq chan<- string) {
 	}
 }
 
+func (p *parser) parserImport(line string, iq chan<- string) bool {
+	var pattern string
+	if p.importFlag {
+		pattern = "\\A[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+	} else {
+		pattern = "\\Aimport[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+	}
+	re, _ := regexp.Compile(pattern)
+	group := re.FindStringSubmatch(line)
+	if len(group) != 4 {
+		return false
+	}
+	if group[1] == "(" || group[1] == "" && group[2] == "" && group[3] == "" {
+		p.importFlag = true
+	}
+	if group[2] != "" {
+		p.putPackages(pkgName(group[2]), iq)
+	}
+	if group[3] == ")" {
+		p.importFlag = false
+	}
+	return true
+}
+
 func (p *parser) parseLine(line string, iq chan<- string) bool {
 	// Ignore `package main', etc.
 	if ignoreStatement(line) {
@@ -67,28 +91,8 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 	}
 
 	switch {
-	case strings.HasPrefix(line, "import "):
-		// parser "import"
-		switch {
-		case strings.Contains(line, "("):
-			p.importFlag = true
-		default:
-			if pkg := pkgName(strings.Split(line, " ")[1]); pkg != "" {
-				p.putPackages(pkg, iq)
-			}
-		}
-
-	case p.importFlag:
-		switch {
-		case strings.HasPrefix(line, ")"):
-			p.importFlag = false
-		default:
-			if strings.NewReader(line).Len() > 0 {
-				if pkg := pkgName(line); pkg != "" {
-					p.putPackages(pkg, iq)
-				}
-			}
-		}
+	case p.parserImport(line, iq):
+		// import parser
 
 	case strings.HasPrefix(line, "func "):
 		// parser "func"
