@@ -44,7 +44,7 @@ func (p *parser) decrement() {
 
 func pkgName(p string) string {
 	// extract 'foo' from '"foo"'
-	re, _ := regexp.Compile("\"([\\S\\s/\\\\]+)\"")
+	re, _ := regexp.Compile("\"([\\S/]+)\"")
 	group := re.FindStringSubmatch(p)
 	if len(group) != 0 {
 		return string(group[1])
