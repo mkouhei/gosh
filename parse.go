@@ -61,13 +61,13 @@ func (p *parser) putPackages(pkg string, iq chan<- string) {
 }
 
 func (p *parser) parserImport(line string, iq chan<- string) bool {
-	var pattern string
+	var pat string
 	if p.importFlag {
-		pattern = "\\A[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+		pat = "\\A[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
 	} else {
-		pattern = "\\Aimport[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+		pat = "\\Aimport[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
 	}
-	re, _ := regexp.Compile(pattern)
+	re, _ := regexp.Compile(pat)
 	group := re.FindStringSubmatch(line)
 	if len(group) != 4 {
 		return false
