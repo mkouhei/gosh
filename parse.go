@@ -25,6 +25,7 @@ import (
 )
 
 type parser struct {
+	packageFlag  bool
 	importPkgs   []string
 	importFlag   bool
 	body         []string
@@ -86,7 +87,7 @@ func (p *parser) parserImport(line string, iq chan<- string) bool {
 
 func (p *parser) parseLine(line string, iq chan<- string) bool {
 	// Ignore `package main', etc.
-	if ignoreStatement(line) {
+	if p.ignoreStatement(line) {
 		return false
 	}
 
@@ -145,11 +146,36 @@ func (p *parser) mergeLines() []string {
 	return lines
 }
 
-func ignoreStatement(line string) bool {
+func (p *parser) ignoreStatement(line string) bool {
 	// ignore statement
 	switch {
-	case strings.HasPrefix(line, "package "):
+	case p.ignorePkgClause(line):
 		return true
 	}
 	return false
+}
+
+func (p *parser) ignorePkgClause(line string) bool {
+	// ignore PackageClause
+	var pat string
+	if p.packageFlag {
+		pat = "\\A([[:blank:]]*package)?[[:blank:]]*([[\\pL\\d_]+)[[:blank:]]*\\z"
+	} else {
+		pat = "\\A([[:blank:]]*package)([[:blank:]]+[\\pL\\d_]+)?[[:blank:]]*\\z"
+	}
+	re, _ := regexp.Compile(pat)
+	group := re.FindStringSubmatch(line)
+	if len(group) != 3 {
+		return false
+	}
+	if group[1] == "" {
+		// `"package"'
+		p.packageFlag = false
+	}
+
+	if group[2] == "" {
+		// PackageName
+		p.packageFlag = true
+	}
+	return true
 }
