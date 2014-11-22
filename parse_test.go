@@ -21,7 +21,7 @@ import (
 	"testing"
 )
 
-func consumeChan(iq <-chan string) {
+func consumeChan(iq <-chan importSpec) {
 	go func() {
 		for {
 			<-iq
@@ -31,8 +31,8 @@ func consumeChan(iq <-chan string) {
 
 func TestParseImportFail(t *testing.T) {
 	p := parser{}
-	p.importPkgs = append(p.importPkgs, "")
-	iq := make(chan string, 1)
+	p.importPkgs = append(p.importPkgs, importSpec{})
+	iq := make(chan importSpec, 1)
 	consumeChan(iq)
 
 	lines := []string{"import fmt"}
@@ -41,14 +41,14 @@ func TestParseImportFail(t *testing.T) {
 		p.parseLine(l, iq)
 	}
 
-	if len(compare(p.importPkgs, []string{})) != 1 {
+	if len(compareImportSpecs(p.importPkgs, []importSpec{})) != 1 {
 		t.Fatal("parse error: expected nil")
 	}
 }
 
 func TestParseMultipleImport(t *testing.T) {
 	p := parser{}
-	iq := make(chan string, 4)
+	iq := make(chan importSpec, 4)
 
 	lines := []string{"import \"fmt\"",
 		"import \"io\"",
@@ -62,15 +62,19 @@ func TestParseMultipleImport(t *testing.T) {
 		p.parseLine(l, iq)
 	}
 
-	el := []string{"fmt", "io", "strings", "os"}
-	if len(compare(p.importPkgs, el)) != 0 {
+	el := []importSpec{
+		importSpec{"fmt", ""},
+		importSpec{"io", ""},
+		importSpec{"strings", ""},
+		importSpec{"os", ""}}
+	if len(compareImportSpecs(p.importPkgs, el)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
 	}
 }
 
 func TestParseDuplicateImport(t *testing.T) {
 	p := parser{}
-	iq := make(chan string, 1)
+	iq := make(chan importSpec, 2)
 
 	lines := []string{"import \"fmt\"",
 		"import \"fmt\"",
@@ -79,16 +83,16 @@ func TestParseDuplicateImport(t *testing.T) {
 	for _, l := range lines {
 		p.parseLine(l, iq)
 	}
-
-	el := []string{"fmt"}
-	if len(compare(p.importPkgs, el)) != 0 {
+	el := []importSpec{
+		importSpec{"fmt", ""}}
+	if len(compareImportSpecs(p.importPkgs, el)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
 	}
 }
 
 func TestParseLine(t *testing.T) {
 	p := parser{}
-	iq := make(chan string, 10)
+	iq := make(chan importSpec, 10)
 
 	lines := []string{"package main",
 		"import (",
@@ -107,7 +111,10 @@ func TestParseLine(t *testing.T) {
 		"}",
 	}
 
-	import1 := []string{"fmt", "os"}
+	import1 := []importSpec{
+		importSpec{"fmt", ""},
+		importSpec{"os", ""}}
+
 	body1 := []string{"func test() bool {",
 		"f, err := os.Stat(\"/tmp\")",
 		"if err != nil {",
@@ -127,7 +134,7 @@ func TestParseLine(t *testing.T) {
 		p.parseLine(l, iq)
 	}
 
-	if len(compare(p.importPkgs, import1)) != 0 {
+	if len(compareImportSpecs(p.importPkgs, import1)) != 0 {
 		t.Fatal("parse error")
 	}
 	if len(compare(p.body, body1)) != 0 {

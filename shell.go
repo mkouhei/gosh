@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- string) {
+func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 	// read from shell prompt
 	go func() {
 		o := true
@@ -88,20 +88,26 @@ func (e *env) goRun() {
 	}
 }
 
-func (e *env) removeImport(msg, pkg string) {
+func (e *env) removeImport(msg string, pkg importSpec) {
 	// remove package from env.parser.importPkg
-	if strings.Contains(msg, fmt.Sprintf("package %s: unrecognized import path \"%s\"", pkg, pkg)) {
-		removeItem(&e.parser.importPkgs, pkg)
+	var key string
+	if pkg.packageName == "" {
+		key = pkg.importPath
+	} else {
+		key = pkg.packageName
+	}
+	if strings.Contains(msg, fmt.Sprintf("package %s: unrecognized import path \"%s\"", key, key)) {
+		removeImportPackage(&e.parser.importPkgs, importSpec{pkg.importPath, pkg.packageName})
 	}
 }
 
-func (e *env) goGet(p <-chan string) {
+func (e *env) goGet(p <-chan importSpec) {
 	// execute `go get'
 	go func() {
 		for {
 			pkg := <-p
 			cmd := "go"
-			args := []string{"get", pkg}
+			args := []string{"get", pkg.importPath}
 			if msg, err := runCmd(true, cmd, args...); err != nil {
 				e.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
@@ -143,7 +149,7 @@ func (e *env) shell(fp *os.File) {
 	// execute channel
 	ec := make(chan bool)
 	// package queue for go get
-	iq := make(chan string, 10)
+	iq := make(chan importSpec, 10)
 
 	e.read(fp, wc, qc, iq)
 	e.goGet(iq)

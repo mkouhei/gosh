@@ -25,7 +25,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
@@ -96,22 +95,30 @@ func compare(A, B []string) []string {
 	return ret
 }
 
-func removeItem(slice *[]string, key string) {
-	// remove item from []string slice
-	s := *slice
-	for i, item := range s {
-		if item == key {
-			s = append(s[:i], s[i+1:]...)
-		}
+func compareImportSpecs(A, B []importSpec) []importSpec {
+	m := make(map[importSpec]int)
+	for _, b := range B {
+		m[b]++
 	}
-	*slice = s
+	var ret []importSpec
+	for _, a := range A {
+		if m[a] > 0 {
+			m[a]--
+			continue
+		}
+		ret = append(ret, a)
+	}
+	return ret
 }
 
-func searchString(s string, list []string) bool {
+func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 	// search item from []string
-	sort.Strings(list)
-	i := sort.SearchStrings(list, s)
-	return i < len(list) && list[i] == s
+	for _, l := range pkgs {
+		if pkg.importPath == l.importPath && pkg.packageName == l.packageName {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *env) logger(facility, msg string, err error) {
@@ -130,4 +137,14 @@ func goVersion() string {
 	args := []string{"version"}
 	msg, _ := runCmd(false, cmd, args...)
 	return msg
+}
+
+func removeImportPackage(slice *[]importSpec, pkg importSpec) {
+	s := *slice
+	for i, item := range s {
+		if item.importPath == pkg.importPath && item.packageName == pkg.packageName {
+			s = append(s[:i], s[i+1:]...)
+		}
+	}
+	*slice = s
 }

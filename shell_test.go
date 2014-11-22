@@ -110,8 +110,8 @@ func main() {
 
 func ExampleGoGet() {
 	e := NewEnv(false)
-	iq := make(chan string, 1)
-	iq <- "fmt"
+	iq := make(chan importSpec, 1)
+	iq <- importSpec{"fmt", ""}
 	e.goGet(iq)
 	// Output:
 	//
@@ -146,22 +146,29 @@ fmt.Println("hello")
 
 func TestRemoveImport(t *testing.T) {
 	e := NewEnv(false)
-	pkgs := []string{"fmt", "os", "hoge", "io"}
-	pkgs2 := []string{"fmt", "os", "io"}
+	pkgs := []importSpec{
+		importSpec{"fmt", ""},
+		importSpec{"os", ""},
+		importSpec{"hoge", ""},
+		importSpec{"io", ""}}
+	pkgs2 := []importSpec{
+		importSpec{"fmt", ""},
+		importSpec{"os", ""},
+		importSpec{"io", ""}}
 	e.parser.importPkgs = pkgs
 
-	e.removeImport("dummy message", "hoge")
-	if len(compare(e.parser.importPkgs, pkgs)) != 0 {
+	e.removeImport("dummy message", importSpec{"hoge", ""})
+	if len(compareImportSpecs(e.parser.importPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
-	e.removeImport("package moge: unrecognized import path \"moge\"", "hoge")
-	if len(compare(e.parser.importPkgs, pkgs)) != 0 {
+	e.removeImport("package moge: unrecognized import path \"moge\"", importSpec{"hoge", ""})
+	if len(compareImportSpecs(e.parser.importPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
-	e.removeImport("package hoge: unrecognized import path \"hoge\"", "hoge")
-	if len(compare(e.parser.importPkgs, pkgs2)) != 0 {
+	e.removeImport("package hoge: unrecognized import path \"hoge\"", importSpec{"hoge", ""})
+	if len(compareImportSpecs(e.parser.importPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}
 }

@@ -24,9 +24,14 @@ import (
 	"sync/atomic"
 )
 
+type importSpec struct {
+	importPath  string
+	packageName string
+}
+
 type parser struct {
 	packageFlag  bool
-	importPkgs   []string
+	importPkgs   []importSpec
 	importFlag   bool
 	body         []string
 	mainFlag     bool
@@ -43,49 +48,42 @@ func (p *parser) decrement() {
 	atomic.AddInt32(&p.mainBlackets, -1)
 }
 
-func pkgName(p string) string {
-	// extract 'foo' from '"foo"'
-	re, _ := regexp.Compile("\"([\\S/]+)\"")
-	group := re.FindStringSubmatch(p)
-	if len(group) != 0 {
-		return string(group[1])
-	}
-	return ""
-}
-
-func (p *parser) putPackages(pkg string, iq chan<- string) {
+func (p *parser) putPackages(importPath, packageName string, iq chan<- importSpec) {
 	// put package to queue of `go get'
-	if !searchString(pkg, p.importPkgs) {
-		p.importPkgs = append(p.importPkgs, pkg)
-		iq <- pkg
+	if !searchPackage(importSpec{importPath, packageName}, p.importPkgs) {
+		is := importSpec{importPath, packageName}
+		p.importPkgs = append(p.importPkgs, is)
+		iq <- is
 	}
 }
 
-func (p *parser) parserImport(line string, iq chan<- string) bool {
+func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 	var pat string
 	if p.importFlag {
-		pat = "\\A[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+		pat = "\\A[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
 	} else {
-		pat = "\\Aimport[[:blank:]]*(\\(?)([[:blank:]]*\"[\\S/]+\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+		pat = "\\Aimport[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
 	}
 	re, _ := regexp.Compile(pat)
 	group := re.FindStringSubmatch(line)
-	if len(group) != 4 {
+	if len(group) != 7 {
 		return false
 	}
 	if group[1] == "(" || group[1] == "" && group[2] == "" && group[3] == "" {
 		p.importFlag = true
 	}
-	if group[2] != "" {
-		p.putPackages(pkgName(group[2]), iq)
+	if group[5] != "" {
+		// group[5] is importPath
+		// group[4] is packageName or ""
+		p.putPackages(group[5], group[4], iq)
 	}
-	if group[3] == ")" {
+	if group[6] == ")" {
 		p.importFlag = false
 	}
 	return true
 }
 
-func (p *parser) parseLine(line string, iq chan<- string) bool {
+func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	// Ignore `package main', etc.
 	if p.ignoreStatement(line) {
 		return false
@@ -126,12 +124,12 @@ func (p *parser) parseLine(line string, iq chan<- string) bool {
 	return false
 }
 
-func convertImport(pkgs []string) []string {
+func convertImport(pkgs []importSpec) []string {
 	// convert packages list to "import" statement
 
 	imports := []string{"import (\n"}
 	for _, pkg := range pkgs {
-		imports = append(imports, fmt.Sprintf("\"%s\"\n", pkg))
+		imports = append(imports, fmt.Sprintf("%s \"%s\"\n", pkg.packageName, pkg.importPath))
 	}
 	imports = append(imports, ")\n")
 	return imports
