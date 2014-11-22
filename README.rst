@@ -30,7 +30,7 @@ Installation
 Debian
 ~~~~~~
 
-Install the follow packages::
+Install the follow packages
 
 * golang
 * golang-go.tools
