@@ -1,6 +1,13 @@
 History
 -------
 
+0.1.6 (2014-11-23)
+~~~~~~~~~~~~~~~~~~
+
+* Supported patterns of ImportDecl supported by `go run',
+  for example, `[ . | PackageName ] "importPath"' syntax.
+* Supported patterns of PackageClause supported by `go run'.
+
 0.1.5 (2014-11-16)
 ~~~~~~~~~~~~~~~~~~
 
