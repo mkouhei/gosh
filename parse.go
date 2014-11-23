@@ -72,7 +72,7 @@ func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 	if p.importFlag {
 		pat = "\\A[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
 	} else {
-		pat = "\\Aimport[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+		pat = "\\A[[:blank:]]*import[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
 	}
 	re, _ := regexp.Compile(pat)
 	group := re.FindStringSubmatch(line)
