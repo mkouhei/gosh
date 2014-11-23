@@ -95,16 +95,6 @@ func compare(A, B []string) []string {
 	return ret
 }
 
-func searchPackage(pkg importSpec, pkgs []importSpec) bool {
-	// search item from []string
-	for _, l := range pkgs {
-		if pkg.importPath == l.importPath && pkg.packageName == l.packageName {
-			return true
-		}
-	}
-	return false
-}
-
 func (e *env) logger(facility, msg string, err error) {
 	if e.Debug {
 		if err == nil {

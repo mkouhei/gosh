@@ -57,6 +57,16 @@ func (p *parser) putPackages(importPath, packageName string, iq chan<- importSpe
 	}
 }
 
+func searchPackage(pkg importSpec, pkgs []importSpec) bool {
+	// search item from []string
+	for _, l := range pkgs {
+		if pkg.importPath == l.importPath && pkg.packageName == l.packageName {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 	var pat string
 	if p.importFlag {
