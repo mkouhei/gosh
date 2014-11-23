@@ -95,22 +95,6 @@ func compare(A, B []string) []string {
 	return ret
 }
 
-func compareImportSpecs(A, B []importSpec) []importSpec {
-	m := make(map[importSpec]int)
-	for _, b := range B {
-		m[b]++
-	}
-	var ret []importSpec
-	for _, a := range A {
-		if m[a] > 0 {
-			m[a]--
-			continue
-		}
-		ret = append(ret, a)
-	}
-	return ret
-}
-
 func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 	// search item from []string
 	for _, l := range pkgs {
@@ -137,14 +121,4 @@ func goVersion() string {
 	args := []string{"version"}
 	msg, _ := runCmd(false, cmd, args...)
 	return msg
-}
-
-func removeImportPackage(slice *[]importSpec, pkg importSpec) {
-	s := *slice
-	for i, item := range s {
-		if item.importPath == pkg.importPath && item.packageName == pkg.packageName {
-			s = append(s[:i], s[i+1:]...)
-		}
-	}
-	*slice = s
 }

@@ -83,6 +83,32 @@ func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 	return true
 }
 
+func removeImportPackage(slice *[]importSpec, pkg importSpec) {
+	s := *slice
+	for i, item := range s {
+		if item.importPath == pkg.importPath && item.packageName == pkg.packageName {
+			s = append(s[:i], s[i+1:]...)
+		}
+	}
+	*slice = s
+}
+
+func compareImportSpecs(A, B []importSpec) []importSpec {
+	m := make(map[importSpec]int)
+	for _, b := range B {
+		m[b]++
+	}
+	var ret []importSpec
+	for _, a := range A {
+		if m[a] > 0 {
+			m[a]--
+			continue
+		}
+		ret = append(ret, a)
+	}
+	return ret
+}
+
 func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	// Ignore `package main', etc.
 	if p.ignoreStatement(line) {
