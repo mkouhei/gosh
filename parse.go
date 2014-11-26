@@ -154,11 +154,6 @@ func (p *parser) parserFuncSignature(line string) bool {
 	return true
 }
 
-		}
-	}
-	return true
-}
-
 func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	// Ignore `package main', etc.
 	if p.ignoreStatement(line) {
