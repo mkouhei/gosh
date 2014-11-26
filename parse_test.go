@@ -106,6 +106,24 @@ func TestParseLine(t *testing.T) {
 		"}",
 		"return f.IsDir()",
 		"}",
+		"func test() {",
+		"fmt.Println(\"hello\")",
+		"}",
+		"func test0(cnt int) {",
+		"fmt.Printf(\"%d\n\", cnt)",
+		"}",
+		"func test1(cnt int) string {",
+		"return fmt.Sprintf(\"%d\n\", cnt)",
+		"}",
+		"func test2(msg string, cnt int) string {",
+		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
+		"}",
+		"func test3(msg string,cnt int) string {",
+		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
+		"}",
+		"func test4(msg string, cnt int) (string, int) {",
+		"return fmt.Sprintf(\"%d: %s\n\", cnt msg), 1",
+		"}",
 		"func main() {",
 		"fmt.Println(test())",
 		"}",
@@ -121,6 +139,24 @@ func TestParseLine(t *testing.T) {
 		"return false",
 		"}",
 		"return f.IsDir()",
+		"}",
+		"func test() {",
+		"fmt.Println(\"hello\")",
+		"}",
+		"func test0(cnt int) {",
+		"fmt.Printf(\"%d\n\", cnt)",
+		"}",
+		"func test1(cnt int) string {",
+		"return fmt.Sprintf(\"%d\n\", cnt)",
+		"}",
+		"func test2(msg string, cnt int) string {",
+		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
+		"}",
+		"func test3(msg string,cnt int) string {",
+		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
+		"}",
+		"func test4(msg string, cnt int) (string, int) {",
+		"return fmt.Sprintf(\"%d: %s\n\", cnt msg), 1",
 		"}",
 	}
 
@@ -143,7 +179,7 @@ func TestParseLine(t *testing.T) {
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
 	}
-	if len(p.mergeLines()) != 15 {
+	if len(p.mergeLines()) != 33 {
 		t.Fatal("parse error")
 	}
 }

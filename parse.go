@@ -119,6 +119,46 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 	return ret
 }
 
+func (p *parser) parserFuncSignature(line string) bool {
+
+	var pat string
+	functionName := "[[:blank:]]*func[[:blank:]]+(\\w+)[[:blank:]]*"
+	parameters := "([\\w,[:blank:]]+|[:blank:]*)"
+	result := "\\(([\\w,[:blank:]]+)\\)|([\\w[:blank:]]+)"
+	pat = fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)", functionName, parameters, result)
+	re, err := regexp.Compile(pat)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	num := re.NumSubexp()
+	groups := re.FindAllStringSubmatch(line, num)
+	// groups[1]: FuntionName
+	// groups[2]: Parameters
+	// groups[4]: result (multiple)
+	// groups[5]: result (single)
+	if len(groups) == 0 {
+		return false
+	}
+	for _, group := range groups {
+		if group[1] == "main" {
+			// func main
+			p.mainFlag = true
+			p.increment()
+			p.main = append(p.main, line)
+		} else {
+			// func other than main
+			p.body = append(p.body, line)
+		}
+	}
+	return true
+}
+
+		}
+	}
+	return true
+}
+
 func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	// Ignore `package main', etc.
 	if p.ignoreStatement(line) {
@@ -128,19 +168,8 @@ func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	switch {
 	case p.parserImport(line, iq):
 		// import parser
-
-	case strings.HasPrefix(line, "func "):
-		// parser "func"
-		switch {
-		case strings.Contains(line, "main"):
-			// func main
-			p.mainFlag = true
-			p.increment()
-			p.main = append(p.main, line)
-		default:
-			// func other than main
-			p.body = append(p.body, line)
-		}
+	case p.parserFuncSignature(line):
+		// func signature parser
 	case p.mainFlag:
 		p.main = append(p.main, line)
 		switch {
@@ -156,6 +185,7 @@ func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 		}
 	default:
 		p.body = append(p.body, line)
+
 	}
 	return false
 }
