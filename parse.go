@@ -29,23 +29,40 @@ type importSpec struct {
 	packageName string
 }
 
+type funcDecl struct {
+	name   string
+	params string
+	result string
+	body   []string
+}
+
 type parser struct {
 	packageFlag  bool
 	importPkgs   []importSpec
 	importFlag   bool
+	funcDecls    []funcDecl
+	funcFlag     string
+	funcBlackets int32
 	body         []string
 	mainFlag     bool
-	mainBlackets int32
 	main         []string
 	continuous   bool
 }
 
+func (p *parser) appendBody(line string) {
+	for i, fun := range p.funcDecls {
+		if p.funcFlag == fun.name {
+			p.funcDecls[i].body = append(p.funcDecls[i].body, line)
+		}
+	}
+}
+
 func (p *parser) increment() {
-	atomic.AddInt32(&p.mainBlackets, 1)
+	atomic.AddInt32(&p.funcBlackets, 1)
 }
 
 func (p *parser) decrement() {
-	atomic.AddInt32(&p.mainBlackets, -1)
+	atomic.AddInt32(&p.funcBlackets, -1)
 }
 
 func (p *parser) putPackages(importPath, packageName string, iq chan<- importSpec) {
@@ -125,7 +142,7 @@ func (p *parser) parserFuncSignature(line string) bool {
 	functionName := "[[:blank:]]*func[[:blank:]]+(\\w+)[[:blank:]]*"
 	parameters := "([\\w,[:blank:]]+|[:blank:]*)"
 	result := "\\(([\\w,[:blank:]]+)\\)|([\\w[:blank:]]+)"
-	pat = fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)", functionName, parameters, result)
+	pat = fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)[[:blank:]]*{", functionName, parameters, result)
 	re, err := regexp.Compile(pat)
 	if err != nil {
 		fmt.Println(err)
@@ -144,12 +161,62 @@ func (p *parser) parserFuncSignature(line string) bool {
 		if group[1] == "main" {
 			// func main
 			p.mainFlag = true
-			p.increment()
 			p.main = append(p.main, line)
+			p.funcFlag = ""
 		} else {
 			// func other than main
-			p.body = append(p.body, line)
+			var result string
+			if group[4] != "" {
+				result = group[4]
+			} else if group[5] != "" {
+				result = group[5]
+			} else {
+				result = ""
+			}
+			p.funcFlag = group[1]
+			p.funcDecls = append(p.funcDecls, funcDecl{group[1], group[2], result, []string{}})
 		}
+		p.increment()
+	}
+	return true
+}
+
+func (p *parser) parserMainBody(line string) bool {
+	if p.mainFlag {
+		p.main = append(p.main, line)
+
+		switch {
+		case strings.Contains(line, "{"):
+			p.increment()
+		case strings.Contains(line, "}"):
+			p.decrement()
+			if p.funcBlackets == 0 {
+				// closing func main
+				p.mainFlag = false
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (p *parser) parserFuncBody(line string) bool {
+	if p.funcFlag != "" {
+		// func body
+		p.appendBody(line)
+		switch {
+		case strings.Contains(line, "{"):
+			p.increment()
+		case strings.Contains(line, "}"):
+			p.decrement()
+			if p.funcBlackets == 0 {
+				// closing func main
+				p.funcFlag = ""
+			}
+		}
+	} else {
+		// parse body
+		return false
 	}
 	return true
 }
@@ -165,23 +232,18 @@ func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 		// import parser
 	case p.parserFuncSignature(line):
 		// func signature parser
-	case p.mainFlag:
-		p.main = append(p.main, line)
-		switch {
-		case strings.Contains(line, "{"):
-			p.increment()
-		case strings.Contains(line, "}"):
-			p.decrement()
-			if p.mainBlackets == 0 {
-				// closing func main
-				p.mainFlag = false
-				return true
-			}
-		}
+	case p.parserMainBody(line):
+		// func main body parser
+		return true
+	case p.parserFuncBody(line):
+		// func body parser
 	default:
-		p.body = append(p.body, line)
-
+		// parser body
+		if !p.mainFlag {
+			p.body = append(p.body, line)
+		}
 	}
+
 	return false
 }
 
@@ -196,10 +258,22 @@ func convertImport(pkgs []importSpec) []string {
 	return imports
 }
 
+func (p *parser) convertFuncDecls() []string {
+	var lines []string
+	for _, fun := range p.funcDecls {
+		lines = append(lines, fmt.Sprintf("func %s(%s) (%s) {", fun.name, fun.params, fun.result))
+		for _, l := range fun.body {
+			lines = append(lines, l)
+		}
+	}
+	return lines
+}
+
 func (p *parser) mergeLines() []string {
 	// merge "package", "import", "func", "func main".
 	lines := []string{"package main\n"}
 	lines = append(lines, convertImport(p.importPkgs)...)
+	lines = append(lines, p.convertFuncDecls()...)
 	lines = append(lines, p.body...)
 	lines = append(lines, p.main...)
 	return lines

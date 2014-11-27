@@ -47,6 +47,7 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 				wc <- true
 				o = false
 			}
+			fmt.Println(e.parser.funcFlag, e.parser.funcBlackets)
 		}
 	}()
 }

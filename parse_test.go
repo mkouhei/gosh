@@ -99,29 +99,29 @@ func TestParseLine(t *testing.T) {
 		"\"fmt\"",
 		"\"os\"",
 		")",
-		"func test() bool {",
+		"func test0() bool {",
 		"f, err := os.Stat(\"/tmp\")",
 		"if err != nil {",
 		"return false",
 		"}",
 		"return f.IsDir()",
 		"}",
-		"func test() {",
+		"func test1() {",
 		"fmt.Println(\"hello\")",
 		"}",
-		"func test0(cnt int) {",
+		"func test2(cnt int) {",
 		"fmt.Printf(\"%d\n\", cnt)",
 		"}",
-		"func test1(cnt int) string {",
+		"func test3(cnt int) string {",
 		"return fmt.Sprintf(\"%d\n\", cnt)",
 		"}",
-		"func test2(msg string, cnt int) string {",
+		"func test4(msg string, cnt int) string {",
 		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
 		"}",
-		"func test3(msg string,cnt int) string {",
+		"func test5(msg string,cnt int) string {",
 		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
 		"}",
-		"func test4(msg string, cnt int) (string, int) {",
+		"func test6(msg string, cnt int) (string, int) {",
 		"return fmt.Sprintf(\"%d: %s\n\", cnt msg), 1",
 		"}",
 		"func main() {",
@@ -133,32 +133,7 @@ func TestParseLine(t *testing.T) {
 		importSpec{"fmt", ""},
 		importSpec{"os", ""}}
 
-	body1 := []string{"func test() bool {",
-		"f, err := os.Stat(\"/tmp\")",
-		"if err != nil {",
-		"return false",
-		"}",
-		"return f.IsDir()",
-		"}",
-		"func test() {",
-		"fmt.Println(\"hello\")",
-		"}",
-		"func test0(cnt int) {",
-		"fmt.Printf(\"%d\n\", cnt)",
-		"}",
-		"func test1(cnt int) string {",
-		"return fmt.Sprintf(\"%d\n\", cnt)",
-		"}",
-		"func test2(msg string, cnt int) string {",
-		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
-		"}",
-		"func test3(msg string,cnt int) string {",
-		"return fmt.Sprintf(\"%d: %s\n\", cnt msg)",
-		"}",
-		"func test4(msg string, cnt int) (string, int) {",
-		"return fmt.Sprintf(\"%d: %s\n\", cnt msg), 1",
-		"}",
-	}
+	body1 := []string{"fmt.Println(test())"}
 
 	main1 := []string{
 		"func main() {",
@@ -176,10 +151,12 @@ func TestParseLine(t *testing.T) {
 	if len(compare(p.body, body1)) != 0 {
 		t.Fatal("parse error")
 	}
+
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
 	}
 	if len(p.mergeLines()) != 33 {
 		t.Fatal("parse error")
 	}
+
 }
