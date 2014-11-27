@@ -1,6 +1,15 @@
 History
 -------
 
+0.1.7 (2014-11-28)
+~~~~~~~~~~~~~~~~~~
+
+* Supported struct method and pointer parameters and results of function.
+* Supported type of function.
+* Appended func parser.
+* Fixes allowing blanks of the begening of ImportDecl.
+* Fixed Installation syntax of README
+
 0.1.6 (2014-11-23)
 ~~~~~~~~~~~~~~~~~~
 
