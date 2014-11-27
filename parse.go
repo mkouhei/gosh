@@ -140,9 +140,9 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 func (p *parser) parserFuncSignature(line string) bool {
 
 	var pat string
-	functionName := "[[:blank:]]*func[[:blank:]]+(\\((\\w+[[:blank:]]+\\w+)\\)[[:blank:]]*)?(\\w+)[[:blank:]]*"
-	parameters := "([\\w,[:blank:]]+|[:blank:]*)"
-	result := "\\(([\\w,[:blank:]]+)\\)|([\\w[:blank:]]+)"
+	functionName := "[[:blank:]]*func[[:blank:]]+(\\((\\w+[[:blank:]]+\\*?\\w+)\\)[[:blank:]]*)?(\\w+)[[:blank:]]*"
+	parameters := "([\\w_\\*\\[\\],[:blank:]]+|[:blank:]*)"
+	result := "\\(([\\w_\\*\\[\\],[:blank:]]+)\\)|([\\w\\*\\[\\][:blank:]]+)"
 	pat = fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)[[:blank:]]*{", functionName, parameters, result)
 	re, err := regexp.Compile(pat)
 	if err != nil {
@@ -190,6 +190,8 @@ func (p *parser) parserMainBody(line string) bool {
 		p.main = append(p.main, line)
 
 		switch {
+		case strings.Contains(line, "{") && strings.Contains(line, "}"):
+			// skip
 		case strings.Contains(line, "{"):
 			p.increment()
 		case strings.Contains(line, "}"):
@@ -209,6 +211,8 @@ func (p *parser) parserFuncBody(line string) bool {
 		// func body
 		p.appendBody(line)
 		switch {
+		case strings.Contains(line, "{") && strings.Contains(line, "}"):
+			// skip
 		case strings.Contains(line, "{"):
 			p.increment()
 		case strings.Contains(line, "}"):
@@ -244,10 +248,17 @@ func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	default:
 		// parser body
 		if !p.mainFlag {
+			switch {
+			case strings.Contains(line, "{") && strings.Contains(line, "}"):
+				// skip
+			case strings.Contains(line, "{"):
+				p.increment()
+			case strings.Contains(line, "}"):
+				p.decrement()
+			}
 			p.body = append(p.body, line)
 		}
 	}
-
 	return false
 }
 

@@ -128,6 +128,12 @@ func TestParseLine(t *testing.T) {
 		"func (f foo) test7() {",
 		"fmt.Println(f)",
 		"}",
+		"type bar struct {",
+		"name string",
+		"}",
+		"func (b *bar) test8() {",
+		"fmt.Println(b.name)",
+		"}",
 		"func main() {",
 		"fmt.Println(test())",
 		"}",
@@ -137,7 +143,10 @@ func TestParseLine(t *testing.T) {
 		importSpec{"fmt", ""},
 		importSpec{"os", ""}}
 
-	body1 := []string{"type foo string"}
+	body1 := []string{"type foo string",
+		"type bar struct {",
+		"name string",
+		"}"}
 
 	main1 := []string{
 		"func main() {",
@@ -159,7 +168,7 @@ func TestParseLine(t *testing.T) {
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
 	}
-	if len(p.mergeLines()) != 37 {
+	if len(p.mergeLines()) != 43 {
 		t.Fatal("parse error")
 	}
 
