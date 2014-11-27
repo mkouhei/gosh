@@ -136,6 +136,16 @@ func TestParseLine(t *testing.T) {
 		"}",
 		"func main() {",
 		"fmt.Println(test())",
+		"test1()",
+		"test2(2)",
+		"fmt.Println(test3(3))",
+		"fmt.Println(test4(\"hello\", 4))",
+		"fmt.Println(test5(\"bye\", 5))",
+		"fmt.Println(test6(\"hello, again\", 6))",
+		"var f foo = \"bye\"",
+		"f.test7()",
+		"b := bar{\"bye bye\"}",
+		"b.test8()",
 		"}",
 	}
 
@@ -151,6 +161,16 @@ func TestParseLine(t *testing.T) {
 	main1 := []string{
 		"func main() {",
 		"fmt.Println(test())",
+		"test1()",
+		"test2(2)",
+		"fmt.Println(test3(3))",
+		"fmt.Println(test4(\"hello\", 4))",
+		"fmt.Println(test5(\"bye\", 5))",
+		"fmt.Println(test6(\"hello, again\", 6))",
+		"var f foo = \"bye\"",
+		"f.test7()",
+		"b := bar{\"bye bye\"}",
+		"b.test8()",
 		"}",
 	}
 
@@ -168,7 +188,7 @@ func TestParseLine(t *testing.T) {
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
 	}
-	if len(p.mergeLines()) != 43 {
+	if len(p.mergeLines()) != 53 {
 		t.Fatal("parse error")
 	}
 
