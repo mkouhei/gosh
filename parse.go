@@ -30,10 +30,11 @@ type importSpec struct {
 }
 
 type funcDecl struct {
-	name   string
-	params string
-	result string
-	body   []string
+	name     string
+	functype string
+	params   string
+	result   string
+	body     []string
 }
 
 type parser struct {
@@ -139,7 +140,7 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 func (p *parser) parserFuncSignature(line string) bool {
 
 	var pat string
-	functionName := "[[:blank:]]*func[[:blank:]]+(\\w+)[[:blank:]]*"
+	functionName := "[[:blank:]]*func[[:blank:]]+(\\((\\w+[[:blank:]]+\\w+)\\)[[:blank:]]*)?(\\w+)[[:blank:]]*"
 	parameters := "([\\w,[:blank:]]+|[:blank:]*)"
 	result := "\\(([\\w,[:blank:]]+)\\)|([\\w[:blank:]]+)"
 	pat = fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)[[:blank:]]*{", functionName, parameters, result)
@@ -150,15 +151,16 @@ func (p *parser) parserFuncSignature(line string) bool {
 	}
 	num := re.NumSubexp()
 	groups := re.FindAllStringSubmatch(line, num)
-	// groups[1]: FuntionName
-	// groups[2]: Parameters
-	// groups[4]: result (multiple)
+	// groups[1]: type (or groups[2] without parentheses)
+	// groups[3]: FuntionName
+	// groups[4]: Parameters
+	// groups[6]: result (multiple)
 	// groups[5]: result (single)
 	if len(groups) == 0 {
 		return false
 	}
 	for _, group := range groups {
-		if group[1] == "main" {
+		if group[3] == "main" {
 			// func main
 			p.mainFlag = true
 			p.main = append(p.main, line)
@@ -166,15 +168,17 @@ func (p *parser) parserFuncSignature(line string) bool {
 		} else {
 			// func other than main
 			var result string
-			if group[4] != "" {
-				result = group[4]
+			if group[6] != "" {
+				// multiple results
+				result = group[6]
 			} else if group[5] != "" {
+				// single result
 				result = group[5]
 			} else {
 				result = ""
 			}
-			p.funcFlag = group[1]
-			p.funcDecls = append(p.funcDecls, funcDecl{group[1], group[2], result, []string{}})
+			p.funcFlag = group[3]
+			p.funcDecls = append(p.funcDecls, funcDecl{group[3], group[1], group[4], result, []string{}})
 		}
 		p.increment()
 	}
@@ -261,7 +265,7 @@ func convertImport(pkgs []importSpec) []string {
 func (p *parser) convertFuncDecls() []string {
 	var lines []string
 	for _, fun := range p.funcDecls {
-		lines = append(lines, fmt.Sprintf("func %s(%s) (%s) {", fun.name, fun.params, fun.result))
+		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", fun.functype, fun.name, fun.params, fun.result))
 		for _, l := range fun.body {
 			lines = append(lines, l)
 		}

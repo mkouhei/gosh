@@ -124,6 +124,10 @@ func TestParseLine(t *testing.T) {
 		"func test6(msg string, cnt int) (string, int) {",
 		"return fmt.Sprintf(\"%d: %s\n\", cnt msg), 1",
 		"}",
+		"type foo string",
+		"func (f foo) test7() {",
+		"fmt.Println(f)",
+		"}",
 		"func main() {",
 		"fmt.Println(test())",
 		"}",
@@ -133,7 +137,7 @@ func TestParseLine(t *testing.T) {
 		importSpec{"fmt", ""},
 		importSpec{"os", ""}}
 
-	body1 := []string{"fmt.Println(test())"}
+	body1 := []string{"type foo string"}
 
 	main1 := []string{
 		"func main() {",
@@ -155,7 +159,7 @@ func TestParseLine(t *testing.T) {
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
 	}
-	if len(p.mergeLines()) != 33 {
+	if len(p.mergeLines()) != 37 {
 		t.Fatal("parse error")
 	}
 
