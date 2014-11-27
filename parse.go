@@ -66,6 +66,26 @@ func (p *parser) decrement() {
 	atomic.AddInt32(&p.funcBlackets, -1)
 }
 
+func (p *parser) countBlackets(line string) {
+	switch {
+	case strings.Contains(line, "{") && strings.Contains(line, "}"):
+		for i := 0; i < strings.Count(line, "{"); i++ {
+			p.increment()
+		}
+		for i := 0; i < strings.Count(line, "}"); i++ {
+			p.decrement()
+		}
+	case strings.Contains(line, "{"):
+		for i := 0; i < strings.Count(line, "{"); i++ {
+			p.increment()
+		}
+	case strings.Contains(line, "}"):
+		for i := 0; i < strings.Count(line, "}"); i++ {
+			p.decrement()
+		}
+	}
+}
+
 func (p *parser) putPackages(importPath, packageName string, iq chan<- importSpec) {
 	// put package to queue of `go get'
 	if !searchPackage(importSpec{importPath, packageName}, p.importPkgs) {
@@ -180,7 +200,7 @@ func (p *parser) parserFuncSignature(line string) bool {
 			p.funcFlag = group[3]
 			p.funcDecls = append(p.funcDecls, funcDecl{group[3], group[1], group[4], result, []string{}})
 		}
-		p.increment()
+		p.countBlackets(line)
 	}
 	return true
 }
@@ -188,19 +208,11 @@ func (p *parser) parserFuncSignature(line string) bool {
 func (p *parser) parserMainBody(line string) bool {
 	if p.mainFlag {
 		p.main = append(p.main, line)
-
-		switch {
-		case strings.Contains(line, "{") && strings.Contains(line, "}"):
-			// skip
-		case strings.Contains(line, "{"):
-			p.increment()
-		case strings.Contains(line, "}"):
-			p.decrement()
-			if p.funcBlackets == 0 {
-				// closing func main
-				p.mainFlag = false
-				return true
-			}
+		p.countBlackets(line)
+		if strings.Contains(line, "}") && p.funcBlackets == 0 {
+			// closing func main
+			p.mainFlag = false
+			return true
 		}
 	}
 	return false
@@ -210,17 +222,10 @@ func (p *parser) parserFuncBody(line string) bool {
 	if p.funcFlag != "" {
 		// func body
 		p.appendBody(line)
-		switch {
-		case strings.Contains(line, "{") && strings.Contains(line, "}"):
-			// skip
-		case strings.Contains(line, "{"):
-			p.increment()
-		case strings.Contains(line, "}"):
-			p.decrement()
-			if p.funcBlackets == 0 {
-				// closing func main
-				p.funcFlag = ""
-			}
+		p.countBlackets(line)
+		if strings.Contains(line, "}") && p.funcBlackets == 0 {
+			// closing func main
+			p.funcFlag = ""
 		}
 	} else {
 		// parse body
@@ -248,14 +253,7 @@ func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	default:
 		// parser body
 		if !p.mainFlag {
-			switch {
-			case strings.Contains(line, "{") && strings.Contains(line, "}"):
-				// skip
-			case strings.Contains(line, "{"):
-				p.increment()
-			case strings.Contains(line, "}"):
-				p.decrement()
-			}
+			p.countBlackets(line)
 			p.body = append(p.body, line)
 		}
 	}
