@@ -44,6 +44,7 @@ type parser struct {
 	funcDecls    []funcDecl
 	funcFlag     string
 	funcBlackets int32
+	parentheses  int32
 	body         []string
 	mainFlag     bool
 	main         []string
@@ -58,30 +59,58 @@ func (p *parser) appendBody(line string) {
 	}
 }
 
-func (p *parser) increment() {
+func (p *parser) bIncrement() {
 	atomic.AddInt32(&p.funcBlackets, 1)
 }
 
-func (p *parser) decrement() {
+func (p *parser) bDecrement() {
 	atomic.AddInt32(&p.funcBlackets, -1)
+}
+
+func (p *parser) pIncrement() {
+	atomic.AddInt32(&p.parentheses, 1)
+}
+
+func (p *parser) pDecrement() {
+	atomic.AddInt32(&p.parentheses, -1)
 }
 
 func (p *parser) countBlackets(line string) {
 	switch {
 	case strings.Contains(line, "{") && strings.Contains(line, "}"):
 		for i := 0; i < strings.Count(line, "{"); i++ {
-			p.increment()
+			p.bIncrement()
 		}
 		for i := 0; i < strings.Count(line, "}"); i++ {
-			p.decrement()
+			p.bDecrement()
 		}
 	case strings.Contains(line, "{"):
 		for i := 0; i < strings.Count(line, "{"); i++ {
-			p.increment()
+			p.bIncrement()
 		}
 	case strings.Contains(line, "}"):
 		for i := 0; i < strings.Count(line, "}"); i++ {
-			p.decrement()
+			p.bDecrement()
+		}
+	}
+}
+
+func (p *parser) countParentheses(line string) {
+	switch {
+	case strings.Contains(line, "(") && strings.Contains(line, ")"):
+		for i := 0; i < strings.Count(line, "("); i++ {
+			p.pIncrement()
+		}
+		for i := 0; i < strings.Count(line, ")"); i++ {
+			p.pDecrement()
+		}
+	case strings.Contains(line, "("):
+		for i := 0; i < strings.Count(line, "("); i++ {
+			p.pIncrement()
+		}
+	case strings.Contains(line, ")"):
+		for i := 0; i < strings.Count(line, ")"); i++ {
+			p.pDecrement()
 		}
 	}
 }
