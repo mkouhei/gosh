@@ -188,11 +188,10 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 
 func (p *parser) parserFuncSignature(line string) bool {
 
-	var pat string
 	functionName := "[[:blank:]]*func[[:blank:]]+(\\((\\w+[[:blank:]]+\\*?\\w+)\\)[[:blank:]]*)?(\\w+)[[:blank:]]*"
 	parameters := "([\\w_\\*\\[\\],[:blank:]]+|[:blank:]*)"
 	result := "\\(([\\w_\\*\\[\\],[:blank:]]+)\\)|([\\w\\*\\[\\][:blank:]]+)"
-	pat = fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)[[:blank:]]*{", functionName, parameters, result)
+	pat := fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)[[:blank:]]*{", functionName, parameters, result)
 	re, err := regexp.Compile(pat)
 	if err != nil {
 		fmt.Println(err)
