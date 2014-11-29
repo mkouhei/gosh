@@ -18,7 +18,6 @@ package main
 */
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -202,10 +201,6 @@ func TestParseLine(t *testing.T) {
 
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
-	}
-
-	for i, l := range p.typeDecls {
-		fmt.Println(i, l)
 	}
 
 	if len(p.mergeLines()) != 58 {
