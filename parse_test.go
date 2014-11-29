@@ -18,6 +18,7 @@ package main
 */
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -99,6 +100,15 @@ func TestParseLine(t *testing.T) {
 		"\"fmt\"",
 		"\"os\"",
 		")",
+		"type foo []string",
+		"type (",
+		"bar string",
+		"baz int",
+		")",
+		"type qux struct {",
+		"name string",
+		"cnt int",
+		"}",
 		"func test0() bool {",
 		"f, err := os.Stat(\"/tmp\")",
 		"if err != nil {",
@@ -124,14 +134,10 @@ func TestParseLine(t *testing.T) {
 		"func test6(msg string, cnt int) (string, int) {",
 		"return fmt.Sprintf(\"%d: %s\n\", cnt msg), 1",
 		"}",
-		"type foo string",
 		"func (f foo) test7() {",
 		"fmt.Println(f)",
 		"}",
-		"type bar struct {",
-		"name string",
-		"}",
-		"func (b *bar) test8() {",
+		"func (b *baz) test8() {",
 		"fmt.Println(b.name)",
 		"}",
 		"func main() {",
@@ -142,9 +148,9 @@ func TestParseLine(t *testing.T) {
 		"fmt.Println(test4(\"hello\", 4))",
 		"fmt.Println(test5(\"bye\", 5))",
 		"fmt.Println(test6(\"hello, again\", 6))",
-		"var f foo = \"bye\"",
+		"f := foo{\"bye\"}",
 		"f.test7()",
-		"b := bar{\"bye bye\"}",
+		"b := baz{\"bye bye\"}",
 		"b.test8()",
 		"}",
 	}
@@ -153,10 +159,15 @@ func TestParseLine(t *testing.T) {
 		importSpec{"fmt", ""},
 		importSpec{"os", ""}}
 
-	body1 := []string{"type foo string",
-		"type bar struct {",
+	type1 := []string{"type (",
+		"foo []string",
+		"bar string",
+		"baz int",
+		"qux struct {",
 		"name string",
-		"}"}
+		"cnt int",
+		"}",
+		")"}
 
 	main1 := []string{
 		"func main() {",
@@ -167,9 +178,9 @@ func TestParseLine(t *testing.T) {
 		"fmt.Println(test4(\"hello\", 4))",
 		"fmt.Println(test5(\"bye\", 5))",
 		"fmt.Println(test6(\"hello, again\", 6))",
-		"var f foo = \"bye\"",
+		"f := foo{\"bye\"}",
 		"f.test7()",
-		"b := bar{\"bye bye\"}",
+		"b := baz{\"bye bye\"}",
 		"b.test8()",
 		"}",
 	}
@@ -181,14 +192,23 @@ func TestParseLine(t *testing.T) {
 	if len(compareImportSpecs(p.importPkgs, import1)) != 0 {
 		t.Fatal("parse error")
 	}
-	if len(compare(p.body, body1)) != 0 {
+
+	if len(compare(p.body, []string{})) != 0 {
+		t.Fatal("parse error")
+	}
+	if len(compare(p.convertTypeDecls(), type1)) != 0 {
 		t.Fatal("parse error")
 	}
 
 	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse error")
 	}
-	if len(p.mergeLines()) != 53 {
+
+	for i, l := range p.typeDecls {
+		fmt.Println(i, l)
+	}
+
+	if len(p.mergeLines()) != 58 {
 		t.Fatal("parse error")
 	}
 	if p.funcBlackets != 0 {

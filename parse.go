@@ -37,6 +37,17 @@ type funcDecl struct {
 	body     []string
 }
 
+type typeDecl struct {
+	typeId     string
+	typeName   string
+	fieldDecls []fieldDecl
+}
+
+type fieldDecl struct {
+	idList    string
+	fieldType string
+}
+
 type parser struct {
 	packageFlag  bool
 	importPkgs   []importSpec
@@ -45,6 +56,8 @@ type parser struct {
 	funcFlag     string
 	funcBlackets int32
 	parentheses  int32
+	typeDecls    []typeDecl
+	typeFlag     string
 	body         []string
 	mainFlag     bool
 	main         []string
@@ -199,11 +212,11 @@ func (p *parser) parserFuncSignature(line string) bool {
 	}
 	num := re.NumSubexp()
 	groups := re.FindAllStringSubmatch(line, num)
-	// groups[1]: type (or groups[2] without parentheses)
-	// groups[3]: FuntionName
-	// groups[4]: Parameters
-	// groups[6]: result (multiple)
-	// groups[5]: result (single)
+	// group[1]: type (or groups[2] without parentheses)
+	// group[3]: FuntionName
+	// group[4]: Parameters
+	// group[6]: result (multiple)
+	// group[5]: result (single)
 	if len(groups) == 0 {
 		return false
 	}
@@ -231,6 +244,66 @@ func (p *parser) parserFuncSignature(line string) bool {
 		p.countBlackets(line)
 	}
 	return true
+}
+
+func (p *parser) parserType(line string) bool {
+	var pat string
+	if p.typeFlag == "paren" || p.typeFlag == "struct" {
+		pat = "\\A[[:blank:]]*(((\\w+)[[:blank:]]+(\\S+)))()[[:blank:]]*\\z"
+	} else {
+		pat = "\\A[[:blank:]]*type[[:blank:]]+((\\()|(\\w+)[[:blank:]]+((struct|interface)[[:blank:]]*\\{|\\S+)[[:blank:]]*)\\z"
+	}
+
+	re, err := regexp.Compile(pat)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+	num := re.NumSubexp()
+	groups := re.FindAllStringSubmatch(line, num)
+	// group[2]: "("
+	// group[3]: identifier
+	// group[4]: type (not struct, interface)
+	// gropu[5]: "{"
+	if len(groups) == 0 {
+		return false
+	}
+	for _, group := range groups {
+		if group[2] == "(" {
+			p.typeFlag = "paren"
+		} else if p.typeFlag == "" && group[5] == "struct" {
+			p.typeFlag = group[5]
+			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[5], []fieldDecl{}})
+		} else if p.typeFlag == "struct" {
+			i := len(p.typeDecls) - 1
+			p.typeDecls[i].fieldDecls = append(p.typeDecls[i].fieldDecls, fieldDecl{group[3], group[4]})
+		} else {
+			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[4], []fieldDecl{}})
+		}
+	}
+	if p.typeFlag == "paren" {
+		p.countParentheses(line)
+	} else if p.typeFlag == "struct" {
+		p.countBlackets(line)
+	}
+	return true
+}
+
+func (p *parser) parserTypeSpec(line string) bool {
+	if p.typeFlag == "paren" {
+		p.countParentheses(line)
+		if strings.Contains(line, ")") && p.parentheses == 0 {
+			p.typeFlag = ""
+			return true
+		}
+	} else if p.typeFlag == "struct" {
+		p.countBlackets(line)
+		if strings.Contains(line, "}") && p.funcBlackets == 0 {
+			p.typeFlag = ""
+			return true
+		}
+	}
+	return false
 }
 
 func (p *parser) parserMainBody(line string) bool {
@@ -271,6 +344,10 @@ func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 	switch {
 	case p.parserImport(line, iq):
 		// import parser
+	case p.parserTypeSpec(line):
+		// type spec of struct parser
+	case p.parserType(line):
+		// type parser
 	case p.parserFuncSignature(line):
 		// func signature parser
 	case p.parserMainBody(line):
@@ -310,10 +387,28 @@ func (p *parser) convertFuncDecls() []string {
 	return lines
 }
 
+func (p *parser) convertTypeDecls() []string {
+	lines := []string{"type ("}
+	for _, t := range p.typeDecls {
+		if len(t.fieldDecls) == 0 {
+			lines = append(lines, fmt.Sprintf("%s %s", t.typeId, t.typeName))
+		} else {
+			lines = append(lines, fmt.Sprintf("%s %s {", t.typeId, t.typeName))
+			for _, f := range t.fieldDecls {
+				lines = append(lines, fmt.Sprintf("%s %s", f.idList, f.fieldType))
+			}
+			lines = append(lines, "}")
+		}
+	}
+	lines = append(lines, ")")
+	return lines
+}
+
 func (p *parser) mergeLines() []string {
 	// merge "package", "import", "func", "func main".
 	lines := []string{"package main\n"}
 	lines = append(lines, convertImport(p.importPkgs)...)
+	lines = append(lines, p.convertTypeDecls()...)
 	lines = append(lines, p.convertFuncDecls()...)
 	lines = append(lines, p.body...)
 	lines = append(lines, p.main...)
