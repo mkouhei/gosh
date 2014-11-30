@@ -40,7 +40,7 @@ func main() {
 		return
 	}
 	cleanDirs()
-	e := NewEnv(*d)
+	e := newEnv(*d)
 	fmt.Println(goVersion())
 	fmt.Printf(license, version)
 	e.shell(nil)

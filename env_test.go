@@ -24,7 +24,7 @@ import (
 )
 
 func TestNewEnv(t *testing.T) {
-	e := NewEnv(false)
+	e := newEnv(false)
 	_, err := os.Stat(e.BldDir)
 	if err != nil {
 		t.Fatal(err)

@@ -32,7 +32,7 @@ type env struct {
 	parser parser
 }
 
-func NewEnv(debug bool) env {
+func newEnv(debug bool) env {
 	// New shell environment
 	e := env{}
 	e.BldDir = bldDir()

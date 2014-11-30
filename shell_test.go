@@ -44,7 +44,7 @@ fmt.Println("hello")
 		"}",
 	}
 
-	e := NewEnv(true)
+	e := newEnv(true)
 	fp, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		t.Fatal(err)
@@ -80,7 +80,7 @@ fmt.Println("hello")
 }
 
 func TestRead(t *testing.T) {
-	e := NewEnv(false)
+	e := newEnv(false)
 	f, err := os.OpenFile("dummy_code", os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		t.Fatal(err)
@@ -109,7 +109,7 @@ func main() {
 }
 
 func ExampleGoGet() {
-	e := NewEnv(false)
+	e := newEnv(false)
 	iq := make(chan importSpec, 1)
 	iq <- importSpec{"fmt", ""}
 	e.goGet(iq)
@@ -124,7 +124,7 @@ func main() {
 fmt.Println("hello")
 }
 `
-	e := NewEnv(true)
+	e := newEnv(true)
 	fp, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Println(err)
@@ -145,7 +145,7 @@ fmt.Println("hello")
 }
 
 func TestRemoveImport(t *testing.T) {
-	e := NewEnv(false)
+	e := newEnv(false)
 	pkgs := []importSpec{
 		importSpec{"fmt", ""},
 		importSpec{"os", ""},
