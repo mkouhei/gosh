@@ -38,7 +38,7 @@ type funcDecl struct {
 }
 
 type typeDecl struct {
-	typeId     string
+	typeID     string
 	typeName   string
 	fieldDecls []fieldDecl
 }
@@ -391,9 +391,9 @@ func (p *parser) convertTypeDecls() []string {
 	lines := []string{"type ("}
 	for _, t := range p.typeDecls {
 		if len(t.fieldDecls) == 0 {
-			lines = append(lines, fmt.Sprintf("%s %s", t.typeId, t.typeName))
+			lines = append(lines, fmt.Sprintf("%s %s", t.typeID, t.typeName))
 		} else {
-			lines = append(lines, fmt.Sprintf("%s %s {", t.typeId, t.typeName))
+			lines = append(lines, fmt.Sprintf("%s %s {", t.typeID, t.typeName))
 			for _, f := range t.fieldDecls {
 				lines = append(lines, fmt.Sprintf("%s %s", f.idList, f.fieldType))
 			}
