@@ -71,6 +71,24 @@ or::
 
 Enable to omit import statement related with standard libraries.
 
+
+Enable to Import libraries of non-standard library
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For example of using the some package.::
+
+  >>> import "net/http"
+  >>> import "example.org/somepkg"
+  >>> func main() {
+  >>> r, _ := http.Get("http://example.org/some")
+  >>> defer r.Body.Close()
+  >>> p, _ := somepkg.Reader(r.Body)
+  >>> fmt.Println(p)
+  >>> }
+  
+  (print some payload)
+
+
 Roadmap
 -------
 
