@@ -49,19 +49,19 @@ type fieldDecl struct {
 }
 
 type parser struct {
-	packageFlag  bool
-	importPkgs   []importSpec
-	importFlag   bool
-	funcDecls    []funcDecl
-	funcFlag     string
-	funcBlackets int32
-	parentheses  int32
-	typeDecls    []typeDecl
-	typeFlag     string
-	body         []string
-	mainFlag     bool
-	main         []string
-	continuous   bool
+	packageFlag bool
+	importPkgs  []importSpec
+	importFlag  bool
+	funcDecls   []funcDecl
+	funcFlag    string
+	blackets    int32
+	parentheses int32
+	typeDecls   []typeDecl
+	typeFlag    string
+	body        []string
+	mainFlag    bool
+	main        []string
+	continuous  bool
 }
 
 func (p *parser) appendBody(line string) {
@@ -73,11 +73,11 @@ func (p *parser) appendBody(line string) {
 }
 
 func (p *parser) bIncrement() {
-	atomic.AddInt32(&p.funcBlackets, 1)
+	atomic.AddInt32(&p.blackets, 1)
 }
 
 func (p *parser) bDecrement() {
-	atomic.AddInt32(&p.funcBlackets, -1)
+	atomic.AddInt32(&p.blackets, -1)
 }
 
 func (p *parser) pIncrement() {
@@ -298,7 +298,7 @@ func (p *parser) parserTypeSpec(line string) bool {
 		}
 	} else if p.typeFlag == "struct" {
 		p.countBlackets(line)
-		if strings.Contains(line, "}") && p.funcBlackets == 0 {
+		if strings.Contains(line, "}") && p.blackets == 0 {
 			p.typeFlag = ""
 			return true
 		}
@@ -310,7 +310,7 @@ func (p *parser) parserMainBody(line string) bool {
 	if p.mainFlag {
 		p.main = append(p.main, line)
 		p.countBlackets(line)
-		if strings.Contains(line, "}") && p.funcBlackets == 0 {
+		if strings.Contains(line, "}") && p.blackets == 0 {
 			// closing func main
 			p.mainFlag = false
 			return true
@@ -324,7 +324,7 @@ func (p *parser) parserFuncBody(line string) bool {
 		// func body
 		p.appendBody(line)
 		p.countBlackets(line)
-		if strings.Contains(line, "}") && p.funcBlackets == 0 {
+		if strings.Contains(line, "}") && p.blackets == 0 {
 			// closing func main
 			p.funcFlag = ""
 		}

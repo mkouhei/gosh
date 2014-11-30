@@ -206,8 +206,8 @@ func TestParseLine(t *testing.T) {
 	if len(p.mergeLines()) != 58 {
 		t.Fatal("parse error")
 	}
-	if p.funcBlackets != 0 {
-		t.Fatalf("blacket count error: %d", p.funcBlackets)
+	if p.blackets != 0 {
+		t.Fatalf("blacket count error: %d", p.blackets)
 	}
 
 }
