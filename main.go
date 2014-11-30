@@ -23,7 +23,7 @@ import (
 )
 
 var version string
-var show_version = flag.Bool("version", false, "show_version")
+var show_version = flag.Bool("version", false, "showVersion")
 
 var license = `Gosh %s
 Copyright (C) 2014 Kouhei Maeda
