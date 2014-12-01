@@ -23,7 +23,7 @@ import (
 )
 
 var version string
-var show_version = flag.Bool("version", false, "showVersion")
+var showVersion = flag.Bool("version", false, "showVersion")
 
 var license = `Gosh %s
 Copyright (C) 2014 Kouhei Maeda
@@ -35,7 +35,7 @@ There is NO WARRANTY, to the extent permitted by law.
 func main() {
 	d := flag.Bool("d", false, "debug mode")
 	flag.Parse()
-	if *show_version {
+	if *showVersion {
 		fmt.Printf("version: %s\n", version)
 		return
 	}
