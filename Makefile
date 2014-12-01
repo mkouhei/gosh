@@ -51,6 +51,7 @@ clean:
 	@rm -f _build/$(BIN)
 
 format:
+	go get code.google.com/p/go.tools/cmd/goimports
 	for src in $(SRC); do \
 		gofmt -w $$src ;\
 		goimports -w $$src; \
