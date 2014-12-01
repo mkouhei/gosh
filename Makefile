@@ -22,6 +22,8 @@ SRC := *.go
 GOPKG := github.com/mkouhei/gosh/
 GOPATH := $(CURDIR)/_build
 export GOPATH
+PATH := $(CURDIR)/_build/bin:$(PATH)
+export PATH
 
 
 all: precheck clean test format build
