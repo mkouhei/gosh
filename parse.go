@@ -154,7 +154,7 @@ func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 	} else {
 		pat = "\\A[[:blank:]]*import[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
 	}
-	re, _ := regexp.Compile(pat)
+	re := regexp.MustCompile(pat)
 	group := re.FindStringSubmatch(line)
 	if len(group) != 7 {
 		return false
@@ -205,11 +205,7 @@ func (p *parser) parserFuncSignature(line string) bool {
 	parameters := "([\\w_\\*\\[\\],[:blank:]]+|[:blank:]*)"
 	result := "\\(([\\w_\\*\\[\\],[:blank:]]+)\\)|([\\w\\*\\[\\][:blank:]]+)"
 	pat := fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)[[:blank:]]*{", functionName, parameters, result)
-	re, err := regexp.Compile(pat)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
+	re := regexp.MustCompile(pat)
 	num := re.NumSubexp()
 	groups := re.FindAllStringSubmatch(line, num)
 	// group[1]: type (or groups[2] without parentheses)
@@ -254,11 +250,7 @@ func (p *parser) parserType(line string) bool {
 		pat = "\\A[[:blank:]]*type[[:blank:]]+((\\()|(\\w+)[[:blank:]]+((struct|interface)[[:blank:]]*\\{|\\S+)[[:blank:]]*)\\z"
 	}
 
-	re, err := regexp.Compile(pat)
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
+	re := regexp.MustCompile(pat)
 	num := re.NumSubexp()
 	groups := re.FindAllStringSubmatch(line, num)
 	// group[2]: "("
@@ -432,7 +424,7 @@ func (p *parser) ignorePkgClause(line string) bool {
 	} else {
 		pat = "\\A([[:blank:]]*package)([[:blank:]]+[\\pL\\d_]+)?[[:blank:]]*\\z"
 	}
-	re, _ := regexp.Compile(pat)
+	re := regexp.MustCompile(pat)
 	group := re.FindStringSubmatch(line)
 	if len(group) != 3 {
 		return false
