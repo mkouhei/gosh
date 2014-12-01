@@ -56,6 +56,8 @@ format:
 
 
 test: prebuild
+	go get github.com/golang/lint/golint
+	golint
 	go vet
 	go test -v -coverprofile=c.out $(GOPKG)
 	go tool cover -func=c.out
