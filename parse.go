@@ -150,9 +150,9 @@ func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 	var pat string
 	if p.importFlag {
-		pat = "\\A[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+		pat = `\A[[:blank:]]*(\(?)([[:blank:]]*((.|\S+)[[:blank:]]+)?"([\S/]+)")?[[:blank:]]*(\)?)[[:blank:]]*\z`
 	} else {
-		pat = "\\A[[:blank:]]*import[[:blank:]]*(\\(?)([[:blank:]]*((.|\\S+)[[:blank:]]+)?\"([\\S/]+)\")?[[:blank:]]*(\\)?)[[:blank:]]*\\z"
+		pat = `\A[[:blank:]]*import[[:blank:]]*(\(?)([[:blank:]]*((.|\S+)[[:blank:]]+)?"([\S/]+)")?[[:blank:]]*(\)?)[[:blank:]]*\z`
 	}
 	re := regexp.MustCompile(pat)
 	group := re.FindStringSubmatch(line)
@@ -201,10 +201,10 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 
 func (p *parser) parserFuncSignature(line string) bool {
 
-	functionName := "[[:blank:]]*func[[:blank:]]+(\\((\\w+[[:blank:]]+\\*?\\w+)\\)[[:blank:]]*)?(\\w+)[[:blank:]]*"
-	parameters := "([\\w_\\*\\[\\],[:blank:]]+|[:blank:]*)"
-	result := "\\(([\\w_\\*\\[\\],[:blank:]]+)\\)|([\\w\\*\\[\\][:blank:]]+)"
-	pat := fmt.Sprintf("\\A%s\\(%s\\)[[:blank:]]*(%s)[[:blank:]]*{", functionName, parameters, result)
+	functionName := `[[:blank:]]*func[[:blank:]]+(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
+	parameters := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
+	result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]+)`
+	pat := fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)[[:blank:]]*{`, functionName, parameters, result)
 	re := regexp.MustCompile(pat)
 	num := re.NumSubexp()
 	groups := re.FindAllStringSubmatch(line, num)
@@ -245,9 +245,9 @@ func (p *parser) parserFuncSignature(line string) bool {
 func (p *parser) parserType(line string) bool {
 	var pat string
 	if p.typeFlag == "paren" || p.typeFlag == "struct" {
-		pat = "\\A[[:blank:]]*(((\\w+)[[:blank:]]+(\\S+)))()[[:blank:]]*\\z"
+		pat = `\A[[:blank:]]*(((\w+)[[:blank:]]+(\S+)))()[[:blank:]]*\z`
 	} else {
-		pat = "\\A[[:blank:]]*type[[:blank:]]+((\\()|(\\w+)[[:blank:]]+((struct|interface)[[:blank:]]*\\{|\\S+)[[:blank:]]*)\\z"
+		pat = `\A[[:blank:]]*type[[:blank:]]+((\()|(\w+)[[:blank:]]+((struct|interface)[[:blank:]]*\{|\S+)[[:blank:]]*)\z`
 	}
 
 	re := regexp.MustCompile(pat)
@@ -420,9 +420,9 @@ func (p *parser) ignorePkgClause(line string) bool {
 	// ignore PackageClause
 	var pat string
 	if p.packageFlag {
-		pat = "\\A([[:blank:]]*package)?[[:blank:]]*([[\\pL\\d_]+)[[:blank:]]*\\z"
+		pat = `\A([[:blank:]]*package)?[[:blank:]]*([[\pL\d_]+)[[:blank:]]*\z`
 	} else {
-		pat = "\\A([[:blank:]]*package)([[:blank:]]+[\\pL\\d_]+)?[[:blank:]]*\\z"
+		pat = `\A([[:blank:]]*package)([[:blank:]]+[\pL\d_]+)?[[:blank:]]*\z`
 	}
 	re := regexp.MustCompile(pat)
 	group := re.FindStringSubmatch(line)
