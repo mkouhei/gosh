@@ -246,6 +246,11 @@ func (p *parser) parserType(line string) bool {
 	var pat string
 	if p.typeFlag == "paren" || p.typeFlag == "struct" {
 		pat = `\A[[:blank:]]*(((\w+)[[:blank:]]+(\S+)))()[[:blank:]]*\z`
+	} else if p.typeFlag == "interface" {
+		methodName := `[[:blank:]]*(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
+		parameters := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
+		result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]+)`
+		pat = fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)?[[:blank:]]*\z`, methodName, parameters, result)
 	} else {
 		pat = `\A[[:blank:]]*type[[:blank:]]+((\()|(\w+)[[:blank:]]+((struct|interface)[[:blank:]]*\{|\S+)[[:blank:]]*)\z`
 	}
@@ -263,19 +268,48 @@ func (p *parser) parserType(line string) bool {
 	for _, group := range groups {
 		if group[2] == "(" {
 			p.typeFlag = "paren"
-		} else if p.typeFlag == "" && group[5] == "struct" {
+		} else if p.typeFlag == "" && (group[5] == "struct" || group[5] == "interface") {
 			p.typeFlag = group[5]
 			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[5], []fieldDecl{}})
 		} else if p.typeFlag == "struct" {
 			i := len(p.typeDecls) - 1
 			p.typeDecls[i].fieldDecls = append(p.typeDecls[i].fieldDecls, fieldDecl{group[3], group[4]})
+		} else if p.typeFlag == "interface" {
+			// group[2]: MethodType (enable to define?)
+			// group[3]: MethodName
+			// group[4]: parameters
+			// group[5]: returns
+
+			methodType := ""
+			if group[2] != "" {
+				methodType = fmt.Sprintf("(%s)", group[2])
+			}
+			var result string
+			if group[6] != "" {
+				// multiple results
+				result = fmt.Sprintf("(%s)", group[6])
+			} else if group[5] != "" {
+				// single result
+				result = group[5]
+			} else {
+				result = ""
+			}
+			var methodSpec string
+			if result == "" {
+				methodSpec = fmt.Sprintf("%s%s(%s)", methodType, group[3], group[4])
+			} else {
+				methodSpec = fmt.Sprintf("%s%s(%s) %s", methodType, group[3], group[4], result)
+			}
+
+			i := len(p.typeDecls) - 1
+			p.typeDecls[i].fieldDecls = append(p.typeDecls[i].fieldDecls, fieldDecl{methodSpec, ""})
 		} else {
 			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[4], []fieldDecl{}})
 		}
 	}
 	if p.typeFlag == "paren" {
 		p.countParentheses(line)
-	} else if p.typeFlag == "struct" {
+	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
 		p.countBlackets(line)
 	}
 	return true
@@ -288,7 +322,7 @@ func (p *parser) parserTypeSpec(line string) bool {
 			p.typeFlag = ""
 			return true
 		}
-	} else if p.typeFlag == "struct" {
+	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
 		p.countBlackets(line)
 		if strings.Contains(line, "}") && p.blackets == 0 {
 			p.typeFlag = ""
@@ -387,7 +421,11 @@ func (p *parser) convertTypeDecls() []string {
 		} else {
 			lines = append(lines, fmt.Sprintf("%s %s {", t.typeID, t.typeName))
 			for _, f := range t.fieldDecls {
-				lines = append(lines, fmt.Sprintf("%s %s", f.idList, f.fieldType))
+				if f.fieldType != "" {
+					lines = append(lines, fmt.Sprintf("%s %s", f.idList, f.fieldType))
+				} else {
+					lines = append(lines, f.idList)
+				}
 			}
 			lines = append(lines, "}")
 		}

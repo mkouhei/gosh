@@ -108,6 +108,10 @@ func TestParseLine(t *testing.T) {
 		"name string",
 		"cnt int",
 		"}",
+		"type quux interface {",
+		"Write()",
+		"Read(b buffer) bool",
+		"}",
 		"func test0() bool {",
 		"f, err := os.Stat(\"/tmp\")",
 		"if err != nil {",
@@ -166,6 +170,10 @@ func TestParseLine(t *testing.T) {
 		"name string",
 		"cnt int",
 		"}",
+		"quux interface {",
+		"Write()",
+		"Read(b buffer) bool",
+		"}",
 		")"}
 
 	main1 := []string{
@@ -195,6 +203,7 @@ func TestParseLine(t *testing.T) {
 	if len(compare(p.body, []string{})) != 0 {
 		t.Fatal("parse error")
 	}
+
 	if len(compare(p.convertTypeDecls(), type1)) != 0 {
 		t.Fatal("parse error")
 	}
@@ -203,7 +212,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
-	if len(p.mergeLines()) != 58 {
+	if len(p.mergeLines()) != 62 {
 		t.Fatal("parse error")
 	}
 	if p.blackets != 0 {
