@@ -203,8 +203,8 @@ func (p *parser) parserFuncSignature(line string) bool {
 
 	functionName := `[[:blank:]]*func[[:blank:]]+(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
 	parameters := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
-	result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]+)`
-	pat := fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)[[:blank:]]*{`, functionName, parameters, result)
+	result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]*)`
+	pat := fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)[[:blank:]]*{[[:blank:]]*\z`, functionName, parameters, result)
 	re := regexp.MustCompile(pat)
 	num := re.NumSubexp()
 	groups := re.FindAllStringSubmatch(line, num)
