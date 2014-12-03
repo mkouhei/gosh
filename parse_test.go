@@ -93,32 +93,37 @@ func TestParseDuplicateImport(t *testing.T) {
 func TestParserFuncSignature(t *testing.T) {
 	p := parser{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}, false}
 	line := "func main() {"
-	if !p.parserFuncSignature(line) {
+	if !p.parserFuncSignature(line) || !p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
 	}
+	p.mainFlag = false
 	line = "func main(){"
-	if !p.parserFuncSignature(line) {
+	if !p.parserFuncSignature(line) || !p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
 	}
+	p.mainFlag = false
 	line = "func main (){"
-	if !p.parserFuncSignature(line) {
+	if !p.parserFuncSignature(line) || !p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
 	}
+	p.mainFlag = false
 	line = "func main () {"
-	if !p.parserFuncSignature(line) {
+	if !p.parserFuncSignature(line) || !p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
 	}
-	line = "func main ()"
-	if p.parserFuncSignature(line) {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
+	p.mainFlag = false
 	line = "func main () { "
-	if !p.parserFuncSignature(line) {
+	if !p.parserFuncSignature(line) || !p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
 	}
-
+	p.mainFlag = false
 	line = " func main () { "
-	if !p.parserFuncSignature(line) {
+	if !p.parserFuncSignature(line) || !p.mainFlag {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+	p.mainFlag = false
+	line = "func main ()"
+	if p.parserFuncSignature(line) || p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
 	}
 
