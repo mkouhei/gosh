@@ -71,7 +71,6 @@ type parser struct {
 	body        []string
 	mainFlag    bool
 	main        []string
-	continuous  bool
 }
 
 func (p *parser) appendBody(line string) {
