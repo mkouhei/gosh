@@ -90,6 +90,40 @@ func TestParseDuplicateImport(t *testing.T) {
 	}
 }
 
+func TestParserFuncSignature(t *testing.T) {
+	p := parser{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}, false}
+	line := "func main() {"
+	if !p.parserFuncSignature(line) {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+	line = "func main(){"
+	if !p.parserFuncSignature(line) {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+	line = "func main (){"
+	if !p.parserFuncSignature(line) {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+	line = "func main () {"
+	if !p.parserFuncSignature(line) {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+	line = "func main ()"
+	if p.parserFuncSignature(line) {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+	line = "func main () { "
+	if !p.parserFuncSignature(line) {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+
+	line = " func main () { "
+	if !p.parserFuncSignature(line) {
+		t.Fatalf(`parser error: "%s"`, line)
+	}
+
+}
+
 func TestParseLine(t *testing.T) {
 	p := parser{}
 	iq := make(chan importSpec, 10)
