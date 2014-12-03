@@ -25,8 +25,8 @@ import (
 )
 
 type importSpec struct {
-	importPath  string
-	packageName string
+	imPath  string
+	pkgName string
 }
 
 type signature struct {
@@ -59,18 +59,18 @@ type fieldDecl struct {
 }
 
 type parser struct {
-	packageFlag bool
-	importPkgs  []importSpec
-	importFlag  bool
-	funcDecls   []funcDecl
-	funcFlag    string
-	blackets    int32
-	parentheses int32
-	typeDecls   []typeDecl
-	typeFlag    string
-	body        []string
-	mainFlag    bool
-	main        []string
+	pkgFlag   bool
+	imPkgs    []importSpec
+	imFlag    bool
+	funcDecls []funcDecl
+	funcFlag  string
+	blackets  int32
+	paren     int32
+	typeDecls []typeDecl
+	typeFlag  string
+	body      []string
+	mainFlag  bool
+	main      []string
 }
 
 func (p *parser) appendBody(line string) {
@@ -90,11 +90,11 @@ func (p *parser) bDecrement() {
 }
 
 func (p *parser) pIncrement() {
-	atomic.AddInt32(&p.parentheses, 1)
+	atomic.AddInt32(&p.paren, 1)
 }
 
 func (p *parser) pDecrement() {
-	atomic.AddInt32(&p.parentheses, -1)
+	atomic.AddInt32(&p.paren, -1)
 }
 
 func (p *parser) countBlackets(line string) {
@@ -117,7 +117,7 @@ func (p *parser) countBlackets(line string) {
 	}
 }
 
-func (p *parser) countParentheses(line string) {
+func (p *parser) countParen(line string) {
 	switch {
 	case strings.Contains(line, "(") && strings.Contains(line, ")"):
 		for i := 0; i < strings.Count(line, "("); i++ {
@@ -137,11 +137,11 @@ func (p *parser) countParentheses(line string) {
 	}
 }
 
-func (p *parser) putPackages(importPath, packageName string, iq chan<- importSpec) {
+func (p *parser) putPackages(imPath, pkgName string, iq chan<- importSpec) {
 	// put package to queue of `go get'
-	if !searchPackage(importSpec{importPath, packageName}, p.importPkgs) {
-		is := importSpec{importPath, packageName}
-		p.importPkgs = append(p.importPkgs, is)
+	if !searchPackage(importSpec{imPath, pkgName}, p.imPkgs) {
+		is := importSpec{imPath, pkgName}
+		p.imPkgs = append(p.imPkgs, is)
 		iq <- is
 	}
 }
@@ -149,7 +149,7 @@ func (p *parser) putPackages(importPath, packageName string, iq chan<- importSpe
 func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 	// search item from []string
 	for _, l := range pkgs {
-		if pkg.importPath == l.importPath && pkg.packageName == l.packageName {
+		if pkg.imPath == l.imPath && pkg.pkgName == l.pkgName {
 			return true
 		}
 	}
@@ -158,7 +158,7 @@ func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 
 func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 	var pat string
-	if p.importFlag {
+	if p.imFlag {
 		pat = `\A[[:blank:]]*(\(?)([[:blank:]]*((.|\S+)[[:blank:]]+)?"([\S/]+)")?[[:blank:]]*(\)?)[[:blank:]]*\z`
 	} else {
 		pat = `\A[[:blank:]]*import[[:blank:]]*(\(?)([[:blank:]]*((.|\S+)[[:blank:]]+)?"([\S/]+)")?[[:blank:]]*(\)?)[[:blank:]]*\z`
@@ -169,15 +169,15 @@ func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 		return false
 	}
 	if group[1] == "(" || group[1] == "" && group[2] == "" && group[3] == "" {
-		p.importFlag = true
+		p.imFlag = true
 	}
 	if group[5] != "" {
-		// group[5] is importPath
-		// group[4] is packageName or ""
+		// group[5] is imPath
+		// group[4] is pkgName or ""
 		p.putPackages(group[5], group[4], iq)
 	}
 	if group[6] == ")" {
-		p.importFlag = false
+		p.imFlag = false
 	}
 	return true
 }
@@ -185,7 +185,7 @@ func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
 func removeImportPackage(slice *[]importSpec, pkg importSpec) {
 	s := *slice
 	for i, item := range s {
-		if item.importPath == pkg.importPath && item.packageName == pkg.packageName {
+		if item.imPath == pkg.imPath && item.pkgName == pkg.pkgName {
 			s = append(s[:i], s[i+1:]...)
 		}
 	}
@@ -210,14 +210,14 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 
 func (p *parser) parserFuncSignature(line string) bool {
 
-	functionName := `[[:blank:]]*func[[:blank:]]+(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
-	parameters := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
+	funcName := `[[:blank:]]*func[[:blank:]]+(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
+	params := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
 	result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]*)`
-	pat := fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)[[:blank:]]*{[[:blank:]]*\z`, functionName, parameters, result)
+	pat := fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)[[:blank:]]*{[[:blank:]]*\z`, funcName, params, result)
 	re := regexp.MustCompile(pat)
 	num := re.NumSubexp()
 	groups := re.FindAllStringSubmatch(line, num)
-	// group[1]: type (or groups[2] without parentheses)
+	// group[1]: type (or groups[2] without paren)
 	// group[3]: FuntionName
 	// group[4]: Parameters
 	// group[6]: result (multiple)
@@ -256,10 +256,10 @@ func (p *parser) parserType(line string) bool {
 	if p.typeFlag == "paren" || p.typeFlag == "struct" {
 		pat = `\A[[:blank:]]*(((\w+)[[:blank:]]+(\S+)))()[[:blank:]]*\z`
 	} else if p.typeFlag == "interface" {
-		methodName := `[[:blank:]]*(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
-		parameters := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
+		methName := `[[:blank:]]*(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
+		params := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
 		result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]+)`
-		pat = fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)?[[:blank:]]*\z`, methodName, parameters, result)
+		pat = fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)?[[:blank:]]*\z`, methName, params, result)
 	} else {
 		pat = `\A[[:blank:]]*type[[:blank:]]+((\()|(\w+)[[:blank:]]+((struct|interface)[[:blank:]]*\{|\S+)[[:blank:]]*)\z`
 	}
@@ -289,9 +289,9 @@ func (p *parser) parserType(line string) bool {
 			// group[4]: parameters
 			// group[5]: returns
 
-			methodType := ""
+			methType := ""
 			if group[2] != "" {
-				methodType = fmt.Sprintf("(%s)", group[2])
+				methType = fmt.Sprintf("(%s)", group[2])
 			}
 			var result string
 			if group[6] != "" {
@@ -311,7 +311,7 @@ func (p *parser) parserType(line string) bool {
 		}
 	}
 	if p.typeFlag == "paren" {
-		p.countParentheses(line)
+		p.countParen(line)
 	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
 		p.countBlackets(line)
 	}
@@ -320,8 +320,8 @@ func (p *parser) parserType(line string) bool {
 
 func (p *parser) parserTypeSpec(line string) bool {
 	if p.typeFlag == "paren" {
-		p.countParentheses(line)
-		if strings.Contains(line, ")") && p.parentheses == 0 {
+		p.countParen(line)
+		if strings.Contains(line, ")") && p.paren == 0 {
 			p.typeFlag = ""
 			return true
 		}
@@ -397,12 +397,12 @@ func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
 func convertImport(pkgs []importSpec) []string {
 	// convert packages list to "import" statement
 
-	imports := []string{"import (\n"}
+	lines := []string{"import (\n"}
 	for _, pkg := range pkgs {
-		imports = append(imports, fmt.Sprintf("%s \"%s\"\n", pkg.packageName, pkg.importPath))
+		lines = append(lines, fmt.Sprintf("%s \"%s\"\n", pkg.pkgName, pkg.imPath))
 	}
-	imports = append(imports, ")\n")
-	return imports
+	lines = append(lines, ")\n")
+	return lines
 }
 
 func (p *parser) convertFuncDecls() []string {
@@ -450,7 +450,7 @@ func (p *parser) convertTypeDecls() []string {
 func (p *parser) mergeLines() []string {
 	// merge "package", "import", "func", "func main".
 	lines := []string{"package main\n"}
-	lines = append(lines, convertImport(p.importPkgs)...)
+	lines = append(lines, convertImport(p.imPkgs)...)
 	lines = append(lines, p.convertTypeDecls()...)
 	lines = append(lines, p.convertFuncDecls()...)
 	lines = append(lines, p.body...)
@@ -470,7 +470,7 @@ func (p *parser) ignoreStatement(line string) bool {
 func (p *parser) ignorePkgClause(line string) bool {
 	// ignore PackageClause
 	var pat string
-	if p.packageFlag {
+	if p.pkgFlag {
 		pat = `\A([[:blank:]]*package)?[[:blank:]]*([[\pL\d_]+)[[:blank:]]*\z`
 	} else {
 		pat = `\A([[:blank:]]*package)([[:blank:]]+[\pL\d_]+)?[[:blank:]]*\z`
@@ -482,12 +482,12 @@ func (p *parser) ignorePkgClause(line string) bool {
 	}
 	if group[1] == "" {
 		// `"package"'
-		p.packageFlag = false
+		p.pkgFlag = false
 	}
 
 	if group[2] == "" {
 		// PackageName
-		p.packageFlag = true
+		p.pkgFlag = true
 	}
 	return true
 }

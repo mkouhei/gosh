@@ -155,20 +155,20 @@ func TestRemoveImport(t *testing.T) {
 		importSpec{"fmt", ""},
 		importSpec{"os", ""},
 		importSpec{"io", ""}}
-	e.parser.importPkgs = pkgs
+	e.parser.imPkgs = pkgs
 
 	e.removeImport("dummy message", importSpec{"hoge", ""})
-	if len(compareImportSpecs(e.parser.importPkgs, pkgs)) != 0 {
+	if len(compareImportSpecs(e.parser.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
 	e.removeImport("package moge: unrecognized import path \"moge\"", importSpec{"hoge", ""})
-	if len(compareImportSpecs(e.parser.importPkgs, pkgs)) != 0 {
+	if len(compareImportSpecs(e.parser.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
 	e.removeImport("package hoge: unrecognized import path \"hoge\"", importSpec{"hoge", ""})
-	if len(compareImportSpecs(e.parser.importPkgs, pkgs2)) != 0 {
+	if len(compareImportSpecs(e.parser.imPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}
 }

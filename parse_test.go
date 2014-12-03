@@ -31,7 +31,7 @@ func consumeChan(iq <-chan importSpec) {
 
 func TestParseImportFail(t *testing.T) {
 	p := parser{}
-	p.importPkgs = append(p.importPkgs, importSpec{})
+	p.imPkgs = append(p.imPkgs, importSpec{})
 	iq := make(chan importSpec, 1)
 	consumeChan(iq)
 
@@ -41,7 +41,7 @@ func TestParseImportFail(t *testing.T) {
 		p.parseLine(l, iq)
 	}
 
-	if len(compareImportSpecs(p.importPkgs, []importSpec{})) != 1 {
+	if len(compareImportSpecs(p.imPkgs, []importSpec{})) != 1 {
 		t.Fatal("parse error: expected nil")
 	}
 }
@@ -67,7 +67,7 @@ func TestParseMultipleImport(t *testing.T) {
 		importSpec{"io", ""},
 		importSpec{"strings", ""},
 		importSpec{"os", ""}}
-	if len(compareImportSpecs(p.importPkgs, el)) != 0 {
+	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
 	}
 }
@@ -85,7 +85,7 @@ func TestParseDuplicateImport(t *testing.T) {
 	}
 	el := []importSpec{
 		importSpec{"fmt", ""}}
-	if len(compareImportSpecs(p.importPkgs, el)) != 0 {
+	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
 	}
 }
@@ -339,7 +339,7 @@ func TestParseLine(t *testing.T) {
 		p.parseLine(l, iq)
 	}
 
-	if len(compareImportSpecs(p.importPkgs, import1)) != 0 {
+	if len(compareImportSpecs(p.imPkgs, import1)) != 0 {
 		t.Fatal("parse error")
 	}
 
