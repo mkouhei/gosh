@@ -146,11 +146,11 @@ func TestParserType(t *testing.T) {
 		t.Fatalf(`parser error: %s`, line)
 	}
 	line = "Read()"
-	if !p.parserType(line) || p.typeFlag != "interface" || len(p.typeDecls[3].fieldDecls) != 1 {
+	if !p.parserType(line) || p.typeFlag != "interface" || len(p.typeDecls[3].methSpecs) != 1 {
 		t.Fatalf(`parser error: %s`, line)
 	}
 	line = "Write(b buffer) bool"
-	if !p.parserType(line) || p.typeFlag != "interface" || len(p.typeDecls[3].fieldDecls) != 2 {
+	if !p.parserType(line) || p.typeFlag != "interface" || len(p.typeDecls[3].methSpecs) != 2 {
 		t.Fatalf(`parser error: %s`, line)
 	}
 	line = "}"

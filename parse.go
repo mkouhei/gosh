@@ -29,18 +29,28 @@ type importSpec struct {
 	packageName string
 }
 
-type funcDecl struct {
-	name     string
+type signature struct {
 	functype string
 	params   string
 	result   string
-	body     []string
+}
+
+type funcDecl struct {
+	name string
+	sig  signature
+	body []string
+}
+
+type methodSpecs struct {
+	name string
+	sig  signature
 }
 
 type typeDecl struct {
 	typeID     string
 	typeName   string
 	fieldDecls []fieldDecl
+	methSpecs  []methodSpecs
 }
 
 type fieldDecl struct {
@@ -235,7 +245,7 @@ func (p *parser) parserFuncSignature(line string) bool {
 				result = ""
 			}
 			p.funcFlag = group[3]
-			p.funcDecls = append(p.funcDecls, funcDecl{group[3], group[1], group[4], result, []string{}})
+			p.funcDecls = append(p.funcDecls, funcDecl{group[3], signature{group[1], group[4], result}, []string{}})
 		}
 		p.countBlackets(line)
 	}
@@ -270,7 +280,7 @@ func (p *parser) parserType(line string) bool {
 			p.typeFlag = "paren"
 		} else if p.typeFlag == "" && (group[5] == "struct" || group[5] == "interface") {
 			p.typeFlag = group[5]
-			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[5], []fieldDecl{}})
+			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[5], []fieldDecl{}, []methodSpecs{}})
 		} else if p.typeFlag == "struct" {
 			i := len(p.typeDecls) - 1
 			p.typeDecls[i].fieldDecls = append(p.typeDecls[i].fieldDecls, fieldDecl{group[3], group[4]})
@@ -294,17 +304,11 @@ func (p *parser) parserType(line string) bool {
 			} else {
 				result = ""
 			}
-			var methodSpec string
-			if result == "" {
-				methodSpec = fmt.Sprintf("%s%s(%s)", methodType, group[3], group[4])
-			} else {
-				methodSpec = fmt.Sprintf("%s%s(%s) %s", methodType, group[3], group[4], result)
-			}
 
 			i := len(p.typeDecls) - 1
-			p.typeDecls[i].fieldDecls = append(p.typeDecls[i].fieldDecls, fieldDecl{methodSpec, ""})
+			p.typeDecls[i].methSpecs = append(p.typeDecls[i].methSpecs, methodSpecs{group[3], signature{methType, group[4], result}})
 		} else {
-			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[4], []fieldDecl{}})
+			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[4], []fieldDecl{}, []methodSpecs{}})
 		}
 	}
 	if p.typeFlag == "paren" {
@@ -405,7 +409,7 @@ func convertImport(pkgs []importSpec) []string {
 func (p *parser) convertFuncDecls() []string {
 	var lines []string
 	for _, fun := range p.funcDecls {
-		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", fun.functype, fun.name, fun.params, fun.result))
+		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", fun.sig.functype, fun.name, fun.sig.params, fun.sig.result))
 		for _, l := range fun.body {
 			lines = append(lines, l)
 		}
@@ -416,9 +420,17 @@ func (p *parser) convertFuncDecls() []string {
 func (p *parser) convertTypeDecls() []string {
 	lines := []string{"type ("}
 	for _, t := range p.typeDecls {
-		if len(t.fieldDecls) == 0 {
-			lines = append(lines, fmt.Sprintf("%s %s", t.typeID, t.typeName))
-		} else {
+		if len(t.methSpecs) > 0 {
+			lines = append(lines, fmt.Sprintf("%s %s {", t.typeID, t.typeName))
+			for _, m := range t.methSpecs {
+				if m.sig.result == "" {
+					lines = append(lines, fmt.Sprintf("%s%s(%s)", m.sig.functype, m.name, m.sig.params))
+				} else {
+					lines = append(lines, fmt.Sprintf("%s%s(%s) %s", m.sig.functype, m.name, m.sig.params, m.sig.result))
+				}
+			}
+			lines = append(lines, "}")
+		} else if len(t.fieldDecls) > 0 {
 			lines = append(lines, fmt.Sprintf("%s %s {", t.typeID, t.typeName))
 			for _, f := range t.fieldDecls {
 				if f.fieldType != "" {
@@ -428,6 +440,8 @@ func (p *parser) convertTypeDecls() []string {
 				}
 			}
 			lines = append(lines, "}")
+		} else {
+			lines = append(lines, fmt.Sprintf("%s %s", t.typeID, t.typeName))
 		}
 	}
 	lines = append(lines, ")")
