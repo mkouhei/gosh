@@ -90,6 +90,79 @@ func TestParseDuplicateImport(t *testing.T) {
 	}
 }
 
+func TestParserType(t *testing.T) {
+	p := parser{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}, false}
+
+	line := "type foo bool"
+	if !p.parserType(line) || p.typeDecls[0].typeID != "foo" || p.typeDecls[0].typeName != "bool" {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "type ("
+	if !p.parserType(line) || p.typeFlag != "paren" || len(p.typeDecls) != 1 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "type bar int"
+	if p.parserType(line) || p.typeFlag != "paren" || len(p.typeDecls) != 1 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "bar int"
+	if !p.parserType(line) || p.typeFlag != "paren" || len(p.typeDecls) != 2 || p.typeDecls[1].typeID != "bar" || p.typeDecls[1].typeName != "int" {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = ")"
+	if p.parserType(line) {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	if !p.parserTypeSpec(line) || p.typeFlag != "" {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "type baz struct {"
+	if !p.parserType(line) || p.typeFlag != "struct" || len(p.typeDecls) != 3 || p.typeDecls[2].typeID != "baz" || p.typeDecls[2].typeName != "struct" || len(p.typeDecls[2].fieldDecls) != 0 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	line = "key string"
+	if !p.parserType(line) || p.typeFlag != "struct" || len(p.typeDecls[2].fieldDecls) != 1 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	line = "value string"
+	if !p.parserType(line) || p.typeFlag != "struct" || len(p.typeDecls[2].fieldDecls) != 2 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	line = "}"
+	if p.parserType(line) || p.typeFlag != "struct" {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	if !p.parserTypeSpec(line) || p.typeFlag != "" {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "type qux interface {"
+	if !p.parserType(line) || p.typeFlag != "interface" || len(p.typeDecls) != 4 || p.typeDecls[3].typeID != "qux" || p.typeDecls[3].typeName != "interface" || len(p.typeDecls[3].fieldDecls) != 0 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	line = "Read()"
+	if !p.parserType(line) || p.typeFlag != "interface" || len(p.typeDecls[3].fieldDecls) != 1 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	line = "Write(b buffer) bool"
+	if !p.parserType(line) || p.typeFlag != "interface" || len(p.typeDecls[3].fieldDecls) != 2 {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	line = "}"
+	if p.parserType(line) || p.typeFlag != "interface" {
+		t.Fatalf(`parser error: %s`, line)
+	}
+	if !p.parserTypeSpec(line) || p.typeFlag != "" {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+}
+
 func TestParserFuncSignature(t *testing.T) {
 	p := parser{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}, false}
 	line := "func main() {"
