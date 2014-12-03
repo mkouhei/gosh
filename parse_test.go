@@ -127,6 +127,37 @@ func TestParserFuncSignature(t *testing.T) {
 		t.Fatalf(`parser error: "%s"`, line)
 	}
 
+	p.mainFlag = false
+	line = "func foo() {"
+	if !p.parserFuncSignature(line) || p.mainFlag {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "func foo(bar string) {"
+	if !p.parserFuncSignature(line) || p.mainFlag {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "func foo(bar, baz  string) {"
+	if !p.parserFuncSignature(line) || p.mainFlag {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "func foo(bar, baz  string) boo{"
+	if !p.parserFuncSignature(line) || p.mainFlag {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "func foo(bar, baz  string) (boo, int){"
+	if !p.parserFuncSignature(line) || p.mainFlag {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
+	line = "func (q *qux) foo(bar, baz  string) (boo, int){"
+	if !p.parserFuncSignature(line) || p.mainFlag {
+		t.Fatalf(`parser error: %s`, line)
+	}
+
 }
 
 func TestParseLine(t *testing.T) {
