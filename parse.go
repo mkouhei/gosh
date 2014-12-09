@@ -58,7 +58,7 @@ type fieldDecl struct {
 	fieldType string
 }
 
-type parser struct {
+type parserSrc struct {
 	pkgFlag   bool
 	imPkgs    []importSpec
 	imFlag    bool
@@ -73,7 +73,7 @@ type parser struct {
 	main      []string
 }
 
-func (p *parser) appendBody(line string) {
+func (p *parserSrc) appendBody(line string) {
 	for i, fun := range p.funcDecls {
 		if p.funcFlag == fun.name {
 			p.funcDecls[i].body = append(p.funcDecls[i].body, line)
@@ -81,23 +81,23 @@ func (p *parser) appendBody(line string) {
 	}
 }
 
-func (p *parser) bIncrement() {
+func (p *parserSrc) bIncrement() {
 	atomic.AddInt32(&p.blackets, 1)
 }
 
-func (p *parser) bDecrement() {
+func (p *parserSrc) bDecrement() {
 	atomic.AddInt32(&p.blackets, -1)
 }
 
-func (p *parser) pIncrement() {
+func (p *parserSrc) pIncrement() {
 	atomic.AddInt32(&p.paren, 1)
 }
 
-func (p *parser) pDecrement() {
+func (p *parserSrc) pDecrement() {
 	atomic.AddInt32(&p.paren, -1)
 }
 
-func (p *parser) countBlackets(line string) {
+func (p *parserSrc) countBlackets(line string) {
 	switch {
 	case strings.Contains(line, "{") && strings.Contains(line, "}"):
 		for i := 0; i < strings.Count(line, "{"); i++ {
@@ -117,7 +117,7 @@ func (p *parser) countBlackets(line string) {
 	}
 }
 
-func (p *parser) countParen(line string) {
+func (p *parserSrc) countParen(line string) {
 	switch {
 	case strings.Contains(line, "(") && strings.Contains(line, ")"):
 		for i := 0; i < strings.Count(line, "("); i++ {
@@ -137,7 +137,7 @@ func (p *parser) countParen(line string) {
 	}
 }
 
-func (p *parser) putPackages(imPath, pkgName string, iq chan<- importSpec) {
+func (p *parserSrc) putPackages(imPath, pkgName string, iq chan<- importSpec) {
 	// put package to queue of `go get'
 	if !searchPackage(importSpec{imPath, pkgName}, p.imPkgs) {
 		is := importSpec{imPath, pkgName}
@@ -156,7 +156,7 @@ func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 	return false
 }
 
-func (p *parser) parserImport(line string, iq chan<- importSpec) bool {
+func (p *parserSrc) parserImport(line string, iq chan<- importSpec) bool {
 	var pat string
 	if p.imFlag {
 		pat = `\A[[:blank:]]*(\(?)([[:blank:]]*((.|\S+)[[:blank:]]+)?"([\S/]+)")?[[:blank:]]*(\)?)[[:blank:]]*\z`
@@ -208,7 +208,7 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 	return ret
 }
 
-func (p *parser) parserFuncSignature(line string) bool {
+func (p *parserSrc) parserFuncSignature(line string) bool {
 
 	funcName := `[[:blank:]]*func[[:blank:]]+(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
 	params := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
@@ -251,7 +251,7 @@ func (p *parser) parserFuncSignature(line string) bool {
 	return true
 }
 
-func (p *parser) parserType(line string) bool {
+func (p *parserSrc) parserType(line string) bool {
 	var pat string
 	if p.typeFlag == "paren" || p.typeFlag == "struct" {
 		pat = `\A[[:blank:]]*(((\w+)[[:blank:]]+(\S+)))()[[:blank:]]*\z`
@@ -318,7 +318,7 @@ func (p *parser) parserType(line string) bool {
 	return true
 }
 
-func (p *parser) parserTypeSpec(line string) bool {
+func (p *parserSrc) parserTypeSpec(line string) bool {
 	if p.typeFlag == "paren" {
 		p.countParen(line)
 		if strings.Contains(line, ")") && p.paren == 0 {
@@ -335,7 +335,7 @@ func (p *parser) parserTypeSpec(line string) bool {
 	return false
 }
 
-func (p *parser) parserMainBody(line string) bool {
+func (p *parserSrc) parserMainBody(line string) bool {
 	if p.mainFlag {
 		p.main = append(p.main, line)
 		p.countBlackets(line)
@@ -348,7 +348,7 @@ func (p *parser) parserMainBody(line string) bool {
 	return false
 }
 
-func (p *parser) parserFuncBody(line string) bool {
+func (p *parserSrc) parserFuncBody(line string) bool {
 	if p.funcFlag != "" {
 		// func body
 		p.appendBody(line)
@@ -364,7 +364,7 @@ func (p *parser) parserFuncBody(line string) bool {
 	return true
 }
 
-func (p *parser) parseLine(line string, iq chan<- importSpec) bool {
+func (p *parserSrc) parseLine(line string, iq chan<- importSpec) bool {
 	// Ignore `package main', etc.
 	if p.ignoreStatement(line) {
 		return false
@@ -405,7 +405,7 @@ func convertImport(pkgs []importSpec) []string {
 	return lines
 }
 
-func (p *parser) convertFuncDecls() []string {
+func (p *parserSrc) convertFuncDecls() []string {
 	var lines []string
 	for _, fun := range p.funcDecls {
 		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", fun.sig.functype, fun.name, fun.sig.params, fun.sig.result))
@@ -416,7 +416,7 @@ func (p *parser) convertFuncDecls() []string {
 	return lines
 }
 
-func (p *parser) convertTypeDecls() []string {
+func (p *parserSrc) convertTypeDecls() []string {
 	lines := []string{"type ("}
 	for _, t := range p.typeDecls {
 		if len(t.methSpecs) > 0 {
@@ -447,7 +447,7 @@ func (p *parser) convertTypeDecls() []string {
 	return lines
 }
 
-func (p *parser) mergeLines() []string {
+func (p *parserSrc) mergeLines() []string {
 	// merge "package", "import", "func", "func main".
 	lines := []string{"package main\n"}
 	lines = append(lines, convertImport(p.imPkgs)...)
@@ -458,7 +458,7 @@ func (p *parser) mergeLines() []string {
 	return lines
 }
 
-func (p *parser) ignoreStatement(line string) bool {
+func (p *parserSrc) ignoreStatement(line string) bool {
 	// ignore statement
 	switch {
 	case p.ignorePkgClause(line):
@@ -467,7 +467,7 @@ func (p *parser) ignoreStatement(line string) bool {
 	return false
 }
 
-func (p *parser) ignorePkgClause(line string) bool {
+func (p *parserSrc) ignorePkgClause(line string) bool {
 	// ignore PackageClause
 	var pat string
 	if p.pkgFlag {

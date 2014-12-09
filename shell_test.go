@@ -45,7 +45,7 @@ fmt.Println("hello")
 	}
 
 	e := newEnv(true)
-	fp, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
+	fp, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ fmt.Println("hello")
 
 	lines := []string{}
 	if <-ec {
-		fp2, err := os.Open(e.TmpPath)
+		fp2, err := os.Open(e.tmpPath)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -125,7 +125,7 @@ fmt.Println("hello")
 }
 `
 	e := newEnv(true)
-	fp, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
+	fp, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -134,7 +134,7 @@ fmt.Println("hello")
 	fp.Sync()
 	fp.Close()
 
-	_, err = os.Stat(e.TmpPath)
+	_, err = os.Stat(e.tmpPath)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -155,20 +155,20 @@ func TestRemoveImport(t *testing.T) {
 		importSpec{"fmt", ""},
 		importSpec{"os", ""},
 		importSpec{"io", ""}}
-	e.parser.imPkgs = pkgs
+	e.parserSrc.imPkgs = pkgs
 
 	e.removeImport("dummy message", importSpec{"hoge", ""})
-	if len(compareImportSpecs(e.parser.imPkgs, pkgs)) != 0 {
+	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
 	e.removeImport("package moge: unrecognized import path \"moge\"", importSpec{"hoge", ""})
-	if len(compareImportSpecs(e.parser.imPkgs, pkgs)) != 0 {
+	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
 	e.removeImport("package hoge: unrecognized import path \"hoge\"", importSpec{"hoge", ""})
-	if len(compareImportSpecs(e.parser.imPkgs, pkgs2)) != 0 {
+	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}
 }

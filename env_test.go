@@ -25,18 +25,18 @@ import (
 
 func TestNewEnv(t *testing.T) {
 	e := newEnv(false)
-	_, err := os.Stat(e.BldDir)
+	_, err := os.Stat(e.bldDir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if e.TmpPath != fmt.Sprintf("%s/%s", e.BldDir, tmpname) {
+	if e.tmpPath != fmt.Sprintf("%s/%s", e.bldDir, tmpname) {
 		t.Fatal("error initialize")
 	}
-	if e.GoPath != e.BldDir {
+	if e.goPath != e.bldDir {
 		t.Fatal("error initialize")
 	}
-	if e.Debug {
+	if e.debug {
 		t.Fatal("error initialize")
 	}
-	cleanDir(e.BldDir)
+	cleanDir(e.bldDir)
 }

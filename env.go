@@ -23,25 +23,25 @@ import (
 )
 
 type env struct {
-	BldDir  string
-	TmpName string
-	TmpPath string
-	GoPath  string
-	Debug   bool
+	bldDir  string
+	tmpName string
+	tmpPath string
+	goPath  string
+	debug   bool
 
-	parser parser
+	parserSrc parserSrc
 }
 
 func newEnv(debug bool) env {
 	// New shell environment
 	e := env{}
-	e.BldDir = bldDir()
-	e.TmpPath = fmt.Sprintf("%s/%s", e.BldDir, tmpname)
-	e.GoPath = e.BldDir
-	e.Debug = debug
-	e.parser = parser{}
+	e.bldDir = bldDir()
+	e.tmpPath = fmt.Sprintf("%s/%s", e.bldDir, tmpname)
+	e.goPath = e.bldDir
+	e.debug = debug
+	e.parserSrc = parserSrc{}
 
-	setGOPATH(e.BldDir)
+	setGOPATH(e.bldDir)
 	e.logger("GOPATH", os.Getenv("GOPATH"), nil)
 	return e
 }

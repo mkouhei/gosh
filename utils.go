@@ -96,7 +96,7 @@ func compare(A, B []string) []string {
 }
 
 func (e *env) logger(facility, msg string, err error) {
-	if e.Debug {
+	if e.debug {
 		if err == nil {
 			log.Printf("[info] %s: %s\n", facility, msg)
 		} else {

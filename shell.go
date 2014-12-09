@@ -39,11 +39,11 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 			line, _, err := reader.ReadLine()
 			if err != nil {
 				e.logger("read", "", err)
-				cleanDir(e.BldDir)
+				cleanDir(e.bldDir)
 				qc <- true
 				return
 			}
-			if e.parser.parseLine(string(line), iq) {
+			if e.parserSrc.parseLine(string(line), iq) {
 				wc <- true
 				o = false
 			}
@@ -54,14 +54,14 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 func (e *env) write(ic chan<- bool) {
 	// write tmporary source code file
 	go func() {
-		f, err := os.OpenFile(e.TmpPath, os.O_WRONLY|os.O_CREATE, 0600)
+		f, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
 			return
 		}
 		time.Sleep(time.Microsecond)
 		f.Truncate(0)
 
-		for _, l := range e.parser.mergeLines() {
+		for _, l := range e.parserSrc.mergeLines() {
 			f.WriteString(fmt.Sprintf("%s\n", l))
 			e.logger("write", l, nil)
 		}
@@ -72,18 +72,18 @@ func (e *env) write(ic chan<- bool) {
 		}
 
 		ic <- true
-		e.parser.main = nil
+		e.parserSrc.main = nil
 	}()
 }
 
 func (e *env) goRun() {
 	// execute `go run'
-	os.Chdir(e.BldDir)
+	os.Chdir(e.bldDir)
 	cmd := "go"
 	args := []string{"run", tmpname}
 	if msg, err := runCmd(true, cmd, args...); err != nil {
 		e.logger("go run", msg, err)
-		e.parser.body = nil
+		e.parserSrc.body = nil
 		return
 	}
 }
@@ -97,7 +97,7 @@ func (e *env) removeImport(msg string, pkg importSpec) {
 		key = pkg.pkgName
 	}
 	if strings.Contains(msg, fmt.Sprintf("package %s: unrecognized import path \"%s\"", key, key)) {
-		removeImportPackage(&e.parser.imPkgs, importSpec{pkg.imPath, pkg.pkgName})
+		removeImportPackage(&e.parserSrc.imPkgs, importSpec{pkg.imPath, pkg.pkgName})
 	}
 }
 
@@ -121,10 +121,10 @@ func (e *env) goImports(ec chan<- bool) {
 	// execute `goimports'
 	go func() {
 		cmd := "goimports"
-		args := []string{"-w", e.TmpPath}
+		args := []string{"-w", e.tmpPath}
 		if msg, err := runCmd(true, cmd, args...); err != nil {
 			e.logger("goimports", msg, err)
-			e.parser.body = nil
+			e.parserSrc.body = nil
 			return
 		}
 		time.Sleep(time.Nanosecond)
@@ -164,7 +164,7 @@ loop:
 		case <-ec:
 			e.goRun()
 		case <-qc:
-			cleanDir(e.BldDir)
+			cleanDir(e.bldDir)
 			fmt.Println("[gosh] terminated")
 			break loop
 		}

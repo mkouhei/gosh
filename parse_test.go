@@ -30,7 +30,7 @@ func consumeChan(iq <-chan importSpec) {
 }
 
 func TestParseImportFail(t *testing.T) {
-	p := parser{}
+	p := parserSrc{}
 	p.imPkgs = append(p.imPkgs, importSpec{})
 	iq := make(chan importSpec, 1)
 	consumeChan(iq)
@@ -47,7 +47,7 @@ func TestParseImportFail(t *testing.T) {
 }
 
 func TestParseMultipleImport(t *testing.T) {
-	p := parser{}
+	p := parserSrc{}
 	iq := make(chan importSpec, 4)
 
 	lines := []string{"import \"fmt\"",
@@ -73,7 +73,7 @@ func TestParseMultipleImport(t *testing.T) {
 }
 
 func TestParseDuplicateImport(t *testing.T) {
-	p := parser{}
+	p := parserSrc{}
 	iq := make(chan importSpec, 2)
 
 	lines := []string{"import \"fmt\"",
@@ -91,7 +91,7 @@ func TestParseDuplicateImport(t *testing.T) {
 }
 
 func TestParserType(t *testing.T) {
-	p := parser{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}}
+	p := parserSrc{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}}
 
 	line := "type foo bool"
 	if !p.parserType(line) || p.typeDecls[0].typeID != "foo" || p.typeDecls[0].typeName != "bool" {
@@ -164,7 +164,7 @@ func TestParserType(t *testing.T) {
 }
 
 func TestParserFuncSignature(t *testing.T) {
-	p := parser{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}}
+	p := parserSrc{false, []importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}}
 	line := "func main() {"
 	if !p.parserFuncSignature(line) || !p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
@@ -234,7 +234,7 @@ func TestParserFuncSignature(t *testing.T) {
 }
 
 func TestParseLine(t *testing.T) {
-	p := parser{}
+	p := parserSrc{}
 	iq := make(chan importSpec, 10)
 
 	lines := []string{"package main",
