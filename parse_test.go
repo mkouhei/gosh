@@ -362,8 +362,8 @@ func TestParseLine(t *testing.T) {
 	if len(p.mergeLines()) != 62 {
 		t.Fatal("parse error")
 	}
-	if p.brackets != 0 {
-		t.Fatalf("bracket count error: %d", p.brackets)
+	if p.braces != 0 {
+		t.Fatalf("braces count error: %d", p.braces)
 	}
 
 }

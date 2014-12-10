@@ -66,6 +66,7 @@ type parserSrc struct {
 	funcDecls []funcDecl
 	funcFlag  string
 	brackets  int32
+	braces    int32
 	paren     int32
 	typeDecls []typeDecl
 	typeFlag  string
@@ -82,12 +83,20 @@ func (p *parserSrc) appendBody(line string) {
 	}
 }
 
-func (p *parserSrc) bIncrement() {
+func (p *parserSrc) brktIncrement() {
 	atomic.AddInt32(&p.brackets, 1)
 }
 
-func (p *parserSrc) bDecrement() {
+func (p *parserSrc) brktDecrement() {
 	atomic.AddInt32(&p.brackets, -1)
+}
+
+func (p *parserSrc) bIncrement() {
+	atomic.AddInt32(&p.braces, 1)
+}
+
+func (p *parserSrc) bDecrement() {
+	atomic.AddInt32(&p.braces, -1)
 }
 
 func (p *parserSrc) pIncrement() {
@@ -328,7 +337,7 @@ func (p *parserSrc) parserTypeSpec(line string) bool {
 		}
 	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
 		p.countBrackets(line)
-		if strings.Contains(line, "}") && p.brackets == 0 {
+		if strings.Contains(line, "}") && p.braces == 0 {
 			p.typeFlag = ""
 			return true
 		}
@@ -340,7 +349,7 @@ func (p *parserSrc) parserMainBody(line string) bool {
 	if p.mainFlag {
 		p.main = append(p.main, line)
 		p.countBrackets(line)
-		if strings.Contains(line, "}") && p.brackets == 0 {
+		if strings.Contains(line, "}") && p.braces == 0 {
 			// closing func main
 			p.mainFlag = false
 			return true
@@ -354,7 +363,7 @@ func (p *parserSrc) parserFuncBody(line string) bool {
 		// func body
 		p.appendBody(line)
 		p.countBrackets(line)
-		if strings.Contains(line, "}") && p.brackets == 0 {
+		if strings.Contains(line, "}") && p.braces == 0 {
 			// closing func main
 			p.funcFlag = ""
 		}
