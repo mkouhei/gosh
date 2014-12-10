@@ -65,7 +65,7 @@ type parserSrc struct {
 	imFlag    bool
 	funcDecls []funcDecl
 	funcFlag  string
-	blackets  int32
+	brackets  int32
 	paren     int32
 	typeDecls []typeDecl
 	typeFlag  string
@@ -83,11 +83,11 @@ func (p *parserSrc) appendBody(line string) {
 }
 
 func (p *parserSrc) bIncrement() {
-	atomic.AddInt32(&p.blackets, 1)
+	atomic.AddInt32(&p.brackets, 1)
 }
 
 func (p *parserSrc) bDecrement() {
-	atomic.AddInt32(&p.blackets, -1)
+	atomic.AddInt32(&p.brackets, -1)
 }
 
 func (p *parserSrc) pIncrement() {
@@ -98,7 +98,7 @@ func (p *parserSrc) pDecrement() {
 	atomic.AddInt32(&p.paren, -1)
 }
 
-func (p *parserSrc) countBlackets(line string) {
+func (p *parserSrc) countBrackets(line string) {
 	switch {
 	case strings.Contains(line, "{") && strings.Contains(line, "}"):
 		for i := 0; i < strings.Count(line, "{"); i++ {
@@ -247,7 +247,7 @@ func (p *parserSrc) parserFuncSignature(line string) bool {
 			p.funcFlag = group[3]
 			p.funcDecls = append(p.funcDecls, funcDecl{group[3], signature{group[1], group[4], result}, []string{}})
 		}
-		p.countBlackets(line)
+		p.countBrackets(line)
 	}
 	return true
 }
@@ -314,7 +314,7 @@ func (p *parserSrc) parserType(line string) bool {
 	if p.typeFlag == "paren" {
 		p.countParen(line)
 	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
-		p.countBlackets(line)
+		p.countBrackets(line)
 	}
 	return true
 }
@@ -327,8 +327,8 @@ func (p *parserSrc) parserTypeSpec(line string) bool {
 			return true
 		}
 	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
-		p.countBlackets(line)
-		if strings.Contains(line, "}") && p.blackets == 0 {
+		p.countBrackets(line)
+		if strings.Contains(line, "}") && p.brackets == 0 {
 			p.typeFlag = ""
 			return true
 		}
@@ -339,8 +339,8 @@ func (p *parserSrc) parserTypeSpec(line string) bool {
 func (p *parserSrc) parserMainBody(line string) bool {
 	if p.mainFlag {
 		p.main = append(p.main, line)
-		p.countBlackets(line)
-		if strings.Contains(line, "}") && p.blackets == 0 {
+		p.countBrackets(line)
+		if strings.Contains(line, "}") && p.brackets == 0 {
 			// closing func main
 			p.mainFlag = false
 			return true
@@ -353,8 +353,8 @@ func (p *parserSrc) parserFuncBody(line string) bool {
 	if p.funcFlag != "" {
 		// func body
 		p.appendBody(line)
-		p.countBlackets(line)
-		if strings.Contains(line, "}") && p.blackets == 0 {
+		p.countBrackets(line)
+		if strings.Contains(line, "}") && p.brackets == 0 {
 			// closing func main
 			p.funcFlag = ""
 		}
@@ -403,7 +403,7 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 	default:
 		// parser body
 		if !p.mainFlag {
-			p.countBlackets(line)
+			p.countBrackets(line)
 			p.body = append(p.body, line)
 		}
 	}

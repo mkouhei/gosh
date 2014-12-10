@@ -18,6 +18,7 @@ package main
 */
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -355,11 +356,14 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
+	for i, l := range p.mergeLines() {
+		fmt.Printf("%d:\t%s\n", i, l)
+	}
 	if len(p.mergeLines()) != 62 {
 		t.Fatal("parse error")
 	}
-	if p.blackets != 0 {
-		t.Fatalf("blacket count error: %d", p.blackets)
+	if p.brackets != 0 {
+		t.Fatalf("bracket count error: %d", p.brackets)
 	}
 
 }
