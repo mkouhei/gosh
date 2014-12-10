@@ -359,6 +359,7 @@ func TestParseLine(t *testing.T) {
 	for i, l := range p.mergeLines() {
 		fmt.Printf("%d:\t%s\n", i, l)
 	}
+
 	if len(p.mergeLines()) != 62 {
 		t.Fatal("parse error")
 	}
