@@ -19,6 +19,8 @@ package main
 
 import (
 	"fmt"
+	"go/scanner"
+	"go/token"
 	"regexp"
 	"strings"
 	"sync/atomic"
@@ -59,7 +61,6 @@ type fieldDecl struct {
 }
 
 type parserSrc struct {
-	pkgFlag   bool
 	imPkgs    []importSpec
 	imFlag    bool
 	funcDecls []funcDecl
@@ -364,10 +365,25 @@ func (p *parserSrc) parserFuncBody(line string) bool {
 	return true
 }
 
-func (p *parserSrc) parseLine(line string, iq chan<- importSpec) bool {
-	// Ignore `package main', etc.
-	if p.ignoreStatement(line) {
-		return false
+func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
+	line := string(bline)
+	var s scanner.Scanner
+	fset := token.NewFileSet()
+	file := fset.AddFile("", fset.Base(), len(bline))
+	s.Init(file, bline, nil, scanner.ScanComments)
+
+	for {
+		//pos, tok, lit := s.Scan()
+		_, tok, _ := s.Scan()
+		if tok == token.EOF {
+			break
+		}
+		//fmt.Println("token:", tok, lit)
+
+		// ignore packageClause
+		if tok == token.PACKAGE {
+			return false
+		}
 	}
 
 	switch {
@@ -456,38 +472,4 @@ func (p *parserSrc) mergeLines() []string {
 	lines = append(lines, p.body...)
 	lines = append(lines, p.main...)
 	return lines
-}
-
-func (p *parserSrc) ignoreStatement(line string) bool {
-	// ignore statement
-	switch {
-	case p.ignorePkgClause(line):
-		return true
-	}
-	return false
-}
-
-func (p *parserSrc) ignorePkgClause(line string) bool {
-	// ignore PackageClause
-	var pat string
-	if p.pkgFlag {
-		pat = `\A([[:blank:]]*package)?[[:blank:]]*([[\pL\d_]+)[[:blank:]]*\z`
-	} else {
-		pat = `\A([[:blank:]]*package)([[:blank:]]+[\pL\d_]+)?[[:blank:]]*\z`
-	}
-	re := regexp.MustCompile(pat)
-	group := re.FindStringSubmatch(line)
-	if len(group) != 3 {
-		return false
-	}
-	if group[1] == "" {
-		// `"package"'
-		p.pkgFlag = false
-	}
-
-	if group[2] == "" {
-		// PackageName
-		p.pkgFlag = true
-	}
-	return true
 }

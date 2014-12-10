@@ -43,7 +43,7 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 				qc <- true
 				return
 			}
-			if e.parserSrc.parseLine(string(line), iq) {
+			if e.parserSrc.parseLine(line, iq) {
 				wc <- true
 				o = false
 			}
