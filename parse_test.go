@@ -92,7 +92,7 @@ func TestParseDuplicateImport(t *testing.T) {
 }
 
 func TestParserType(t *testing.T) {
-	p := parserSrc{[]importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}}
+	p := parserSrc{}
 
 	line := "type foo bool"
 	if !p.parserType(line) || p.typeDecls[0].typeID != "foo" || p.typeDecls[0].typeName != "bool" {
@@ -165,7 +165,7 @@ func TestParserType(t *testing.T) {
 }
 
 func TestParserFuncSignature(t *testing.T) {
-	p := parserSrc{[]importSpec{}, false, []funcDecl{}, "", 0, 0, []typeDecl{}, "", []string{}, false, []string{}}
+	p := parserSrc{}
 	line := "func main() {"
 	if !p.parserFuncSignature(line) || !p.mainFlag {
 		t.Fatalf(`parser error: "%s"`, line)
