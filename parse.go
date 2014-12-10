@@ -382,12 +382,13 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 	s.Init(file, bline, nil, scanner.ScanComments)
 
 	for {
-		//pos, tok, lit := s.Scan()
+		//_, tok, lit := s.Scan()
 		_, tok, _ := s.Scan()
 		if tok == token.EOF {
 			break
 		}
 		//fmt.Println("token:", tok, lit)
+		p.countBBP(tok)
 
 		// ignore packageClause
 		if tok == token.PACKAGE {
@@ -481,4 +482,36 @@ func (p *parserSrc) mergeLines() []string {
 	lines = append(lines, p.body...)
 	lines = append(lines, p.main...)
 	return lines
+}
+
+func (p *parserSrc) countBBP(tok token.Token) {
+	switch {
+	case tok == token.LBRACE:
+		// {
+		p.bIncrement()
+	case tok == token.RBRACE:
+		// }
+		p.bDecrement()
+	case tok == token.LBRACK:
+		// [
+		p.brktIncrement()
+	case tok == token.RBRACK:
+		// ]
+		p.brktDecrement()
+	case tok == token.LPAREN:
+		// (
+		p.pIncrement()
+	case tok == token.RPAREN:
+		// )
+		p.pDecrement()
+	}
+}
+
+func (p *parserSrc) validateBBP() bool {
+	switch {
+	case p.braces < 0, p.brackets < 0, p.paren < 0:
+		return false
+	default:
+		return true
+	}
 }
