@@ -73,7 +73,7 @@ type parserSrc struct {
 	body      []string
 	mainFlag  bool
 	main      []string
-	prevToken token.Token
+	preToken  token.Token
 }
 
 func (p *parserSrc) appendBody(line string) {
@@ -388,14 +388,14 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 		if tok == token.EOF {
 			break
 		}
-		//fmt.Println("token:", tok, lit, p.prevToken)
+		//fmt.Println("token:", tok, lit, p.preToken)
 		p.countBBP(tok)
 
 		// ignore packageClause
 		if p.ignorePkg(tok) {
 			return false
 		}
-		p.prevToken = tok
+		p.preToken = tok
 
 	}
 
@@ -521,10 +521,10 @@ func (p *parserSrc) validateBBP() bool {
 
 func (p *parserSrc) ignorePkg(tok token.Token) bool {
 	if tok == token.PACKAGE {
-		p.prevToken = tok
+		p.preToken = tok
 		return true
-	} else if tok == token.IDENT && p.prevToken == token.PACKAGE {
-		p.prevToken = tok
+	} else if tok == token.IDENT && p.preToken == token.PACKAGE {
+		p.preToken = tok
 		return true
 	}
 	return false
