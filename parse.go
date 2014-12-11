@@ -74,6 +74,7 @@ type parserSrc struct {
 	mainFlag  bool
 	main      []string
 	preToken  token.Token
+	preLit    string
 }
 
 func (p *parserSrc) appendBody(line string) {
@@ -165,32 +166,6 @@ func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 		}
 	}
 	return false
-}
-
-func (p *parserSrc) parserImport(line string, iq chan<- importSpec) bool {
-	var pat string
-	if p.imFlag {
-		pat = `\A[[:blank:]]*(\(?)([[:blank:]]*((.|\S+)[[:blank:]]+)?"([\S/]+)")?[[:blank:]]*(\)?)[[:blank:]]*\z`
-	} else {
-		pat = `\A[[:blank:]]*import[[:blank:]]*(\(?)([[:blank:]]*((.|\S+)[[:blank:]]+)?"([\S/]+)")?[[:blank:]]*(\)?)[[:blank:]]*\z`
-	}
-	re := regexp.MustCompile(pat)
-	group := re.FindStringSubmatch(line)
-	if len(group) != 7 {
-		return false
-	}
-	if group[1] == "(" || group[1] == "" && group[2] == "" && group[3] == "" {
-		p.imFlag = true
-	}
-	if group[5] != "" {
-		// group[5] is imPath
-		// group[4] is pkgName or ""
-		p.putPackages(group[5], group[4], iq)
-	}
-	if group[6] == ")" {
-		p.imFlag = false
-	}
-	return true
 }
 
 func removeImportPackage(slice *[]importSpec, pkg importSpec) {
@@ -382,9 +357,10 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 	file := fset.AddFile("", fset.Base(), len(bline))
 	s.Init(file, bline, nil, scanner.ScanComments)
 
+	flg := false
+
 	for {
-		//_, tok, lit := s.Scan()
-		_, tok, _ := s.Scan()
+		_, tok, lit := s.Scan()
 		if tok == token.EOF {
 			break
 		}
@@ -393,15 +369,21 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 
 		// ignore packageClause
 		if p.ignorePkg(tok) {
-			return false
+			flg = true
+		}
+		// parse import declare
+		if p.parseImPkg(tok, lit, iq) {
+			flg = true
 		}
 		p.preToken = tok
 
 	}
 
+	if flg {
+		return false
+	}
+
 	switch {
-	case p.parserImport(line, iq):
-		// import parser
 	case p.parserTypeSpec(line):
 		// type spec of struct parser
 	case p.parserType(line):
@@ -528,4 +510,36 @@ func (p *parserSrc) ignorePkg(tok token.Token) bool {
 		return true
 	}
 	return false
+}
+
+func rmQuot(lit string) string {
+	pat := `"(.|\S+|[\S/]+)"`
+	re := regexp.MustCompile(pat)
+	grp := re.FindStringSubmatch(lit)
+	if len(grp) == 0 {
+		return lit
+	}
+	return grp[1]
+}
+
+func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec) bool {
+	switch {
+	case tok == token.IMPORT:
+		p.imFlag = true
+		p.preToken = tok
+	case p.imFlag:
+		switch {
+		case tok == token.IDENT:
+			p.preLit = lit
+		case tok == token.STRING:
+			p.putPackages(rmQuot(lit), p.preLit, iq)
+			p.preLit = ""
+		case tok == token.SEMICOLON && p.paren == 0:
+			p.imFlag = false
+			p.preToken = tok
+		}
+	default:
+		return false
+	}
+	return true
 }
