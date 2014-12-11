@@ -54,7 +54,7 @@ func TestParseMultipleImport(t *testing.T) {
 	lines := []string{"import \"fmt\"",
 		"import \"io\"",
 		"import (",
-		"\"strings\"",
+		"str \"strings\"",
 		"\"os\"",
 		")",
 	}
@@ -66,7 +66,7 @@ func TestParseMultipleImport(t *testing.T) {
 	el := []importSpec{
 		importSpec{"fmt", ""},
 		importSpec{"io", ""},
-		importSpec{"strings", ""},
+		importSpec{"strings", "str"},
 		importSpec{"os", ""}}
 	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
@@ -241,7 +241,7 @@ func TestParseLine(t *testing.T) {
 	lines := []string{"package main",
 		"import (",
 		"\"fmt\"",
-		"\"os\"",
+		"o \"os\"",
 		")",
 		"type foo []string",
 		"type (",
@@ -257,7 +257,7 @@ func TestParseLine(t *testing.T) {
 		"Read(b buffer) bool",
 		"}",
 		"func test0() bool {",
-		"f, err := os.Stat(\"/tmp\")",
+		"f, err := o.Stat(\"/tmp\")",
 		"if err != nil {",
 		"return false",
 		"}",
@@ -304,7 +304,7 @@ func TestParseLine(t *testing.T) {
 
 	import1 := []importSpec{
 		importSpec{"fmt", ""},
-		importSpec{"os", ""}}
+		importSpec{"os", "o"}}
 
 	type1 := []string{"type (",
 		"foo []string",
