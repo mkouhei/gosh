@@ -334,13 +334,11 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 
 func convertImport(pkgs []importSpec) []string {
 	// convert packages list to "import" statement
-
-	lines := []string{"import (\n"}
+	l := []string{"import ("}
 	for _, pkg := range pkgs {
-		lines = append(lines, fmt.Sprintf("%s \"%s\"\n", pkg.pkgName, pkg.imPath))
+		l = append(l, fmt.Sprintf(`%s "%s"`, pkg.pkgName, pkg.imPath))
 	}
-	lines = append(lines, ")\n")
-	return lines
+	return append(l, ")")
 }
 
 func (p *parserSrc) convertFuncDecls() []string {
@@ -355,45 +353,48 @@ func (p *parserSrc) convertFuncDecls() []string {
 }
 
 func (p *parserSrc) convertTypeDecls() []string {
-	lines := []string{"type ("}
+	l := []string{"type ("}
 	for _, t := range p.typeDecls {
-		if len(t.methSpecs) > 0 {
-			lines = append(lines, fmt.Sprintf("%s %s {", t.typeID, t.typeName))
+		sig := fmt.Sprintf("%s %s {", t.typeID, t.typeName)
+		switch {
+		case len(t.methSpecs) > 0:
+			l = append(l, sig)
 			for _, m := range t.methSpecs {
-				if m.sig.result == "" {
-					lines = append(lines, fmt.Sprintf("%s%s(%s)", m.sig.functype, m.name, m.sig.params))
-				} else {
-					lines = append(lines, fmt.Sprintf("%s%s(%s) %s", m.sig.functype, m.name, m.sig.params, m.sig.result))
+				sig = fmt.Sprintf("%s%s(%s)", m.sig.functype, m.name, m.sig.params)
+				if m.sig.result != "" {
+					sig = fmt.Sprintf("%s %s", sig, m.sig.result)
 				}
+				l = append(l, sig)
 			}
-			lines = append(lines, "}")
-		} else if len(t.fieldDecls) > 0 {
-			lines = append(lines, fmt.Sprintf("%s %s {", t.typeID, t.typeName))
+			l = append(l, "}")
+		case len(t.fieldDecls) > 0:
+			l = append(l, sig)
 			for _, f := range t.fieldDecls {
-				if f.fieldType != "" {
-					lines = append(lines, fmt.Sprintf("%s %s", f.idList, f.fieldType))
+				if f.fieldType == "" {
+					l = append(l, f.idList)
 				} else {
-					lines = append(lines, f.idList)
+					l = append(l, fmt.Sprintf("%s %s", f.idList, f.fieldType))
 				}
 			}
-			lines = append(lines, "}")
-		} else {
-			lines = append(lines, fmt.Sprintf("%s %s", t.typeID, t.typeName))
+			l = append(l, "}")
+		default:
+			// rewrite sig
+			sig = fmt.Sprintf("%s %s", t.typeID, t.typeName)
+			l = append(l, sig)
 		}
 	}
-	lines = append(lines, ")")
-	return lines
+	l = append(l, ")")
+	return l
 }
 
 func (p *parserSrc) mergeLines() []string {
 	// merge "package", "import", "func", "func main".
-	lines := []string{"package main\n"}
-	lines = append(lines, convertImport(p.imPkgs)...)
-	lines = append(lines, p.convertTypeDecls()...)
-	lines = append(lines, p.convertFuncDecls()...)
-	lines = append(lines, p.body...)
-	lines = append(lines, p.main...)
-	return lines
+	l := []string{"package main"}
+	l = append(l, convertImport(p.imPkgs)...)
+	l = append(l, p.convertTypeDecls()...)
+	l = append(l, p.convertFuncDecls()...)
+	l = append(l, p.body...)
+	return append(l, p.main...)
 }
 
 func (p *parserSrc) countBBP(tok token.Token) {
