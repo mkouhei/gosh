@@ -32,7 +32,7 @@ type importSpec struct {
 }
 
 type signature struct {
-	receiverId   string
+	receiverID   string
 	baseTypeName string
 	params       string
 	result       string
@@ -353,8 +353,8 @@ func (p *parserSrc) convertFuncDecls() []string {
 	var lines []string
 	for _, fun := range p.funcDecls {
 		rcv := ""
-		if fun.sig.receiverId != "" && fun.sig.baseTypeName != "" {
-			rcv = fmt.Sprintf("(%s %s)", fun.sig.receiverId, fun.sig.baseTypeName)
+		if fun.sig.receiverID != "" && fun.sig.baseTypeName != "" {
+			rcv = fmt.Sprintf("(%s %s)", fun.sig.receiverID, fun.sig.baseTypeName)
 		}
 		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", rcv, fun.name, fun.sig.params, fun.sig.result))
 		for _, l := range fun.body {
