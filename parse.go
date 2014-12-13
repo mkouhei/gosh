@@ -80,70 +80,6 @@ type parserSrc struct {
 	preLit   string
 }
 
-func (p *parserSrc) brktIncrement() {
-	atomic.AddInt32(&p.brackets, 1)
-}
-
-func (p *parserSrc) brktDecrement() {
-	atomic.AddInt32(&p.brackets, -1)
-}
-
-func (p *parserSrc) bIncrement() {
-	atomic.AddInt32(&p.braces, 1)
-}
-
-func (p *parserSrc) bDecrement() {
-	atomic.AddInt32(&p.braces, -1)
-}
-
-func (p *parserSrc) pIncrement() {
-	atomic.AddInt32(&p.paren, 1)
-}
-
-func (p *parserSrc) pDecrement() {
-	atomic.AddInt32(&p.paren, -1)
-}
-
-func (p *parserSrc) countBrackets(line string) {
-	switch {
-	case strings.Contains(line, "{") && strings.Contains(line, "}"):
-		for i := 0; i < strings.Count(line, "{"); i++ {
-			p.bIncrement()
-		}
-		for i := 0; i < strings.Count(line, "}"); i++ {
-			p.bDecrement()
-		}
-	case strings.Contains(line, "{"):
-		for i := 0; i < strings.Count(line, "{"); i++ {
-			p.bIncrement()
-		}
-	case strings.Contains(line, "}"):
-		for i := 0; i < strings.Count(line, "}"); i++ {
-			p.bDecrement()
-		}
-	}
-}
-
-func (p *parserSrc) countParen(line string) {
-	switch {
-	case strings.Contains(line, "(") && strings.Contains(line, ")"):
-		for i := 0; i < strings.Count(line, "("); i++ {
-			p.pIncrement()
-		}
-		for i := 0; i < strings.Count(line, ")"); i++ {
-			p.pDecrement()
-		}
-	case strings.Contains(line, "("):
-		for i := 0; i < strings.Count(line, "("); i++ {
-			p.pIncrement()
-		}
-	case strings.Contains(line, ")"):
-		for i := 0; i < strings.Count(line, ")"); i++ {
-			p.pDecrement()
-		}
-	}
-}
-
 func (p *parserSrc) putPackages(imPath, pkgName string, iq chan<- importSpec) {
 	// put package to queue of `go get'
 	if !searchPackage(importSpec{imPath, pkgName}, p.imPkgs) {
@@ -227,7 +163,6 @@ func (p *parserSrc) parserFuncSignature(line string) bool {
 			p.funcFlag = group[3]
 			p.funcDecls = append(p.funcDecls, funcDecl{group[3], signature{group[1], group[4], result}, []string{}})
 		}
-		p.countBrackets(line)
 	}
 	return true
 }
@@ -291,23 +226,16 @@ func (p *parserSrc) parserType(line string) bool {
 			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[4], []fieldDecl{}, []methodSpecs{}})
 		}
 	}
-	if p.typeFlag == "paren" {
-		p.countParen(line)
-	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
-		p.countBrackets(line)
-	}
 	return true
 }
 
 func (p *parserSrc) parserTypeSpec(line string) bool {
 	if p.typeFlag == "paren" {
-		p.countParen(line)
 		if strings.Contains(line, ")") && p.paren == 0 {
 			p.typeFlag = ""
 			return true
 		}
 	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
-		p.countBrackets(line)
 		if strings.Contains(line, "}") && p.braces == 0 {
 			p.typeFlag = ""
 			return true
@@ -319,9 +247,7 @@ func (p *parserSrc) parserTypeSpec(line string) bool {
 func (p *parserSrc) parserMainBody(line string) bool {
 	if p.mainFlag {
 		p.main = append(p.main, line)
-		p.countBrackets(line)
 		if strings.Contains(line, "}") && p.braces == 0 {
-			// closing func main
 			p.mainFlag = false
 			return true
 		}
@@ -333,7 +259,6 @@ func (p *parserSrc) parserFuncBody(line string) bool {
 	if p.funcFlag != "" {
 		// func body
 		p.appendBody(line)
-		p.countBrackets(line)
 		if strings.Contains(line, "}") && p.braces == 0 {
 			// closing func main
 			p.funcFlag = ""
@@ -401,7 +326,6 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 	default:
 		// parser body
 		if !p.mainFlag {
-			p.countBrackets(line)
 			p.body = append(p.body, line)
 		}
 	}
@@ -476,22 +400,22 @@ func (p *parserSrc) countBBP(tok token.Token) {
 	switch {
 	case tok == token.LBRACE:
 		// {
-		p.bIncrement()
+		atomic.AddInt32(&p.braces, 1)
 	case tok == token.RBRACE:
 		// }
-		p.bDecrement()
+		atomic.AddInt32(&p.braces, -1)
 	case tok == token.LBRACK:
 		// [
-		p.brktIncrement()
+		atomic.AddInt32(&p.brackets, 1)
 	case tok == token.RBRACK:
 		// ]
-		p.brktDecrement()
+		atomic.AddInt32(&p.brackets, -1)
 	case tok == token.LPAREN:
 		// (
-		p.pIncrement()
+		atomic.AddInt32(&p.paren, 1)
 	case tok == token.RPAREN:
 		// )
-		p.pDecrement()
+		atomic.AddInt32(&p.paren, -1)
 	}
 }
 
