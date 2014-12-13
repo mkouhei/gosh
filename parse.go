@@ -430,14 +430,13 @@ func (p *parserSrc) validateBBP() bool {
 }
 
 func (p *parserSrc) ignorePkg(tok token.Token) bool {
-	if tok == token.PACKAGE {
+	switch {
+	case tok == token.PACKAGE, tok == token.IDENT && p.preToken == token.PACKAGE:
 		p.preToken = tok
-		return true
-	} else if tok == token.IDENT && p.preToken == token.PACKAGE {
-		p.preToken = tok
-		return true
+	default:
+		return false
 	}
-	return false
+	return true
 }
 
 func rmQuot(lit string) string {
