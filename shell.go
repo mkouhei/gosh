@@ -96,7 +96,7 @@ func (e *env) removeImport(msg string, pkg importSpec) {
 	} else {
 		key = pkg.pkgName
 	}
-	if strings.Contains(msg, fmt.Sprintf("package %s: unrecognized import path \"%s\"", key, key)) {
+	if strings.Contains(msg, fmt.Sprintf(`package %s: unrecognized import path "%s"`, key, key)) {
 		removeImportPackage(&e.parserSrc.imPkgs, importSpec{pkg.imPath, pkg.pkgName})
 	}
 }
