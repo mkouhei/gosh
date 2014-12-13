@@ -284,7 +284,9 @@ func TestParseLine(t *testing.T) {
 		"func (f foo) test7() {",
 		"fmt.Println(f)",
 		"}",
-		"func (q *qux) test8() {",
+		"func (q *qux) test8(name string) {",
+		"fmt.Println(q.name)",
+		"q.name = name",
 		"fmt.Println(q.name)",
 		"}",
 		"func main() {",
@@ -298,7 +300,7 @@ func TestParseLine(t *testing.T) {
 		"f := foo{\"bye\"}",
 		"f.test7()",
 		"q := qux{\"bye bye\", 1}",
-		"q.test8()",
+		"q.test8(\"end\")",
 		"}",
 	}
 
@@ -332,7 +334,7 @@ func TestParseLine(t *testing.T) {
 		"f := foo{\"bye\"}",
 		"f.test7()",
 		"q := qux{\"bye bye\", 1}",
-		"q.test8()",
+		"q.test8(\"end\")",
 		"}",
 	}
 
@@ -360,7 +362,7 @@ func TestParseLine(t *testing.T) {
 		fmt.Printf("%d:\t%s\n", i, l)
 	}
 
-	if len(p.mergeLines()) != 62 {
+	if len(p.mergeLines()) != 64 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
