@@ -32,9 +32,10 @@ type importSpec struct {
 }
 
 type signature struct {
-	functype string
-	params   string
-	result   string
+	receiverId   string
+	baseTypeName string
+	params       string
+	result       string
 }
 
 type funcDecl struct {
@@ -161,7 +162,14 @@ func (p *parserSrc) parserFuncSignature(line string) bool {
 				result = ""
 			}
 			p.funcFlag = group[3]
-			p.funcDecls = append(p.funcDecls, funcDecl{group[3], signature{group[1], group[4], result}, []string{}})
+			r := strings.Split(group[2], " ")
+			var rid, btn string
+			if len(r) == 2 {
+				rid, btn = r[0], r[1]
+			} else {
+				rid, btn = "", r[0]
+			}
+			p.funcDecls = append(p.funcDecls, funcDecl{group[3], signature{rid, btn, group[4], result}, []string{}})
 		}
 	}
 	return true
@@ -221,7 +229,7 @@ func (p *parserSrc) parserType(line string) bool {
 			}
 
 			i := len(p.typeDecls) - 1
-			p.typeDecls[i].methSpecs = append(p.typeDecls[i].methSpecs, methodSpecs{group[3], signature{methType, group[4], result}})
+			p.typeDecls[i].methSpecs = append(p.typeDecls[i].methSpecs, methodSpecs{group[3], signature{"", methType, group[4], result}})
 		} else {
 			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[4], []fieldDecl{}, []methodSpecs{}})
 		}
@@ -344,7 +352,11 @@ func convertImport(pkgs []importSpec) []string {
 func (p *parserSrc) convertFuncDecls() []string {
 	var lines []string
 	for _, fun := range p.funcDecls {
-		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", fun.sig.functype, fun.name, fun.sig.params, fun.sig.result))
+		rcv := ""
+		if fun.sig.receiverId != "" && fun.sig.baseTypeName != "" {
+			rcv = fmt.Sprintf("(%s %s)", fun.sig.receiverId, fun.sig.baseTypeName)
+		}
+		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", rcv, fun.name, fun.sig.params, fun.sig.result))
 		for _, l := range fun.body {
 			lines = append(lines, l)
 		}
@@ -360,7 +372,7 @@ func (p *parserSrc) convertTypeDecls() []string {
 		case len(t.methSpecs) > 0:
 			l = append(l, sig)
 			for _, m := range t.methSpecs {
-				sig = fmt.Sprintf("%s%s(%s)", m.sig.functype, m.name, m.sig.params)
+				sig = fmt.Sprintf("%s%s(%s)", m.sig.baseTypeName, m.name, m.sig.params)
 				if m.sig.result != "" {
 					sig = fmt.Sprintf("%s %s", sig, m.sig.result)
 				}
