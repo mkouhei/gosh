@@ -61,28 +61,23 @@ type fieldDecl struct {
 }
 
 type parserSrc struct {
-	imPkgs    []importSpec
-	imFlag    bool
-	funcDecls []funcDecl
-	funcFlag  string
-	brackets  int32
-	braces    int32
-	paren     int32
-	typeDecls []typeDecl
-	typeFlag  string
-	body      []string
-	mainFlag  bool
-	main      []string
-	preToken  token.Token
-	preLit    string
-}
+	brackets int32
+	braces   int32
+	paren    int32
 
-func (p *parserSrc) appendBody(line string) {
-	for i, fun := range p.funcDecls {
-		if p.funcFlag == fun.name {
-			p.funcDecls[i].body = append(p.funcDecls[i].body, line)
-		}
-	}
+	imPkgs    []importSpec
+	funcDecls []funcDecl
+	typeDecls []typeDecl
+	body      []string
+	main      []string
+
+	imFlag   bool
+	funcFlag string
+	typeFlag string
+	tFlag    bool
+	mainFlag bool
+	preToken token.Token
+	preLit   string
 }
 
 func (p *parserSrc) brktIncrement() {
@@ -348,6 +343,14 @@ func (p *parserSrc) parserFuncBody(line string) bool {
 		return false
 	}
 	return true
+}
+
+func (p *parserSrc) appendBody(line string) {
+	for i, fun := range p.funcDecls {
+		if p.funcFlag == fun.name {
+			p.funcDecls[i].body = append(p.funcDecls[i].body, line)
+		}
+	}
 }
 
 func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
