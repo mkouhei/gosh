@@ -72,13 +72,25 @@ type parserSrc struct {
 	body      []string
 	main      []string
 
-	imFlag   bool
-	funcFlag string
-	typeFlag string
-	tFlag    bool
-	mainFlag bool
-	preToken token.Token
-	preLit   string
+	imFlag      bool
+	funcName    string
+	typeFlag    string
+	tFlag       bool
+	mainFlag    bool
+	preToken    token.Token
+	preLit      string
+	tmpFuncDecl funcDecl
+
+	// 0: nofunc
+	// 1: receiverID
+	// 2: baseTypeName
+	// 3: name
+	// 4: params
+	// 5: result
+	// 6: body
+	// 7: close
+	// 8: close main
+	posFuncSig int
 }
 
 func (p *parserSrc) putPackages(imPath, pkgName string, iq chan<- importSpec) {
@@ -124,55 +136,6 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 		ret = append(ret, a)
 	}
 	return ret
-}
-
-func (p *parserSrc) parserFuncSignature(line string) bool {
-
-	funcName := `[[:blank:]]*func[[:blank:]]+(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
-	params := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
-	result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]*)`
-	pat := fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)[[:blank:]]*{[[:blank:]]*\z`, funcName, params, result)
-	re := regexp.MustCompile(pat)
-	num := re.NumSubexp()
-	groups := re.FindAllStringSubmatch(line, num)
-	// group[1]: type (or groups[2] without paren)
-	// group[3]: FuntionName
-	// group[4]: Parameters
-	// group[6]: result (multiple)
-	// group[5]: result (single)
-	if len(groups) == 0 {
-		return false
-	}
-	for _, group := range groups {
-		if group[3] == "main" {
-			// func main
-			p.mainFlag = true
-			p.main = append(p.main, line)
-			p.funcFlag = ""
-		} else {
-			// func other than main
-			var result string
-			if group[6] != "" {
-				// multiple results
-				result = group[6]
-			} else if group[5] != "" {
-				// single result
-				result = group[5]
-			} else {
-				result = ""
-			}
-			p.funcFlag = group[3]
-			r := strings.Split(group[2], " ")
-			var rid, btn string
-			if len(r) == 2 {
-				rid, btn = r[0], r[1]
-			} else {
-				rid, btn = "", r[0]
-			}
-			p.funcDecls = append(p.funcDecls, funcDecl{group[3], signature{rid, btn, group[4], result}, []string{}})
-		}
-	}
-	return true
 }
 
 func (p *parserSrc) parserType(line string) bool {
@@ -252,40 +215,6 @@ func (p *parserSrc) parserTypeSpec(line string) bool {
 	return false
 }
 
-func (p *parserSrc) parserMainBody(line string) bool {
-	if p.mainFlag {
-		p.main = append(p.main, line)
-		if strings.Contains(line, "}") && p.braces == 0 {
-			p.mainFlag = false
-			return true
-		}
-	}
-	return false
-}
-
-func (p *parserSrc) parserFuncBody(line string) bool {
-	if p.funcFlag != "" {
-		// func body
-		p.appendBody(line)
-		if strings.Contains(line, "}") && p.braces == 0 {
-			// closing func main
-			p.funcFlag = ""
-		}
-	} else {
-		// parse body
-		return false
-	}
-	return true
-}
-
-func (p *parserSrc) appendBody(line string) {
-	for i, fun := range p.funcDecls {
-		if p.funcFlag == fun.name {
-			p.funcDecls[i].body = append(p.funcDecls[i].body, line)
-		}
-	}
-}
-
 func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 	line := string(bline)
 	var s scanner.Scanner
@@ -293,50 +222,39 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 	file := fset.AddFile("", fset.Base(), len(bline))
 	s.Init(file, bline, nil, scanner.ScanComments)
 
-	flg := false
+	switch {
+	case p.parserTypeSpec(line):
+		// type spec of struct parser
+		return false
+	case p.parserType(line):
+		// type parser
+		return false
+	}
 
 	for {
 		_, tok, lit := s.Scan()
 		if tok == token.EOF {
 			break
 		}
-		//fmt.Println("token:", tok, lit, p.preToken)
 		p.countBBP(tok)
 
 		// ignore packageClause
-		if p.ignorePkg(tok) {
-			flg = true
-		}
+		p.ignorePkg(tok)
+
 		// parse import declare
-		if p.parseImPkg(tok, lit, iq) {
-			flg = true
-		}
+		p.parseImPkg(tok, lit, iq)
+		// parse func declare
+		p.parseFunc(tok, lit)
+
 		p.preToken = tok
 
 	}
 
-	if flg {
-		return false
+	if p.posFuncSig == 8 {
+		p.posFuncSig = 0
+		return true
 	}
 
-	switch {
-	case p.parserTypeSpec(line):
-		// type spec of struct parser
-	case p.parserType(line):
-		// type parser
-	case p.parserFuncSignature(line):
-		// func signature parser
-	case p.parserMainBody(line):
-		// func main body parser
-		return true
-	case p.parserFuncBody(line):
-		// func body parser
-	default:
-		// parser body
-		if !p.mainFlag {
-			p.body = append(p.body, line)
-		}
-	}
 	return false
 }
 
@@ -356,10 +274,17 @@ func (p *parserSrc) convertFuncDecls() []string {
 		if fun.sig.receiverID != "" && fun.sig.baseTypeName != "" {
 			rcv = fmt.Sprintf("(%s %s)", fun.sig.receiverID, fun.sig.baseTypeName)
 		}
-		lines = append(lines, fmt.Sprintf("func %s %s(%s) (%s) {", rcv, fun.name, fun.sig.params, fun.sig.result))
+
+		if fun.sig.result == "" {
+			lines = append(lines, fmt.Sprintf("func %s%s(%s) {", rcv, fun.name, fun.sig.params))
+		} else {
+			lines = append(lines, fmt.Sprintf("func %s%s(%s) (%s) {", rcv, fun.name, fun.sig.params, fun.sig.result))
+		}
+
 		for _, l := range fun.body {
 			lines = append(lines, l)
 		}
+		lines = append(lines, "}")
 	}
 	return lines
 }
@@ -406,7 +331,9 @@ func (p *parserSrc) mergeLines() []string {
 	l = append(l, p.convertTypeDecls()...)
 	l = append(l, p.convertFuncDecls()...)
 	l = append(l, p.body...)
-	return append(l, p.main...)
+	l = append(l, "func main() {")
+	l = append(l, p.main...)
+	return append(l, "}")
 }
 
 func (p *parserSrc) countBBP(tok token.Token) {
@@ -477,6 +404,381 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 			p.imFlag = false
 			p.preToken = tok
 		}
+	default:
+		return false
+	}
+	return true
+}
+
+func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
+	str := tokenToStr(tok, lit)
+
+	//fmt.Printf("[%d] T: %v\tL: %s\tP: %v\n", p.posFuncSig, tok, str, p.preToken)
+	switch {
+	case p.posFuncSig == 0:
+		if tok == token.FUNC {
+			p.posFuncSig = 1
+			p.preLit = ""
+		}
+	case p.posFuncSig == 1 && p.paren > 0:
+		// receiverID
+		// func (ri rt) fname(pi pt) (res)
+		//       ~~
+		if tok == token.IDENT {
+			p.tmpFuncDecl.sig.receiverID = str
+			p.posFuncSig = 2
+		}
+	case p.posFuncSig == 2:
+		// baseTypeName
+		if p.paren > 0 && p.tmpFuncDecl.sig.receiverID != "" {
+			switch {
+			case tok == token.MUL, tok == token.LBRACK:
+				// func (ri *rt) fname(pi pt) (res)
+				//          ~
+				// func (ri []rt) fname(pi pt) (res)
+				//          ~
+				p.tmpFuncDecl.sig.baseTypeName = str
+			case tok == token.RBRACK:
+				// func (ri []rt) fname(pi pt) (res)
+				//           ~
+				if p.tmpFuncDecl.sig.baseTypeName == "[" {
+					p.tmpFuncDecl.sig.baseTypeName += str
+				}
+			case tok == token.IDENT:
+				// func (ri rt) fname(pi pt) (res)
+				//          ~~
+				switch {
+				case p.preToken == token.MUL && p.tmpFuncDecl.sig.baseTypeName == "*":
+					// func (ri *rt) fname(pi pt) (res)
+					//           ~~
+					p.tmpFuncDecl.sig.baseTypeName += str
+				case p.preToken == token.RBRACK && p.tmpFuncDecl.sig.baseTypeName == "[]":
+					// func (ri []rt) fname(pi pt) (res)
+					//            ~~
+					p.tmpFuncDecl.sig.baseTypeName += str
+				default:
+					// func (ri rt) fname(pi pt) (res)
+					//          ~~
+					p.tmpFuncDecl.sig.baseTypeName = str
+				}
+				p.posFuncSig = 3
+			}
+		}
+
+	case p.posFuncSig == 3, p.posFuncSig == 1 && p.paren == 0:
+		// funcName
+		if p.paren == 0 && tok == token.IDENT && p.tmpFuncDecl.name == "" {
+			// func (ri rt) fname(pi pt) (res)
+			//              ~~~~~
+			if str == "main" {
+				p.mainFlag = true
+			} else {
+				p.tmpFuncDecl.name = str
+				p.funcName = str
+			}
+			p.posFuncSig = 4
+		}
+
+	case p.posFuncSig == 4:
+		// params
+		switch {
+		case tok == token.IDENT:
+			if p.tmpFuncDecl.sig.params == "" {
+				// func (ri rt) fname(pi pt) (res)
+				//                    ~~
+				p.tmpFuncDecl.sig.params = str
+			} else {
+				if p.preToken == token.COMMA {
+					// func (ri rt) fname(pi pt, pi pt) (res)
+					//                           ~~
+					p.tmpFuncDecl.sig.params = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.params, str)
+				} else if p.preToken == token.MUL || p.preToken == token.RBRACK {
+					// func (ri rt) fname(pi *pt) (res)
+					//                        ~
+					// func (ri rt) fname(pi []pt) (res)
+					//                         ~
+					p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, str)
+				} else {
+					// func (ri rt) fname(pi pt) (res)
+					//                       ~~
+					p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, str)
+				}
+			}
+		case tok == token.MUL, tok == token.LBRACK:
+			if p.tmpFuncDecl.sig.params != "" {
+				// func (ri rt) fname(pi *pt) (res)
+				//                       ~
+				// func (ri rt) fname(pi []pt) (res)
+				//                       ~
+				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, str)
+			}
+		case tok == token.RBRACK && p.preToken == token.LBRACK:
+			// func (ri rt) fname(pi []pt) (res)
+			//                        ~
+			if p.tmpFuncDecl.sig.params != "" {
+				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, str)
+			}
+		case tok == token.RPAREN && p.paren == 0:
+			p.posFuncSig = 5
+		case p.mainFlag && tok == token.RPAREN:
+			p.posFuncSig = 6
+		}
+
+	case p.posFuncSig == 5:
+		// result
+		switch {
+		case tok == token.IDENT:
+			switch {
+			case p.preToken == token.RPAREN:
+				// func (ri rt) fname(pi pt) res
+				//                           ~~~
+				p.tmpFuncDecl.sig.result = str
+				p.posFuncSig = 6
+			case p.preToken == token.LPAREN:
+				// func (ri rt) fname(pi pt) (res, res)
+				//                            ~~~
+				p.tmpFuncDecl.sig.result = str
+			case p.tmpFuncDecl.sig.result != "":
+				p.tmpFuncDecl.sig.result = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.result, str)
+			}
+		case p.paren == 0 && (tok == token.RPAREN || tok == token.LBRACE):
+			p.posFuncSig = 6
+		}
+
+	case p.posFuncSig == 6:
+		// body
+		if p.mainFlag {
+			p.parseFuncBody(&p.main, tok, str)
+		} else {
+			p.parseFuncBody(&p.tmpFuncDecl.body, tok, str)
+		}
+
+	case p.posFuncSig == 7:
+		// closing
+		if tok != token.IDENT && p.paren == 0 {
+			if p.mainFlag {
+				p.posFuncSig = 8
+			} else {
+				p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
+				p.posFuncSig = 0
+			}
+			p.tmpFuncDecl = funcDecl{}
+			p.mainFlag = false
+		}
+	default:
+		p.preLit = str
+	}
+	p.preToken = tok
+	return true
+}
+
+func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
+	b := *body
+	switch {
+	case tok == token.SEMICOLON:
+		b = append(b, p.preLit)
+		p.preLit = ""
+	case tok == token.LBRACE && p.braces == 1:
+	case tok == token.RBRACE && p.braces == 0:
+		p.posFuncSig = 7
+	case p.preLit == "":
+		p.preLit = lit
+	case hasSpaceToken(p.preToken) && hasSpaceToken(tok):
+		p.preLit = fmt.Sprintf("%s %s", p.preLit, lit)
+	default:
+		p.preLit = fmt.Sprintf("%s%s", p.preLit, lit)
+	}
+	*body = b
+}
+
+func tokenToStr(tok token.Token, lit string) string {
+	var str string
+	switch {
+	case tok == token.ADD:
+		str = "+"
+	case tok == token.SUB:
+		str = "-"
+	case tok == token.MUL:
+		str = "*"
+	case tok == token.QUO:
+		str = "/"
+	case tok == token.REM:
+		str = "%"
+	case tok == token.AND:
+		str = "&"
+	case tok == token.OR:
+		str = "|"
+	case tok == token.XOR:
+		str = "^"
+	case tok == token.SHL:
+		str = "<<"
+	case tok == token.SHR:
+		str = ">>"
+	case tok == token.AND_NOT:
+		str = "&^"
+	case tok == token.ADD_ASSIGN:
+		str = "+="
+	case tok == token.SUB_ASSIGN:
+		str = "-="
+	case tok == token.MUL_ASSIGN:
+		str = "*="
+	case tok == token.QUO_ASSIGN:
+		str = "/="
+	case tok == token.REM_ASSIGN:
+		str = "%="
+	case tok == token.AND_ASSIGN:
+		str = "&="
+	case tok == token.OR_ASSIGN:
+		str = "|="
+	case tok == token.XOR_ASSIGN:
+		str = "^="
+	case tok == token.SHL_ASSIGN:
+		str = "<<="
+	case tok == token.SHR_ASSIGN:
+		str = ">>="
+	case tok == token.AND_NOT_ASSIGN:
+		str = "&^="
+	case tok == token.LAND:
+		str = "&&"
+	case tok == token.LOR:
+		str = "||"
+	case tok == token.ARROW:
+		str = "<-"
+	case tok == token.INC:
+		str = "++"
+	case tok == token.DEC:
+		str = "--"
+	case tok == token.EQL:
+		str = "=="
+	case tok == token.LSS:
+		str = "<"
+	case tok == token.GTR:
+		str = ">"
+	case tok == token.ASSIGN:
+		str = "="
+	case tok == token.NOT:
+		str = "!"
+	case tok == token.NEQ:
+		str = "!="
+	case tok == token.LEQ:
+		str = "<="
+	case tok == token.GEQ:
+		str = ">="
+	case tok == token.DEFINE:
+		str = ":="
+	case tok == token.ELLIPSIS:
+		str = "..."
+	case tok == token.LPAREN:
+		str = "("
+	case tok == token.LBRACK:
+		str = "["
+	case tok == token.LBRACE:
+		str = "{"
+	case tok == token.COMMA:
+		str = ","
+	case tok == token.PERIOD:
+		str = "."
+	case tok == token.RPAREN:
+		str = ")"
+	case tok == token.RBRACK:
+		str = "]"
+	case tok == token.RBRACE:
+		str = "}"
+	case tok == token.SEMICOLON:
+		str = ";"
+	case tok == token.COLON:
+		str = ":"
+	case tok == token.BREAK:
+		str = "break"
+	case tok == token.CASE:
+		str = "case"
+	case tok == token.CHAN:
+		str = "chan"
+	case tok == token.CONST:
+		str = "const"
+	case tok == token.CONTINUE:
+		str = "continue"
+	case tok == token.DEFAULT:
+		str = "default"
+	case tok == token.DEFER:
+		str = "defer"
+	case tok == token.ELSE:
+		str = "else"
+	case tok == token.FALLTHROUGH:
+		str = "fallthrough"
+	case tok == token.FOR:
+		str = "for"
+	case tok == token.FUNC:
+		str = "func"
+	case tok == token.GO:
+		str = "go"
+	case tok == token.GOTO:
+		str = "goto"
+	case tok == token.IF:
+		str = "if"
+	case tok == token.IMPORT:
+		str = "import"
+	case tok == token.INTERFACE:
+		str = "interface"
+	case tok == token.MAP:
+		str = "map"
+	case tok == token.PACKAGE:
+		str = "package"
+	case tok == token.RANGE:
+		str = "range"
+	case tok == token.RETURN:
+		str = "return"
+	case tok == token.SELECT:
+		str = "select"
+	case tok == token.STRUCT:
+		str = "struct"
+	case tok == token.SWITCH:
+		str = "switch"
+	case tok == token.TYPE:
+		str = "type"
+	case tok == token.VAR:
+		str = "var"
+	default:
+		str = lit
+	}
+	return str
+}
+
+func hasSpaceToken(tok token.Token) bool {
+	switch {
+	case tok == token.LBRACK:
+	case tok == token.RBRACK:
+	case tok == token.BREAK:
+	case tok == token.CASE:
+	case tok == token.CHAN:
+	case tok == token.CONST:
+	case tok == token.CONTINUE:
+	case tok == token.DEFAULT:
+	case tok == token.DEFER:
+	case tok == token.ELSE:
+	case tok == token.FALLTHROUGH:
+	case tok == token.FOR:
+	case tok == token.FUNC:
+	case tok == token.GO:
+	case tok == token.GOTO:
+	case tok == token.IF:
+	case tok == token.IMPORT:
+	case tok == token.INTERFACE:
+	case tok == token.MAP:
+	case tok == token.PACKAGE:
+	case tok == token.RANGE:
+	case tok == token.RETURN:
+	case tok == token.SELECT:
+	case tok == token.STRUCT:
+	case tok == token.SWITCH:
+	case tok == token.TYPE:
+	case tok == token.VAR:
+	case tok == token.IDENT:
+	case tok == token.INT:
+	case tok == token.FLOAT:
+	case tok == token.IMAG:
+	case tok == token.CHAR:
+	case tok == token.STRING:
 	default:
 		return false
 	}

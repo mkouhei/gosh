@@ -18,7 +18,6 @@ package main
 */
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -164,76 +163,6 @@ func TestParserType(t *testing.T) {
 
 }
 
-func TestParserFuncSignature(t *testing.T) {
-	p := parserSrc{}
-	line := "func main() {"
-	if !p.parserFuncSignature(line) || !p.mainFlag {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
-	p.mainFlag = false
-	line = "func main(){"
-	if !p.parserFuncSignature(line) || !p.mainFlag {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
-	p.mainFlag = false
-	line = "func main (){"
-	if !p.parserFuncSignature(line) || !p.mainFlag {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
-	p.mainFlag = false
-	line = "func main () {"
-	if !p.parserFuncSignature(line) || !p.mainFlag {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
-	p.mainFlag = false
-	line = "func main () { "
-	if !p.parserFuncSignature(line) || !p.mainFlag {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
-	p.mainFlag = false
-	line = " func main () { "
-	if !p.parserFuncSignature(line) || !p.mainFlag {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
-	p.mainFlag = false
-	line = "func main ()"
-	if p.parserFuncSignature(line) || p.mainFlag {
-		t.Fatalf(`parser error: "%s"`, line)
-	}
-
-	p.mainFlag = false
-	line = "func foo() {"
-	if !p.parserFuncSignature(line) || p.mainFlag {
-		t.Fatalf(`parser error: %s`, line)
-	}
-
-	line = "func foo(bar string) {"
-	if !p.parserFuncSignature(line) || p.mainFlag {
-		t.Fatalf(`parser error: %s`, line)
-	}
-
-	line = "func foo(bar, baz  string) {"
-	if !p.parserFuncSignature(line) || p.mainFlag {
-		t.Fatalf(`parser error: %s`, line)
-	}
-
-	line = "func foo(bar, baz  string) boo{"
-	if !p.parserFuncSignature(line) || p.mainFlag {
-		t.Fatalf(`parser error: %s`, line)
-	}
-
-	line = "func foo(bar, baz  string) (boo, int){"
-	if !p.parserFuncSignature(line) || p.mainFlag {
-		t.Fatalf(`parser error: %s`, line)
-	}
-
-	line = "func (q *qux) foo(bar, baz  string) (boo, int){"
-	if !p.parserFuncSignature(line) || p.mainFlag {
-		t.Fatalf(`parser error: %s`, line)
-	}
-
-}
-
 func TestParseLine(t *testing.T) {
 	p := parserSrc{}
 	iq := make(chan importSpec, 10)
@@ -325,19 +254,17 @@ func TestParseLine(t *testing.T) {
 		`)`}
 
 	main1 := []string{
-		`func main() {`,
 		`fmt.Println(test0())`,
 		`test1()`,
 		`test2(2)`,
 		`fmt.Println(test3(3))`,
-		`fmt.Println(test4("hello", 4))`,
-		`fmt.Println(test5("bye", 5))`,
-		`fmt.Println(test6("hello, again", 6))`,
-		`f := foo{"bye"}`,
+		`fmt.Println(test4("hello",4))`,
+		`fmt.Println(test5("bye",5))`,
+		`fmt.Println(test6("hello, again",6))`,
+		`f:=foo{"bye"}`,
 		`f.test7()`,
-		`q := qux{"bye bye", 1}`,
+		`q:=qux{"bye bye",1}`,
 		`q.test8("end")`,
-		`}`,
 	}
 
 	for _, l := range lines {
@@ -360,11 +287,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
-	for i, l := range p.mergeLines() {
-		fmt.Printf("%d:\t%s\n", i, l)
-	}
-
-	if len(p.mergeLines()) != 66 {
+	if len(p.mergeLines()) != 64 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
