@@ -275,8 +275,10 @@ func TestParseLine(t *testing.T) {
 		`func test4(msg string, cnt int) string {`,
 		`return fmt.Sprintf("%d: %s\n", cnt, msg)`,
 		`}`,
-		`func test5(msg string,cnt int) string {`,
-		`return fmt.Sprintf("%d: %s\n", cnt, msg)`,
+		`func test5(msgs []string,cnt int) {`,
+		`for i, l := range msgs {`,
+		`fmt.Printf("%d: %s\n", i + cnt, l)`,
+		`}`,
 		`}`,
 		`func test6(msg string, cnt int) (string, int) {`,
 		`return fmt.Sprintf("%d: %s\n", cnt, msg), 1`,
@@ -362,7 +364,7 @@ func TestParseLine(t *testing.T) {
 		fmt.Printf("%d:\t%s\n", i, l)
 	}
 
-	if len(p.mergeLines()) != 64 {
+	if len(p.mergeLines()) != 66 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
