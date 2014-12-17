@@ -413,7 +413,6 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 	str := tokenToStr(tok, lit)
 
-	//fmt.Printf("[%d] T: %v\tL: %s\tP: %v\n", p.posFuncSig, tok, str, p.preToken)
 	switch {
 	case p.posFuncSig == 0:
 		if tok == token.FUNC {
