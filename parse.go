@@ -605,6 +605,11 @@ func (p *parserSrc) funcClosing(tok token.Token) {
 	if tok != token.IDENT && p.paren == 0 {
 		if p.mainFlag {
 			p.posFuncSig = 8
+		} else if i := p.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
+			p.funcDecls[i].name = p.tmpFuncDecl.name
+			p.funcDecls[i].sig = p.tmpFuncDecl.sig
+			p.funcDecls[i].body = p.tmpFuncDecl.body
+			p.posFuncSig = 0
 		} else {
 			p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
 			p.posFuncSig = 0
@@ -613,6 +618,15 @@ func (p *parserSrc) funcClosing(tok token.Token) {
 		p.mainFlag = false
 	}
 
+}
+
+func (p *parserSrc) searchFuncDecl(name string) int {
+	for i, fnc := range p.funcDecls {
+		if fnc.name == name {
+			return i
+		}
+	}
+	return -1
 }
 
 func tokenToStr(tok token.Token, lit string) string {
