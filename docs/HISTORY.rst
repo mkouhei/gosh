@@ -1,6 +1,16 @@
 History
 -------
 
+0.2.0 (not released)
+~~~~~~~~~~~~~~~~~~~~
+
+* Enable to re-declare function.
+* refactoring of parser import declaration, function declaration with go/scanner, go/token instead of regexp.
+* Added parser of typeDecl.
+* Fixed some bugs.
+* Added to execute go get for goimports in Makefile.
+* Applied golint, go vet.
+
 0.1.7 (2014-11-28)
 ~~~~~~~~~~~~~~~~~~
 

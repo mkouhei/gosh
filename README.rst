@@ -15,6 +15,7 @@ Features
 * Enable to omit package statement
 * Enable to omit the import statement of standard library
 * Enable to Import libraries of non-standard library
+* Enable to re-declare function
 * Ignoring duplicate import package
 * Ignoring unused import package
 
