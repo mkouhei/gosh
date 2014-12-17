@@ -430,120 +430,19 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		}
 	case p.posFuncSig == 2:
 		// baseTypeName
-		if p.paren > 0 && p.tmpFuncDecl.sig.receiverID != "" {
-			switch {
-			case tok == token.MUL, tok == token.LBRACK:
-				// func (ri *rt) fname(pi pt) (res)
-				//          ~
-				// func (ri []rt) fname(pi pt) (res)
-				//          ~
-				p.tmpFuncDecl.sig.baseTypeName = str
-			case tok == token.RBRACK:
-				// func (ri []rt) fname(pi pt) (res)
-				//           ~
-				if p.tmpFuncDecl.sig.baseTypeName == "[" {
-					p.tmpFuncDecl.sig.baseTypeName += str
-				}
-			case tok == token.IDENT:
-				// func (ri rt) fname(pi pt) (res)
-				//          ~~
-				switch {
-				case p.preToken == token.MUL && p.tmpFuncDecl.sig.baseTypeName == "*":
-					// func (ri *rt) fname(pi pt) (res)
-					//           ~~
-					p.tmpFuncDecl.sig.baseTypeName += str
-				case p.preToken == token.RBRACK && p.tmpFuncDecl.sig.baseTypeName == "[]":
-					// func (ri []rt) fname(pi pt) (res)
-					//            ~~
-					p.tmpFuncDecl.sig.baseTypeName += str
-				default:
-					// func (ri rt) fname(pi pt) (res)
-					//          ~~
-					p.tmpFuncDecl.sig.baseTypeName = str
-				}
-				p.posFuncSig = 3
-			}
-		}
+		p.parseFuncBaseTypeName(tok, str)
 
 	case p.posFuncSig == 3, p.posFuncSig == 1 && p.paren == 0:
 		// funcName
-		if p.paren == 0 && tok == token.IDENT && p.tmpFuncDecl.name == "" {
-			// func (ri rt) fname(pi pt) (res)
-			//              ~~~~~
-			if str == "main" {
-				p.mainFlag = true
-			} else {
-				p.tmpFuncDecl.name = str
-				p.funcName = str
-			}
-			p.posFuncSig = 4
-		}
+		p.parseFuncName(tok, str)
 
 	case p.posFuncSig == 4:
 		// params
-		switch {
-		case tok == token.IDENT:
-			if p.tmpFuncDecl.sig.params == "" {
-				// func (ri rt) fname(pi pt) (res)
-				//                    ~~
-				p.tmpFuncDecl.sig.params = str
-			} else {
-				if p.preToken == token.COMMA {
-					// func (ri rt) fname(pi pt, pi pt) (res)
-					//                           ~~
-					p.tmpFuncDecl.sig.params = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.params, str)
-				} else if p.preToken == token.MUL || p.preToken == token.RBRACK {
-					// func (ri rt) fname(pi *pt) (res)
-					//                        ~
-					// func (ri rt) fname(pi []pt) (res)
-					//                         ~
-					p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, str)
-				} else {
-					// func (ri rt) fname(pi pt) (res)
-					//                       ~~
-					p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, str)
-				}
-			}
-		case tok == token.MUL, tok == token.LBRACK:
-			if p.tmpFuncDecl.sig.params != "" {
-				// func (ri rt) fname(pi *pt) (res)
-				//                       ~
-				// func (ri rt) fname(pi []pt) (res)
-				//                       ~
-				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, str)
-			}
-		case tok == token.RBRACK && p.preToken == token.LBRACK:
-			// func (ri rt) fname(pi []pt) (res)
-			//                        ~
-			if p.tmpFuncDecl.sig.params != "" {
-				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, str)
-			}
-		case tok == token.RPAREN && p.paren == 0:
-			p.posFuncSig = 5
-		case p.mainFlag && tok == token.RPAREN:
-			p.posFuncSig = 6
-		}
+		p.parseFuncParams(tok, lit)
 
 	case p.posFuncSig == 5:
 		// result
-		switch {
-		case tok == token.IDENT:
-			switch {
-			case p.preToken == token.RPAREN:
-				// func (ri rt) fname(pi pt) res
-				//                           ~~~
-				p.tmpFuncDecl.sig.result = str
-				p.posFuncSig = 6
-			case p.preToken == token.LPAREN:
-				// func (ri rt) fname(pi pt) (res, res)
-				//                            ~~~
-				p.tmpFuncDecl.sig.result = str
-			case p.tmpFuncDecl.sig.result != "":
-				p.tmpFuncDecl.sig.result = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.result, str)
-			}
-		case p.paren == 0 && (tok == token.RPAREN || tok == token.LBRACE):
-			p.posFuncSig = 6
-		}
+		p.parseFuncResult(tok, lit)
 
 	case p.posFuncSig == 6:
 		// body
@@ -555,21 +454,133 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 
 	case p.posFuncSig == 7:
 		// closing
-		if tok != token.IDENT && p.paren == 0 {
-			if p.mainFlag {
-				p.posFuncSig = 8
-			} else {
-				p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
-				p.posFuncSig = 0
-			}
-			p.tmpFuncDecl = funcDecl{}
-			p.mainFlag = false
-		}
+		p.funcClosing(tok)
+
 	default:
 		p.preLit = str
 	}
 	p.preToken = tok
 	return true
+}
+
+func (p *parserSrc) parseFuncBaseTypeName(tok token.Token, lit string) {
+	if p.paren > 0 && p.tmpFuncDecl.sig.receiverID != "" {
+		switch {
+		case tok == token.MUL, tok == token.LBRACK:
+			// func (ri *rt) fname(pi pt) (res)
+			//          ~
+			// func (ri []rt) fname(pi pt) (res)
+			//          ~
+			p.tmpFuncDecl.sig.baseTypeName = lit
+		case tok == token.RBRACK:
+			// func (ri []rt) fname(pi pt) (res)
+			//           ~
+			if p.tmpFuncDecl.sig.baseTypeName == "[" {
+				p.tmpFuncDecl.sig.baseTypeName += lit
+			}
+		case tok == token.IDENT:
+			// func (ri rt) fname(pi pt) (res)
+			//          ~~
+			switch {
+			case p.preToken == token.MUL && p.tmpFuncDecl.sig.baseTypeName == "*":
+				// func (ri *rt) fname(pi pt) (res)
+				//           ~~
+				p.tmpFuncDecl.sig.baseTypeName += lit
+			case p.preToken == token.RBRACK && p.tmpFuncDecl.sig.baseTypeName == "[]":
+				// func (ri []rt) fname(pi pt) (res)
+				//            ~~
+				p.tmpFuncDecl.sig.baseTypeName += lit
+			default:
+				// func (ri rt) fname(pi pt) (res)
+				//          ~~
+				p.tmpFuncDecl.sig.baseTypeName = lit
+			}
+			p.posFuncSig = 3
+		}
+	}
+
+}
+
+func (p *parserSrc) parseFuncName(tok token.Token, lit string) {
+	if p.paren == 0 && tok == token.IDENT && p.tmpFuncDecl.name == "" {
+		// func (ri rt) fname(pi pt) (res)
+		//              ~~~~~
+		if lit == "main" {
+			p.mainFlag = true
+		} else {
+			p.tmpFuncDecl.name = lit
+			p.funcName = lit
+		}
+		p.posFuncSig = 4
+	}
+}
+
+func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
+	switch {
+	case tok == token.IDENT:
+		if p.tmpFuncDecl.sig.params == "" {
+			// func (ri rt) fname(pi pt) (res)
+			//                    ~~
+			p.tmpFuncDecl.sig.params = lit
+		} else {
+			if p.preToken == token.COMMA {
+				// func (ri rt) fname(pi pt, pi pt) (res)
+				//                           ~~
+				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.params, lit)
+			} else if p.preToken == token.MUL || p.preToken == token.RBRACK {
+				// func (ri rt) fname(pi *pt) (res)
+				//                        ~
+				// func (ri rt) fname(pi []pt) (res)
+				//                         ~
+				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, lit)
+			} else {
+				// func (ri rt) fname(pi pt) (res)
+				//                       ~~
+				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, lit)
+			}
+		}
+	case tok == token.MUL, tok == token.LBRACK:
+		if p.tmpFuncDecl.sig.params != "" {
+			// func (ri rt) fname(pi *pt) (res)
+			//                       ~
+			// func (ri rt) fname(pi []pt) (res)
+			//                       ~
+			p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, lit)
+		}
+	case tok == token.RBRACK && p.preToken == token.LBRACK:
+		// func (ri rt) fname(pi []pt) (res)
+		//                        ~
+		if p.tmpFuncDecl.sig.params != "" {
+			p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, lit)
+		}
+	case tok == token.RPAREN && p.paren == 0:
+		p.posFuncSig = 5
+	case p.mainFlag && tok == token.RPAREN:
+		p.posFuncSig = 6
+	}
+
+}
+
+func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
+	switch {
+	case tok == token.IDENT:
+		switch {
+		case p.preToken == token.RPAREN:
+			// func (ri rt) fname(pi pt) res
+			//                           ~~~
+			p.tmpFuncDecl.sig.result = lit
+			p.posFuncSig = 6
+		case p.preToken == token.LPAREN:
+			// func (ri rt) fname(pi pt) (res, res)
+			//                            ~~~
+			p.tmpFuncDecl.sig.result = lit
+		case p.tmpFuncDecl.sig.result != "":
+			p.tmpFuncDecl.sig.result = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.result, lit)
+		}
+	case p.paren == 0 && (tok == token.RPAREN || tok == token.LBRACE):
+		p.posFuncSig = 6
+	}
+
 }
 
 func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
@@ -589,6 +600,20 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 		p.preLit = fmt.Sprintf("%s%s", p.preLit, lit)
 	}
 	*body = b
+}
+
+func (p *parserSrc) funcClosing(tok token.Token) {
+	if tok != token.IDENT && p.paren == 0 {
+		if p.mainFlag {
+			p.posFuncSig = 8
+		} else {
+			p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
+			p.posFuncSig = 0
+		}
+		p.tmpFuncDecl = funcDecl{}
+		p.mainFlag = false
+	}
+
 }
 
 func tokenToStr(tok token.Token, lit string) string {
