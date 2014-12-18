@@ -299,7 +299,7 @@ func (p *parserSrc) convertTypeDecls() []string {
 			for _, m := range t.methSpecs {
 				sig = fmt.Sprintf("%s%s(%s)", m.sig.baseTypeName, m.name, m.sig.params)
 				if m.sig.result != "" {
-					sig = fmt.Sprintf("%s %s", sig, m.sig.result)
+					sig += " " + m.sig.result
 				}
 				l = append(l, sig)
 			}
@@ -525,17 +525,17 @@ func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
 			if p.preToken == token.COMMA {
 				// func (ri rt) fname(pi pt, pi pt) (res)
 				//                           ~~
-				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.params, lit)
+				p.tmpFuncDecl.sig.params += ", " + lit
 			} else if p.preToken == token.MUL || p.preToken == token.RBRACK {
 				// func (ri rt) fname(pi *pt) (res)
 				//                        ~
 				// func (ri rt) fname(pi []pt) (res)
 				//                         ~
-				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, lit)
+				p.tmpFuncDecl.sig.params += lit
 			} else {
 				// func (ri rt) fname(pi pt) (res)
 				//                       ~~
-				p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, lit)
+				p.tmpFuncDecl.sig.params += " " + lit
 			}
 		}
 	case tok == token.MUL, tok == token.LBRACK:
@@ -544,13 +544,14 @@ func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
 			//                       ~
 			// func (ri rt) fname(pi []pt) (res)
 			//                       ~
-			p.tmpFuncDecl.sig.params = fmt.Sprintf("%s %s", p.tmpFuncDecl.sig.params, lit)
+			p.tmpFuncDecl.sig.params += " " + lit
+
 		}
 	case tok == token.RBRACK && p.preToken == token.LBRACK:
 		// func (ri rt) fname(pi []pt) (res)
 		//                        ~
 		if p.tmpFuncDecl.sig.params != "" {
-			p.tmpFuncDecl.sig.params = fmt.Sprintf("%s%s", p.tmpFuncDecl.sig.params, lit)
+			p.tmpFuncDecl.sig.params += lit
 		}
 	case tok == token.RPAREN && p.paren == 0:
 		p.posFuncSig = 5
@@ -574,7 +575,7 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 			//                            ~~~
 			p.tmpFuncDecl.sig.result = lit
 		case p.tmpFuncDecl.sig.result != "":
-			p.tmpFuncDecl.sig.result = fmt.Sprintf("%s, %s", p.tmpFuncDecl.sig.result, lit)
+			p.tmpFuncDecl.sig.result += ", " + lit
 		}
 	case p.paren == 0 && (tok == token.RPAREN || tok == token.LBRACE):
 		p.posFuncSig = 6
@@ -594,9 +595,9 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 	case p.preLit == "":
 		p.preLit = lit
 	case hasSpaceToken(p.preToken) && hasSpaceToken(tok):
-		p.preLit = fmt.Sprintf("%s %s", p.preLit, lit)
+		p.preLit += " " + lit
 	default:
-		p.preLit = fmt.Sprintf("%s%s", p.preLit, lit)
+		p.preLit += lit
 	}
 	*body = b
 }
