@@ -80,6 +80,7 @@ type parserSrc struct {
 	preToken    token.Token
 	preLit      string
 	tmpFuncDecl funcDecl
+	tmpTypeDecl typeDecl
 
 	// 0: nofunc
 	// 1: receiverID
@@ -91,6 +92,21 @@ type parserSrc struct {
 	// 7: close
 	// 8: close main
 	posFuncSig int
+
+	// 0: notype
+	// 1: typeID
+	// 2: typeName
+	// 3: fieldIDList
+	// 4: fieldType
+	// 5: method
+	posType int
+
+	// 0: no method
+	// 1: method name
+	// 2: param typeID
+	// 3: param typeName
+	// 4: result
+	posMeth int
 }
 
 func (p *parserSrc) putPackages(imPath, pkgName string, iq chan<- importSpec) {
@@ -138,98 +154,253 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 	return ret
 }
 
-func (p *parserSrc) parserType(line string) bool {
-	var pat string
-	if p.typeFlag == "paren" || p.typeFlag == "struct" {
-		pat = `\A[[:blank:]]*(((\w+)[[:blank:]]+(\S+)))()[[:blank:]]*\z`
-	} else if p.typeFlag == "interface" {
-		methName := `[[:blank:]]*(\((\w+[[:blank:]]+\*?\w+)\)[[:blank:]]*)?(\w+)[[:blank:]]*`
-		params := `([\w_\*\[\],[:blank:]]+|[:blank:]*)`
-		result := `\(([\w_\*\[\],[:blank:]]+)\)|([\w\*\[\][:blank:]]+)`
-		pat = fmt.Sprintf(`\A%s\(%s\)[[:blank:]]*(%s)?[[:blank:]]*\z`, methName, params, result)
-	} else {
-		pat = `\A[[:blank:]]*type[[:blank:]]+((\()|(\w+)[[:blank:]]+((struct|interface)[[:blank:]]*\{|\S+)[[:blank:]]*)\z`
-	}
+func (p *parserSrc) parseType(tok token.Token, lit string) bool {
+	str := tokenToStr(tok, lit)
 
-	re := regexp.MustCompile(pat)
-	num := re.NumSubexp()
-	groups := re.FindAllStringSubmatch(line, num)
-	// group[2]: "("
-	// group[3]: identifier
-	// group[4]: type (not struct, interface)
-	// gropu[5]: "{"
-	if len(groups) == 0 {
-		return false
-	}
-	for _, group := range groups {
-		if group[2] == "(" {
-			p.typeFlag = "paren"
-		} else if p.typeFlag == "" && (group[5] == "struct" || group[5] == "interface") {
-			p.typeFlag = group[5]
-			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[5], []fieldDecl{}, []methodSpecs{}})
-		} else if p.typeFlag == "struct" {
-			i := len(p.typeDecls) - 1
-			p.typeDecls[i].fieldDecls = append(p.typeDecls[i].fieldDecls, fieldDecl{group[3], group[4]})
-		} else if p.typeFlag == "interface" {
-			// group[2]: MethodType (enable to define?)
-			// group[3]: MethodName
-			// group[4]: parameters
-			// group[5]: returns
-
-			methType := ""
-			if group[2] != "" {
-				methType = fmt.Sprintf("(%s)", group[2])
-			}
-			var result string
-			if group[6] != "" {
-				// multiple results
-				result = fmt.Sprintf("(%s)", group[6])
-			} else if group[5] != "" {
-				// single result
-				result = group[5]
-			} else {
-				result = ""
-			}
-
-			i := len(p.typeDecls) - 1
-			p.typeDecls[i].methSpecs = append(p.typeDecls[i].methSpecs, methodSpecs{group[3], signature{"", methType, group[4], result}})
-		} else {
-			p.typeDecls = append(p.typeDecls, typeDecl{group[3], group[4], []fieldDecl{}, []methodSpecs{}})
+	switch {
+	case p.posType == 0:
+		if tok == token.TYPE {
+			// type typeID typeName
+			// ~~~~
+			p.tFlag = true
+			p.posType = 1
 		}
+	case p.posType == 1:
+		// type typeID typeName
+		//      ~~~~~~
+		switch {
+		case tok == token.IDENT && p.tmpTypeDecl.typeID == "":
+			p.tmpTypeDecl.typeID = str
+			p.posType = 2
+		case tok == token.RPAREN && p.paren == 0:
+			p.posType = 0
+		}
+	case p.posType == 2:
+		if p.tmpTypeDecl.typeID != "" {
+			switch {
+			case tok == token.LBRACK:
+				// type typeID []typeName
+				//             ~
+				p.tmpTypeDecl.typeName = str
+			case tok == token.RBRACK:
+				// type typeID []typeName
+				//              ~
+				if p.tmpTypeDecl.typeName == "[" {
+					p.tmpTypeDecl.typeName += str
+				}
+			case tok == token.STRUCT:
+				// type typeID struct {
+				//             ~~~~~~
+				p.tmpTypeDecl.typeName = str
+				p.posType = 3
+			case tok == token.INTERFACE:
+				// type typeID interface {
+				//             ~~~~~~~~~
+				p.tmpTypeDecl.typeName = str
+				p.posType = 5
+				p.posMeth = 1
+			case tok == token.IDENT:
+				switch {
+				case p.preToken == token.RBRACK && p.tmpTypeDecl.typeName == "[]":
+					p.tmpTypeDecl.typeName += str
+					p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
+					p.tmpTypeDecl = typeDecl{}
+					if p.paren == 0 {
+						// type typeID []typeName
+						//               ~~~~~~~~
+						p.posType = 0
+					} else {
+						// type (
+						//    typeID []typeName
+						//             ~~~~~~~~
+						p.posType = 1
+					}
+				default:
+					p.tmpTypeDecl.typeName = str
+					p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
+					p.tmpTypeDecl = typeDecl{}
+					if p.paren == 0 {
+						// type typeID typeName
+						//             ~~~~~~~~
+						p.posType = 0
+					} else {
+						// type (
+						//    typeID typeName
+						//           ~~~~~~~~
+						p.posType = 1
+					}
+				}
+			}
+		}
+	case p.posType == 3:
+		// fieldIDList
+		switch {
+		case tok == token.RBRACE && p.braces == 0:
+			if p.preToken == token.SEMICOLON {
+				p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
+				p.tmpTypeDecl = typeDecl{}
+			}
+			if p.paren == 0 {
+				// type typeID struct {
+				//     typeID []typeName
+				//     }
+				//     ~
+				p.posType = 0
+			} else if p.paren == 1 {
+				// type (
+				// typeID struct {
+				//     typeID []typeName
+				//     }
+				//     ~
+				p.posType = 1
+			}
+		case tok == token.IDENT && p.braces > 0:
+			if p.preToken == token.LBRACE || p.preToken == token.SEMICOLON {
+				// type typeID struct {
+				//     typeID typeName
+				//     ~~~~~~
+				p.tmpTypeDecl.fieldDecls = append(p.tmpTypeDecl.fieldDecls, fieldDecl{str, ""})
+				p.posType = 4
+			}
+		}
+
+	case p.posType == 4:
+		i := len(p.tmpTypeDecl.fieldDecls)
+		if i > 0 {
+			switch {
+			case tok == token.IDENT && p.braces > 0:
+				if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "[]" {
+					// type typeID struct {
+					//     typeID []typeName
+					//              ~~~~~~~~
+					p.tmpTypeDecl.fieldDecls[i-1].fieldType += str
+				} else {
+					// type typeID struct {
+					//     typeID typeName
+					//            ~~~~~~~~
+					p.tmpTypeDecl.fieldDecls[i-1].fieldType = str
+				}
+			case tok == token.LBRACK:
+				// type typeID struct {
+				//     typeID []typeName
+				//            ~
+				if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "" {
+					p.tmpTypeDecl.fieldDecls[i-1].fieldType = str
+				}
+			case tok == token.RBRACK:
+				// type typeID struct {
+				//     typeID []typeName
+				//             ~
+				if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "[" {
+					p.tmpTypeDecl.fieldDecls[i-1].fieldType += str
+				}
+			case tok == token.SEMICOLON:
+				p.posType = 3
+			}
+		}
+	case p.posType == 5:
+		i := len(p.tmpTypeDecl.methSpecs)
+		switch {
+		case p.posMeth == 1:
+			// type typeID interface {
+			//     mname(pi pt) res
+			//     ~~~~~
+			switch {
+			case tok == token.IDENT:
+				p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methodSpecs{str, signature{}})
+			case tok == token.LPAREN:
+				p.posMeth = 2
+			case tok == token.RBRACE && p.braces == 0:
+				p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
+				p.tmpTypeDecl = typeDecl{}
+				p.posMeth = 0
+				if p.paren == 0 {
+					p.posType = 0
+				} else {
+					p.posType = 1
+				}
+			}
+		case p.posMeth == 2:
+			switch {
+			case tok == token.IDENT:
+				// type typeID interface {
+				//     mname(pi pt) res
+				//           ~~
+				if p.tmpTypeDecl.methSpecs[i-1].sig.params == "" {
+					p.tmpTypeDecl.methSpecs[i-1].sig.params = str
+					p.posMeth = 3
+				}
+			case tok == token.RPAREN:
+				p.posMeth = 4
+			}
+		case p.posMeth == 3:
+			if p.tmpTypeDecl.methSpecs[i-1].sig.params != "" {
+				switch {
+				case tok == token.LBRACK:
+					// type typeID interface {
+					//     mname(pi []pt) res
+					//              ~
+					p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + str
+				case tok == token.RBRACK:
+					// type typeID interface {
+					//     mname(pi []pt) res
+					//               ~
+					p.tmpTypeDecl.methSpecs[i-1].sig.params += str
+				case tok == token.IDENT:
+					if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, "[]") {
+						// type typeID interface {
+						//     mname(pi []pt) res
+						//                ~~
+						p.tmpTypeDecl.methSpecs[i-1].sig.params += str
+						p.posMeth = 4
+					} else {
+						// type typeID interface {
+						//     mname(pi pt) res
+						//              ~~
+						p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + str
+						p.posMeth = 4
+					}
+				}
+			}
+		case p.posMeth == 4:
+			switch {
+			case tok == token.IDENT:
+				// type typeID interface {
+				//     mname(pi pt) res
+				//                  ~~~
+				p.tmpTypeDecl.methSpecs[i-1].sig.result = str
+			case p.preToken == token.COMMA && tok == token.IDENT:
+				// type typeID interface {
+				//     mname(pi pt) (res, res)
+				//                        ~~~
+				if p.tmpTypeDecl.methSpecs[i-1].sig.result != "" {
+					p.tmpTypeDecl.methSpecs[i-1].sig.result += ", " + str
+				}
+			case tok == token.SEMICOLON:
+				// type typeID interface {
+				//     mname(pi pt)
+				// or
+				// type typeID interface {
+				//     mname(pi pt) res
+				// or
+				// type typeID interface {
+				//     mname(pi pt) (res, res)
+				p.posMeth = 1
+			}
+		}
+	default:
+		return false
+
 	}
 	return true
 }
 
-func (p *parserSrc) parserTypeSpec(line string) bool {
-	if p.typeFlag == "paren" {
-		if strings.Contains(line, ")") && p.paren == 0 {
-			p.typeFlag = ""
-			return true
-		}
-	} else if p.typeFlag == "struct" || p.typeFlag == "interface" {
-		if strings.Contains(line, "}") && p.braces == 0 {
-			p.typeFlag = ""
-			return true
-		}
-	}
-	return false
-}
-
 func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
-	line := string(bline)
+	//	line := string(bline)
 	var s scanner.Scanner
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(bline))
 	s.Init(file, bline, nil, scanner.ScanComments)
-
-	switch {
-	case p.parserTypeSpec(line):
-		// type spec of struct parser
-		return false
-	case p.parserType(line):
-		// type parser
-		return false
-	}
 
 	for {
 		_, tok, lit := s.Scan()
@@ -243,6 +414,10 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 
 		// parse import declare
 		p.parseImPkg(tok, lit, iq)
+
+		// parse type
+		p.parseType(tok, lit)
+
 		// parse func declare
 		p.parseFunc(tok, lit)
 
