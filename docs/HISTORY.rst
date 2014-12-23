@@ -5,7 +5,7 @@ History
 ~~~~~~~~~~~~~~~~~~~~
 
 * Enable to re-declare function.
-* refactoring of parser import declaration, function declaration with go/scanner, go/token instead of regexp.
+* refactoring of parser import, type, function declaration with go/scanner, go/token instead of regexp.
 * Added parser of typeDecl.
 * Fixed some bugs.
 * Added to execute go get for goimports in Makefile.
