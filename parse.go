@@ -552,15 +552,6 @@ func (p *parserSrc) countBBP(tok token.Token) {
 	}
 }
 
-func (p *parserSrc) validateBBP() bool {
-	switch {
-	case p.braces < 0, p.brackets < 0, p.paren < 0:
-		return false
-	default:
-		return true
-	}
-}
-
 func (p *parserSrc) ignorePkg(tok token.Token) bool {
 	switch {
 	case tok == token.PACKAGE, tok == token.IDENT && p.preToken == token.PACKAGE:
