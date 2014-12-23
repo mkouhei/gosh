@@ -103,6 +103,14 @@ func TestParseLine(t *testing.T) {
 		`type (`,
 		`bar string`,
 		`baz int`,
+		`spam struct {`,
+		`name string`,
+		`cnt int`,
+		`}`,
+		`ham interface {`,
+		`Write()`,
+		`Read(b buffer) bool`,
+		`}`,
 		`)`,
 		`type qux struct {`,
 		`name string`,
@@ -173,9 +181,17 @@ func TestParseLine(t *testing.T) {
 		`foo []string`,
 		`bar string`,
 		`baz int`,
+		`spam struct {`,
+		`name string`,
+		`cnt int`,
+		`}`,
 		`qux struct {`,
 		`name string`,
 		`cnt int`,
+		`}`,
+		`ham interface {`,
+		`Write()`,
+		`Read(b buffer) bool`,
 		`}`,
 		`quux interface {`,
 		`Write()`,
@@ -217,7 +233,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
-	if len(p.mergeLines()) != 64 {
+	if len(p.mergeLines()) != 72 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
