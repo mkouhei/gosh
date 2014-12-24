@@ -388,16 +388,21 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) {
 	case p.posMeth == 4:
 		switch {
 		case tok == token.IDENT:
-			// type typeID interface {
-			//     mname(pi pt) res
-			//                  ~~~
-			p.tmpTypeDecl.methSpecs[i-1].sig.result = lit
-		case p.preToken == token.COMMA && tok == token.IDENT:
-			// type typeID interface {
-			//     mname(pi pt) (res, res)
-			//                        ~~~
-			if p.tmpTypeDecl.methSpecs[i-1].sig.result != "" {
-				p.tmpTypeDecl.methSpecs[i-1].sig.result += ", " + lit
+			if p.preToken == token.COMMA {
+				// type typeID interface {
+				//     mname(pi pt) (res, res)
+				//                        ~~~
+				if p.tmpTypeDecl.methSpecs[i-1].sig.result != "" {
+					p.tmpTypeDecl.methSpecs[i-1].sig.result += ", " + lit
+				}
+			} else {
+				// type typeID interface {
+				//     mname(pi pt) res
+				//                  ~~~
+				// or
+				//     mname(pi pt) (res, res)
+				//                   ~~~
+				p.tmpTypeDecl.methSpecs[i-1].sig.result = lit
 			}
 		case tok == token.SEMICOLON:
 			// type typeID interface {
@@ -492,7 +497,11 @@ func (p *parserSrc) convertTypeDecls() []string {
 			for _, m := range t.methSpecs {
 				sig = fmt.Sprintf("%s%s(%s)", m.sig.baseTypeName, m.name, m.sig.params)
 				if m.sig.result != "" {
-					sig += " " + m.sig.result
+					if strings.Index(m.sig.result, ",") == -1 {
+						sig += " " + m.sig.result
+					} else {
+						sig += " (" + m.sig.result + ")"
+					}
 				}
 				l = append(l, sig)
 			}

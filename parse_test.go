@@ -110,6 +110,7 @@ func TestParseLine(t *testing.T) {
 		`ham interface {`,
 		`Write()`,
 		`Read(b buffer) bool`,
+		`List(l []string) (int, bool)`,
 		`}`,
 		`)`,
 		`type qux struct {`,
@@ -192,6 +193,7 @@ func TestParseLine(t *testing.T) {
 		`ham interface {`,
 		`Write()`,
 		`Read(b buffer) bool`,
+		`List(l []string) (int, bool)`,
 		`}`,
 		`quux interface {`,
 		`Write()`,
@@ -233,7 +235,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
-	if len(p.mergeLines()) != 72 {
+	if len(p.mergeLines()) != 73 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
