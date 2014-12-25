@@ -8,6 +8,8 @@ go:
 
 install:
   - go get code.google.com/p/go.tools/cmd/goimports
+  - go get github.com/mattn/goveralls
   - go get -d -v ./...
 script:
-  - go test -v
+  - go test -v -covermode=count -coverprofile=profile.cov
+  - goveralls -coverprofie=profile.cov -service=travis-ci
