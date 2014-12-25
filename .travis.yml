@@ -13,4 +13,4 @@ before_install:
   - go get -d -v ./...
 script:
   - go test -v -covermode=count -coverprofile=profile.cov
-  - goveralls -coverprofie=profile.cov -service=travis-ci
+  - goveralls -coverprofile=profile.cov -service=travis-ci
