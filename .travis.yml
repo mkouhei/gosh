@@ -6,8 +6,9 @@ go:
   - 1.4
   - tip
 
-install:
+before_install:
   - go get code.google.com/p/go.tools/cmd/goimports
+  - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
   - go get -d -v ./...
 script:
