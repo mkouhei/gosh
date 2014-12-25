@@ -99,6 +99,7 @@ func TestParseLine(t *testing.T) {
 		`"fmt"`,
 		`o "os"`,
 		`)`,
+		`type hoge int`,
 		`type foo []string`,
 		`type (`,
 		`bar string`,
@@ -106,12 +107,14 @@ func TestParseLine(t *testing.T) {
 		`spam struct {`,
 		`name string`,
 		`cnt int`,
+		`lines []string`,
 		`}`,
 		`ham interface {`,
 		`Write()`,
 		`Read(b buffer) bool`,
 		`List(l []string) (int, bool)`,
 		`}`,
+		`eggs []string`,
 		`)`,
 		`type qux struct {`,
 		`name string`,
@@ -179,12 +182,14 @@ func TestParseLine(t *testing.T) {
 		importSpec{"os", "o"}}
 
 	type1 := []string{`type (`,
+		`hoge int`,
 		`foo []string`,
 		`bar string`,
 		`baz int`,
 		`spam struct {`,
 		`name string`,
 		`cnt int`,
+		`lines []string`,
 		`}`,
 		`qux struct {`,
 		`name string`,
@@ -195,6 +200,7 @@ func TestParseLine(t *testing.T) {
 		`Read(b buffer) bool`,
 		`List(l []string) (int, bool)`,
 		`}`,
+		`eggs []string`,
 		`quux interface {`,
 		`Write()`,
 		`Read(b buffer) bool`,
@@ -235,7 +241,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
-	if len(p.mergeLines()) != 73 {
+	if len(p.mergeLines()) != 76 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
