@@ -7,6 +7,8 @@ The goal is to provide an easy-to-use interactive execution environment.
 
 .. image:: https://secure.travis-ci.org/mkouhei/gosh.png
    :target: http://travis-ci.org/mkouhei/gosh
+.. image:: https://coveralls.io/repos/mkouhei/gosh/badge.png?branch=master
+   :target: https://coveralls.io/r/mkouhei/gosh?branch=master
 
 Features
 --------
