@@ -65,6 +65,10 @@ func TestBldDirAndCleanDir(t *testing.T) {
 }
 
 func TestGoVersion(t *testing.T) {
+	if !strings.HasPrefix(goVersion(goVer), "go version") {
+		t.Fatal("expecting 'go version goX.X.X os/arch'")
+	}
+
 	goVer = "go version goX.X.X"
 	if !strings.HasPrefix(goVersion(goVer), "go version") {
 		t.Fatal("expecting 'go version goX.X.X os/arch'")
