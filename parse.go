@@ -359,15 +359,21 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) {
 	case p.posMeth == 3:
 		if p.tmpTypeDecl.methSpecs[i-1].sig.params != "" {
 			switch {
+			case tok == token.RPAREN:
+				p.posMeth = 4
 			case tok == token.LBRACK:
 				// type typeID interface {
 				//     mname(pi []pt) res
 				//              ~
 				p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
-			case tok == token.RBRACK:
+			case tok == token.RBRACK, tok == token.PERIOD:
 				// type typeID interface {
 				//     mname(pi []pt) res
 				//               ~
+				// or
+				// type typeID interface {
+				//     mname(pi pn.pt) res
+				//                ~
 				p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
 			case tok == token.IDENT:
 				if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, "[]") {
@@ -375,13 +381,16 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) {
 					//     mname(pi []pt) res
 					//                ~~
 					p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
-					p.posMeth = 4
+				} else if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, ".") {
+					// type typeID interface {
+					//     mname(pi pn.pt) res
+					//                 ~~
+					p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
 				} else {
 					// type typeID interface {
 					//     mname(pi pt) res
 					//              ~~
 					p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
-					p.posMeth = 4
 				}
 			}
 		}
@@ -979,7 +988,6 @@ func tokenToStr(tok token.Token, lit string) string {
 func hasSpaceToken(tok token.Token) bool {
 	switch {
 	case tok == token.LBRACK:
-	case tok == token.RBRACK:
 	case tok == token.BREAK:
 	case tok == token.CASE:
 	case tok == token.CHAN:
