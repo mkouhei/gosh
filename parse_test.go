@@ -27,6 +27,7 @@ var (
 import (
 "fmt"
 o "os"
+"bytes"
 )
 type hoge int
 type foo []string
@@ -40,7 +41,7 @@ lines []string
 }
 ham interface {
 Write()
-Read(b buffer) bool
+Read(b bytes.Buffer) bool
 List(l []string) (int, bool)
 }
 eggs []string
@@ -51,7 +52,7 @@ cnt int
 }
 type quux interface {
 Write()
-Read(b buffer) bool
+Read(b bytes.Buffer) bool
 }
 func test0() bool {
 f, err := o.Stat("/tmp")
@@ -97,7 +98,8 @@ test1()
 test2(2)
 fmt.Println(test3(3))
 fmt.Println(test4("hello", 4))
-fmt.Println(test5("bye", 5))
+msgs := []string{"bye"}
+test5(msgs, 5)
 fmt.Println(test6("hello, again", 6))
 f := foo{"bye"}
 f.test7()
@@ -121,13 +123,13 @@ cnt int
 }
 ham interface {
 Write()
-Read(b buffer) bool
+Read(b bytes.Buffer) bool
 List(l []string) (int, bool)
 }
 eggs []string
 quux interface {
 Write()
-Read(b buffer) bool
+Read(b bytes.Buffer) bool
 }
 )
 `
@@ -137,7 +139,8 @@ test1()
 test2(2)
 fmt.Println(test3(3))
 fmt.Println(test4("hello",4))
-fmt.Println(test5("bye",5))
+msgs:=[]string{"bye"}
+test5(msgs,5)
 fmt.Println(test6("hello, again",6))
 f:=foo{"bye"}
 f.test7()
@@ -223,7 +226,8 @@ func TestParseLine(t *testing.T) {
 
 	import1 := []importSpec{
 		importSpec{"fmt", ""},
-		importSpec{"os", "o"}}
+		importSpec{"os", "o"},
+		importSpec{"bytes", ""}}
 
 	type1 := strings.Split(typeResult, "\n")
 	main1 := strings.Split(mainResult, "\n")
@@ -248,7 +252,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
-	if len(p.mergeLines()) != 76 {
+	if len(p.mergeLines()) != 78 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
