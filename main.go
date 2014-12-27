@@ -32,6 +32,14 @@ This is free software, and you are welcome to redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 `
 
+func run(d bool) {
+	cleanDirs()
+	e := newEnv(d)
+	fmt.Println(goVersion())
+	fmt.Printf(license, version)
+	e.shell(nil)
+}
+
 func main() {
 	d := flag.Bool("d", false, "debug mode")
 	flag.Parse()
@@ -39,9 +47,5 @@ func main() {
 		fmt.Printf("version: %s\n", version)
 		return
 	}
-	cleanDirs()
-	e := newEnv(*d)
-	fmt.Println(goVersion())
-	fmt.Printf(license, version)
-	e.shell(nil)
+	run(*d)
 }

@@ -22,11 +22,24 @@ import (
 	"time"
 )
 
-func Example_Main() {
+func Example_MainVersion() {
 	os.Args = append(os.Args, "-version")
 	main()
 	// Output:
 	// version:
 	time.Sleep(time.Microsecond)
+}
 
+func Example_Run() {
+	version = "x.x.x"
+	run(false)
+	// Output:
+	// go version go1.3.3 linux/amd64
+	//
+	// Gosh x.x.x
+	// Copyright (C) 2014 Kouhei Maeda
+	// License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+	// This is free software, and you are welcome to redistribute it.
+	// There is NO WARRANTY, to the extent permitted by law.
+	// >>> [gosh] terminated
 }
