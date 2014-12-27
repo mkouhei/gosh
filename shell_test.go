@@ -144,6 +144,13 @@ fmt.Println("hello")
 
 }
 
+func ExampleGoRunFail() {
+	e := newEnv(false)
+	e.goRun()
+	// Output:
+	// [error] stat gosh_tmp.go: no such file or directory
+}
+
 func TestRemoveImport(t *testing.T) {
 	e := newEnv(false)
 	pkgs := []importSpec{
