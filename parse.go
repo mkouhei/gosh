@@ -987,6 +987,7 @@ func tokenToStr(tok token.Token, lit string) string {
 
 func hasSpaceToken(tok token.Token) bool {
 	switch {
+	case tok == token.NOT:
 	case tok == token.LBRACK:
 	case tok == token.BREAK:
 	case tok == token.CASE:

@@ -68,6 +68,11 @@ func test1() {
 fmt.Println("hello")
 }
 func test2(cnt int) {
+cnt += ((cnt+1)*2-3)/4%5
+cnt *= 4
+cnt -= 3
+cnt /= 2
+cnt %= 5
 fmt.Printf("%d\n", cnt)
 }
 func test3(cnt int) string {
@@ -88,12 +93,15 @@ func (f foo) test7() {
 fmt.Println(f)
 }
 func (q *qux) test8(name string) {
-fmt.Println(q.name)
+fmt.Println(q.name == name)
+fmt.Println(q.name != name)
 q.name = name
 fmt.Println(q.name)
 }
 func main() {
+if !test0() {
 fmt.Println(test0())
+}
 test1()
 test2(2)
 fmt.Println(test3(3))
@@ -134,7 +142,8 @@ Read(b bytes.Buffer) bool
 )
 `
 
-	mainResult = `fmt.Println(test0())
+	mainResult = `if ! test0(){fmt.Println(test0())
+}
 test1()
 test2(2)
 fmt.Println(test3(3))
@@ -252,7 +261,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse error")
 	}
 
-	if len(p.mergeLines()) != 78 {
+	if len(p.mergeLines()) != 85 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
