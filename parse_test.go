@@ -18,7 +18,132 @@ package main
 */
 
 import (
+	"strings"
 	"testing"
+)
+
+var (
+	src = `package main
+import (
+"fmt"
+o "os"
+)
+type hoge int
+type foo []string
+type (
+bar string
+baz int
+spam struct {
+name string
+cnt int
+lines []string
+}
+ham interface {
+Write()
+Read(b buffer) bool
+List(l []string) (int, bool)
+}
+eggs []string
+)
+type qux struct {
+name string
+cnt int
+}
+type quux interface {
+Write()
+Read(b buffer) bool
+}
+func test0() bool {
+f, err := o.Stat("/tmp")
+if err != nil {
+return false
+}
+return f.IsDir()
+}
+func test1() {
+fmt.Println("helo")
+}
+func test1() {
+fmt.Println("hello")
+}
+func test2(cnt int) {
+fmt.Printf("%d\n", cnt)
+}
+func test3(cnt int) string {
+return fmt.Sprintf("%d\n", cnt)
+}
+func test4(msg string, cnt int) string {
+return fmt.Sprintf("%d: %s\n", cnt, msg)
+}
+func test5(msgs []string,cnt int) {
+for i, l := range msgs {
+fmt.Printf("%d: %s\n", i + cnt, l)
+}
+}
+func test6(msg string, cnt int) (string, int) {
+return fmt.Sprintf("%d: %s\n", cnt, msg), 1
+}
+func (f foo) test7() {
+fmt.Println(f)
+}
+func (q *qux) test8(name string) {
+fmt.Println(q.name)
+q.name = name
+fmt.Println(q.name)
+}
+func main() {
+fmt.Println(test0())
+test1()
+test2(2)
+fmt.Println(test3(3))
+fmt.Println(test4("hello", 4))
+fmt.Println(test5("bye", 5))
+fmt.Println(test6("hello, again", 6))
+f := foo{"bye"}
+f.test7()
+q := qux{"bye bye", 1}
+q.test8("end")
+}
+`
+	typeResult = `type (
+hoge int
+foo []string
+bar string
+baz int
+spam struct {
+name string
+cnt int
+lines []string
+}
+qux struct {
+name string
+cnt int
+}
+ham interface {
+Write()
+Read(b buffer) bool
+List(l []string) (int, bool)
+}
+eggs []string
+quux interface {
+Write()
+Read(b buffer) bool
+}
+)
+`
+
+	mainResult = `fmt.Println(test0())
+test1()
+test2(2)
+fmt.Println(test3(3))
+fmt.Println(test4("hello",4))
+fmt.Println(test5("bye",5))
+fmt.Println(test6("hello, again",6))
+f:=foo{"bye"}
+f.test7()
+q:=qux{"bye bye",1}
+q.test8("end")
+`
 )
 
 func consumeChan(iq <-chan importSpec) {
@@ -94,132 +219,14 @@ func TestParseLine(t *testing.T) {
 	p := parserSrc{}
 	iq := make(chan importSpec, 10)
 
-	lines := []string{`package main`,
-		`import (`,
-		`"fmt"`,
-		`o "os"`,
-		`)`,
-		`type hoge int`,
-		`type foo []string`,
-		`type (`,
-		`bar string`,
-		`baz int`,
-		`spam struct {`,
-		`name string`,
-		`cnt int`,
-		`lines []string`,
-		`}`,
-		`ham interface {`,
-		`Write()`,
-		`Read(b buffer) bool`,
-		`List(l []string) (int, bool)`,
-		`}`,
-		`eggs []string`,
-		`)`,
-		`type qux struct {`,
-		`name string`,
-		`cnt int`,
-		`}`,
-		`type quux interface {`,
-		`Write()`,
-		`Read(b buffer) bool`,
-		`}`,
-		`func test0() bool {`,
-		`f, err := o.Stat("/tmp")`,
-		`if err != nil {`,
-		`return false`,
-		`}`,
-		`return f.IsDir()`,
-		`}`,
-		`func test1() {`,
-		`fmt.Println("helo")`,
-		`}`,
-		`func test1() {`,
-		`fmt.Println("hello")`,
-		`}`,
-		`func test2(cnt int) {`,
-		`fmt.Printf("%d\n", cnt)`,
-		`}`,
-		`func test3(cnt int) string {`,
-		`return fmt.Sprintf("%d\n", cnt)`,
-		`}`,
-		`func test4(msg string, cnt int) string {`,
-		`return fmt.Sprintf("%d: %s\n", cnt, msg)`,
-		`}`,
-		`func test5(msgs []string,cnt int) {`,
-		`for i, l := range msgs {`,
-		`fmt.Printf("%d: %s\n", i + cnt, l)`,
-		`}`,
-		`}`,
-		`func test6(msg string, cnt int) (string, int) {`,
-		`return fmt.Sprintf("%d: %s\n", cnt, msg), 1`,
-		`}`,
-		`func (f foo) test7() {`,
-		`fmt.Println(f)`,
-		`}`,
-		`func (q *qux) test8(name string) {`,
-		`fmt.Println(q.name)`,
-		`q.name = name`,
-		`fmt.Println(q.name)`,
-		`}`,
-		`func main() {`,
-		`fmt.Println(test0())`,
-		`test1()`,
-		`test2(2)`,
-		`fmt.Println(test3(3))`,
-		`fmt.Println(test4("hello", 4))`,
-		`fmt.Println(test5("bye", 5))`,
-		`fmt.Println(test6("hello, again", 6))`,
-		`f := foo{"bye"}`,
-		`f.test7()`,
-		`q := qux{"bye bye", 1}`,
-		`q.test8("end")`,
-		`}`,
-	}
+	lines := strings.Split(src, "\n")
 
 	import1 := []importSpec{
 		importSpec{"fmt", ""},
 		importSpec{"os", "o"}}
 
-	type1 := []string{`type (`,
-		`hoge int`,
-		`foo []string`,
-		`bar string`,
-		`baz int`,
-		`spam struct {`,
-		`name string`,
-		`cnt int`,
-		`lines []string`,
-		`}`,
-		`qux struct {`,
-		`name string`,
-		`cnt int`,
-		`}`,
-		`ham interface {`,
-		`Write()`,
-		`Read(b buffer) bool`,
-		`List(l []string) (int, bool)`,
-		`}`,
-		`eggs []string`,
-		`quux interface {`,
-		`Write()`,
-		`Read(b buffer) bool`,
-		`}`,
-		`)`}
-
-	main1 := []string{
-		`fmt.Println(test0())`,
-		`test1()`,
-		`test2(2)`,
-		`fmt.Println(test3(3))`,
-		`fmt.Println(test4("hello",4))`,
-		`fmt.Println(test5("bye",5))`,
-		`fmt.Println(test6("hello, again",6))`,
-		`f:=foo{"bye"}`,
-		`f.test7()`,
-		`q:=qux{"bye bye",1}`,
-		`q.test8("end")`,
-	}
+	type1 := strings.Split(typeResult, "\n")
+	main1 := strings.Split(mainResult, "\n")
 
 	for _, l := range lines {
 		p.parseLine([]byte(l), iq)
