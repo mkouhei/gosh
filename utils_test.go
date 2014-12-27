@@ -54,10 +54,19 @@ func TestBldDirAndCleanDir(t *testing.T) {
 	if lists != nil {
 		t.Fatal("FAILURE cleanDirs()")
 	}
+
+	f2 := bldDir()
+	if err := os.Chmod(f2, 0100); err != nil {
+		t.Fatal(err)
+	}
+	if err := cleanDir(f2); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestGoVersion(t *testing.T) {
-	if !strings.HasPrefix(goVersion(), "go version") {
+	goVer = "go version goX.X.X"
+	if !strings.HasPrefix(goVersion(goVer), "go version") {
 		t.Fatal("expecting 'go version goX.X.X os/arch'")
 	}
 }

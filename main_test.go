@@ -31,10 +31,11 @@ func Example_MainVersion() {
 }
 
 func Example_Run() {
+	goVer = "go version goX.X.X\n"
 	version = "x.x.x"
 	run(false)
 	// Output:
-	// go version go1.3.3 linux/amd64
+	// go version goX.X.X
 	//
 	// Gosh x.x.x
 	// Copyright (C) 2014 Kouhei Maeda

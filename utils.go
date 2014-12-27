@@ -105,8 +105,11 @@ func (e *env) logger(facility, msg string, err error) {
 	}
 }
 
-func goVersion() string {
+func goVersion(goVer string) string {
 	// get `go version'
+	if goVer != "" {
+		return goVer
+	}
 	cmd := "go"
 	args := []string{"version"}
 	msg, _ := runCmd(false, cmd, args...)
