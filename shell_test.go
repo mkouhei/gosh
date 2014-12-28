@@ -44,6 +44,11 @@ func main() {
 }
 `
 
+	testSrc3 = `main() {
+     fmt.Println("hello")
+}
+`
+
 	expSrc = `package main
 
 import "fmt"
@@ -90,6 +95,40 @@ func TestGoImports(t *testing.T) {
 		t.Fatal("goimports error")
 	}
 
+}
+
+func TestGoImportsFail(t *testing.T) {
+
+	e := newEnv(true)
+	fp, _ := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
+	fp.WriteString(testSrc3)
+	fp.Sync()
+	fp.Close()
+
+	time.Sleep(time.Microsecond)
+
+	ec := make(chan bool)
+	e.goImports(ec)
+
+	time.Sleep(time.Microsecond)
+
+	lines := []string{}
+	if <-ec {
+		fp2, err := os.Open(e.tmpPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := bufio.NewScanner(fp2)
+		for s.Scan() {
+			lines = append(lines, s.Text())
+		}
+		fp2.Close()
+	}
+
+	expectLines := strings.Split(expSrc, "\n")
+	if len(compare(lines, expectLines)) != 2 {
+		t.Fatal("expects goimports error")
+	}
 }
 
 func TestRead(t *testing.T) {
