@@ -21,12 +21,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
 
-func TestGoImports(t *testing.T) {
-	dummy := `package main
+var (
+	testSrc = `package main
 import (
 "fmt"
 "os"
@@ -35,21 +36,32 @@ func main() {
 fmt.Println("hello")
 }
 `
-	expectLines := []string{"package main",
-		"",
-		"import \"fmt\"",
-		"",
-		"func main() {",
-		"\tfmt.Println(\"hello\")",
-		"}",
-	}
+
+	testSrc2 = `import "fmt"
+
+func main() {
+     fmt.Println("hello")
+}
+`
+
+	expSrc = `package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("hello")
+}
+`
+)
+
+func TestGoImports(t *testing.T) {
 
 	e := newEnv(true)
 	fp, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fp.WriteString(dummy)
+	fp.WriteString(testSrc)
 	fp.Sync()
 	fp.Close()
 
@@ -73,6 +85,7 @@ fmt.Println("hello")
 		fp2.Close()
 	}
 
+	expectLines := strings.Split(expSrc, "\n")
 	if len(compare(lines, expectLines)) != 0 {
 		t.Fatal("goimports error")
 	}
@@ -87,13 +100,7 @@ func TestRead(t *testing.T) {
 	}
 	defer f.Close()
 
-	text := `import "fmt"
-
-func main() {
-     fmt.Println("hello")
-}
-`
-	f.WriteString(text)
+	f.WriteString(testSrc2)
 
 	f, err = os.Open("dummy_code")
 	if err != nil {
@@ -118,19 +125,13 @@ func ExampleGoGet() {
 }
 
 func ExampleGoRun() {
-	dummy := `package main
-import "fmt"
-func main() {
-fmt.Println("hello")
-}
-`
 	e := newEnv(true)
 	fp, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Println(err)
 	}
 	time.Sleep(time.Microsecond)
-	fp.WriteString(dummy)
+	fp.WriteString(expSrc)
 	fp.Sync()
 	fp.Close()
 
