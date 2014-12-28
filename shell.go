@@ -125,7 +125,6 @@ func (e *env) goImports(ec chan<- bool) {
 		if msg, err := runCmd(true, cmd, args...); err != nil {
 			e.logger("goimports", msg, err)
 			e.parserSrc.body = nil
-			return
 		}
 		time.Sleep(time.Nanosecond)
 		ec <- true
