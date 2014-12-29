@@ -142,6 +142,47 @@ Read(b bytes.Buffer) bool
 )
 `
 
+	funcResult = `func test0() bool {
+f,err := o.Stat("/tmp")
+if err != nil{return false
+}
+return f.IsDir()
+}
+func test1() {
+fmt.Println("hello")
+}
+func test2(cnt int) {
+cnt +=((cnt+1)*2-3)/4%5
+cnt *= 4
+cnt -= 3
+cnt /= 2
+cnt %= 5
+fmt.Printf("%d\n",cnt)
+}
+func test3(cnt int) string {
+return fmt.Sprintf("%d\n",cnt)
+}
+func test4(msg string, cnt int) string {
+return fmt.Sprintf("%d: %s\n",cnt,msg)
+}
+func test5(msgs []string, cnt int) {
+for i,l := range msgs{fmt.Printf("%d: %s\n",i+cnt,l)
+}
+}
+func test6(msg string, cnt int) (string, int) {
+return fmt.Sprintf("%d: %s\n",cnt,msg),1
+}
+func (f foo)test7() {
+fmt.Println(f)
+}
+func (q *qux)test8(name string) {
+fmt.Println(q.name == name)
+fmt.Println(q.name != name)
+q.name = name
+fmt.Println(q.name)
+}
+`
+
 	mainResult = `if ! test0(){fmt.Println(test0())
 }
 test1()
@@ -239,6 +280,7 @@ func TestParseLine(t *testing.T) {
 		importSpec{"bytes", ""}}
 
 	type1 := strings.Split(typeResult, "\n")
+	func1 := strings.Split(funcResult, "\n")
 	main1 := strings.Split(mainResult, "\n")
 
 	for _, l := range lines {
@@ -255,6 +297,10 @@ func TestParseLine(t *testing.T) {
 
 	if len(compare(p.convertTypeDecls(), type1)) != 0 {
 		t.Fatal("parse type decls error")
+	}
+
+	if len(compare(p.convertFuncDecls(), func1)) != 0 {
+		t.Fatal("parse func decls error")
 	}
 
 	if len(compare(p.main, main1)) != 0 {
