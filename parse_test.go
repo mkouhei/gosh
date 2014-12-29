@@ -246,19 +246,19 @@ func TestParseLine(t *testing.T) {
 	}
 
 	if len(compareImportSpecs(p.imPkgs, import1)) != 0 {
-		t.Fatal("parse error")
+		t.Fatal("parse import packages error")
 	}
 
 	if len(compare(p.body, []string{})) != 0 {
-		t.Fatal("parse error")
+		t.Fatal("parse body error")
 	}
 
 	if len(compare(p.convertTypeDecls(), type1)) != 0 {
-		t.Fatal("parse error")
+		t.Fatal("parse type decls error")
 	}
 
 	if len(compare(p.main, main1)) != 0 {
-		t.Fatal("parse error")
+		t.Fatal("parse main func error")
 	}
 
 	if len(p.mergeLines()) != 85 {
