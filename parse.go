@@ -639,11 +639,11 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 
 	case p.posFuncSig == 4:
 		// params
-		p.parseFuncParams(tok, lit)
+		p.parseFuncParams(tok, str)
 
 	case p.posFuncSig == 5:
 		// result
-		p.parseFuncResult(tok, lit)
+		p.parseFuncResult(tok, str)
 
 	case p.posFuncSig == 6:
 		// body
