@@ -76,7 +76,16 @@ cnt %= 5
 fmt.Printf("%d\n", cnt)
 }
 func test3(cnt int) string {
-return fmt.Sprintf("%d\n", cnt)
+var msg string
+switch {
+case cnt == 0:
+msg = "zero"
+case cnt == 1:
+msg = "one"
+default:
+msg = "none"
+}
+return msg
 }
 func test4(msg string, cnt int) string {
 return fmt.Sprintf("%d: %s\n", cnt, msg)
@@ -160,7 +169,15 @@ cnt %= 5
 fmt.Printf("%d\n",cnt)
 }
 func test3(cnt int) string {
-return fmt.Sprintf("%d\n",cnt)
+var msg string
+switch{case cnt == 0:
+msg = "zero"
+case cnt == 1:
+msg = "one"
+default:
+msg = "none"
+}
+return msg
 }
 func test4(msg string, cnt int) string {
 return fmt.Sprintf("%d: %s\n",cnt,msg)
@@ -307,7 +324,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse main func error")
 	}
 
-	if len(p.mergeLines()) != 85 {
+	if len(p.mergeLines()) != 93 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
