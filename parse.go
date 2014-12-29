@@ -818,7 +818,7 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 		p.posFuncSig = 7
 	case p.preLit == "":
 		p.preLit = lit
-	case hasSpaceToken(p.preToken) && hasSpaceToken(tok):
+	case hasSpaceBefore(p.preToken) && hasSpaceBefore(tok):
 		p.preLit += " " + lit
 	default:
 		p.preLit += lit
@@ -1007,7 +1007,7 @@ func tokenToStr(tok token.Token, lit string) string {
 	return str
 }
 
-func hasSpaceToken(tok token.Token) bool {
+func hasSpaceBefore(tok token.Token) bool {
 	switch {
 	case tok == token.ADD_ASSIGN:
 	case tok == token.SUB_ASSIGN:
