@@ -482,10 +482,13 @@ func (p *parserSrc) convertFuncDecls() []string {
 			rcv = fmt.Sprintf("(%s %s)", fun.sig.receiverID, fun.sig.baseTypeName)
 		}
 
-		if fun.sig.result == "" {
+		switch {
+		case fun.sig.result == "":
 			lines = append(lines, fmt.Sprintf("func %s%s(%s) {", rcv, fun.name, fun.sig.params))
-		} else {
+		case strings.Contains(fun.sig.result, ","):
 			lines = append(lines, fmt.Sprintf("func %s%s(%s) (%s) {", rcv, fun.name, fun.sig.params, fun.sig.result))
+		default:
+			lines = append(lines, fmt.Sprintf("func %s%s(%s) %s {", rcv, fun.name, fun.sig.params, fun.sig.result))
 		}
 
 		for _, l := range fun.body {
