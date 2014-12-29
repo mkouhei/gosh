@@ -148,12 +148,12 @@ test1()
 test2(2)
 fmt.Println(test3(3))
 fmt.Println(test4("hello",4))
-msgs:=[]string{"bye"}
+msgs := []string{"bye"}
 test5(msgs,5)
 fmt.Println(test6("hello, again",6))
-f:=foo{"bye"}
+f := foo{"bye"}
 f.test7()
-q:=qux{"bye bye",1}
+q := qux{"bye bye",1}
 q.test8("end")
 `
 )

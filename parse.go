@@ -990,7 +990,22 @@ func tokenToStr(tok token.Token, lit string) string {
 
 func hasSpaceToken(tok token.Token) bool {
 	switch {
+	case tok == token.ADD_ASSIGN:
+	case tok == token.SUB_ASSIGN:
+	case tok == token.MUL_ASSIGN:
+	case tok == token.QUO_ASSIGN:
+	case tok == token.REM_ASSIGN:
+	case tok == token.AND_ASSIGN:
+	case tok == token.OR_ASSIGN:
+	case tok == token.XOR_ASSIGN:
+	case tok == token.SHL_ASSIGN:
+	case tok == token.SHR_ASSIGN:
+	case tok == token.AND_NOT_ASSIGN:
+	case tok == token.ASSIGN:
 	case tok == token.NOT:
+	case tok == token.NEQ:
+	case tok == token.EQL:
+	case tok == token.DEFINE:
 	case tok == token.LBRACK:
 	case tok == token.BREAK:
 	case tok == token.CASE:
