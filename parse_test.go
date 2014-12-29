@@ -64,8 +64,8 @@ return f.IsDir()
 func test1() {
 fmt.Println("helo")
 }
-func test1() {
-fmt.Println("hello")
+func test1() []string {
+return []string{"hello"}
 }
 func test2(cnt int) {
 cnt += ((cnt+1)*2-3)/4%5
@@ -102,7 +102,7 @@ func main() {
 if !test0() {
 fmt.Println(test0())
 }
-test1()
+fmt.Println(test1())
 test2(2)
 fmt.Println(test3(3))
 fmt.Println(test4("hello", 4))
@@ -148,8 +148,8 @@ if err != nil{return false
 }
 return f.IsDir()
 }
-func test1() {
-fmt.Println("hello")
+func test1() []string {
+return []string{"hello"}
 }
 func test2(cnt int) {
 cnt +=((cnt+1)*2-3)/4%5
@@ -185,7 +185,7 @@ fmt.Println(q.name)
 
 	mainResult = `if ! test0(){fmt.Println(test0())
 }
-test1()
+fmt.Println(test1())
 test2(2)
 fmt.Println(test3(3))
 fmt.Println(test4("hello",4))

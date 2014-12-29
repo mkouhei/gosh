@@ -779,8 +779,27 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 			// func (ri rt) fname(pi pt) (res, res)
 			//                            ~~~
 			p.tmpFuncDecl.sig.result = lit
+		case strings.HasSuffix(p.tmpFuncDecl.sig.result, "[]"), strings.HasSuffix(p.tmpFuncDecl.sig.result, "*"):
+			p.tmpFuncDecl.sig.result += lit
 		case p.tmpFuncDecl.sig.result != "":
 			p.tmpFuncDecl.sig.result += ", " + lit
+		}
+	case tok == token.MUL, tok == token.LBRACK:
+		switch {
+		case p.preToken == token.RPAREN:
+			// func (ri rt) fname(pi pt) *res
+			//                           ~
+			p.tmpFuncDecl.sig.result = lit
+		case p.preToken == token.LPAREN:
+			// func (ri rt) fname(pi pt) (res, res)
+			//                            ~~~
+			p.tmpFuncDecl.sig.result = lit
+		case p.tmpFuncDecl.sig.result != "":
+			p.tmpFuncDecl.sig.result += ", " + lit
+		}
+	case tok == token.RBRACK && p.preToken == token.LBRACK:
+		if p.tmpFuncDecl.sig.result != "" {
+			p.tmpFuncDecl.sig.result += lit
 		}
 	case p.paren == 0 && (tok == token.RPAREN || tok == token.LBRACE):
 		p.posFuncSig = 6
