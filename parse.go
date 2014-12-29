@@ -818,6 +818,10 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 		p.posFuncSig = 7
 	case p.preLit == "":
 		p.preLit = lit
+	case hasLineFeedAfter(tok):
+		p.preLit += lit
+		b = append(b, p.preLit)
+		p.preLit = ""
 	case hasSpaceBefore(p.preToken) && hasSpaceBefore(tok):
 		p.preLit += " " + lit
 	default:
@@ -1057,6 +1061,15 @@ func hasSpaceBefore(tok token.Token) bool {
 	case tok == token.IMAG:
 	case tok == token.CHAR:
 	case tok == token.STRING:
+	default:
+		return false
+	}
+	return true
+}
+
+func hasLineFeedAfter(tok token.Token) bool {
+	switch {
+	case tok == token.COLON:
 	default:
 		return false
 	}
