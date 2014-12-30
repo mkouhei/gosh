@@ -68,12 +68,14 @@ func test1() []string {
 return []string{"hello"}
 }
 func test2(cnt int) {
+cnt << 1
 cnt += ((cnt+1)*2-3)/4%5
 cnt *= 4
 cnt -= 3
 cnt /= 2
 cnt %= 5
 cnt++
+cnt >> 1
 fmt.Printf("%d\n", cnt)
 }
 func test3(cnt int) string {
@@ -180,12 +182,14 @@ func test1() []string {
 return []string{"hello"}
 }
 func test2(cnt int) {
+cnt << 1
 cnt +=((cnt+1)*2-3)/4%5
 cnt *= 4
 cnt -= 3
 cnt /= 2
 cnt %= 5
 cnt++
+cnt >> 1
 fmt.Printf("%d\n", cnt)
 }
 func test3(cnt int) string {
@@ -359,7 +363,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse main func error")
 	}
 
-	if len(p.mergeLines()) != 110 {
+	if len(p.mergeLines()) != 112 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {

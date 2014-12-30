@@ -1006,6 +1006,8 @@ func tokenToStr(tok token.Token, lit string) string {
 
 func hasSpaceBefore(tok token.Token) bool {
 	switch {
+	case tok == token.SHL:
+	case tok == token.SHR:
 	case tok == token.ADD_ASSIGN:
 	case tok == token.SUB_ASSIGN:
 	case tok == token.MUL_ASSIGN:
