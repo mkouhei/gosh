@@ -218,4 +218,10 @@ func TestRemoveImport(t *testing.T) {
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}
+
+	e.parserSrc.imPkgs = append(e.parserSrc.imPkgs, importSpec{"foo", "F"})
+	e.removeImport("package F: unrecognized import path \"F\"", importSpec{"foo", "F"})
+	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs2)) != 0 {
+		t.Fatal("fail remove package")
+	}
 }
