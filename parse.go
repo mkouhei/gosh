@@ -779,8 +779,8 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 			//                           ~
 			p.tmpFuncDecl.sig.result = lit
 		case p.preToken == token.LPAREN:
-			// func (ri rt) fname(pi pt) (res, res)
-			//                            ~~~
+			// func (ri rt) fname(pi pt) (*res, res)
+			//                             ~~~
 			p.tmpFuncDecl.sig.result = lit
 		case p.tmpFuncDecl.sig.result != "":
 			p.tmpFuncDecl.sig.result += ", " + lit
@@ -810,8 +810,13 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 		p.preLit += lit
 		b = append(b, p.preLit)
 		p.preLit = ""
+	case hasLineFeedBefore(tok):
+		b = append(b, p.preLit)
+		p.preLit = lit
 	case hasSpaceBefore(p.preToken) && hasSpaceBefore(tok):
 		p.preLit += " " + lit
+	case hasSpaceAfter(tok):
+		p.preLit += lit + " "
 	default:
 		p.preLit += lit
 	}
@@ -1061,9 +1066,28 @@ func hasSpaceBefore(tok token.Token) bool {
 	return true
 }
 
+func hasSpaceAfter(tok token.Token) bool {
+	switch {
+	case tok == token.COMMA:
+	default:
+		return false
+	}
+	return true
+}
+
 func hasLineFeedAfter(tok token.Token) bool {
 	switch {
 	case tok == token.COLON:
+	default:
+		return false
+	}
+	return true
+}
+
+func hasLineFeedBefore(tok token.Token) bool {
+	switch {
+	case tok == token.RETURN:
+	case tok == token.BREAK:
 	default:
 		return false
 	}

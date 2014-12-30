@@ -102,8 +102,19 @@ fmt.Printf("%d: %s\n", i + cnt, l)
 func test6(msg string, cnt int) (string, int) {
 return fmt.Sprintf("%d: %s\n", cnt, msg), 1
 }
-func (f foo) test7() {
-fmt.Println(f)
+func (f foo) test7() *qux {
+q := &qux{}
+if len(f) == 0 {
+return nil
+}
+for i, str := range f {
+q.cnt = i
+q.name = str
+if i > 1 {
+break
+}
+}
+return q
 }
 func (q *qux) test8(name string) {
 fmt.Println(q.name == name)
@@ -123,7 +134,7 @@ msgs := []string{"bye"}
 test5(msgs, 5)
 fmt.Println(test6("hello, again", 6))
 f := foo{"bye"}
-f.test7()
+fmt.Println(f.test7())
 q := qux{"bye bye", 1}
 q.test8("end")
 }
@@ -156,8 +167,9 @@ Read(b bytes.Buffer) bool
 `
 
 	funcResult = `func test0() bool {
-f,err := o.Stat("/tmp")
-if err != nil{return false
+f, err := o.Stat("/tmp")
+if err != nil{
+return false
 }
 return f.IsDir()
 }
@@ -171,7 +183,7 @@ cnt -= 3
 cnt /= 2
 cnt %= 5
 cnt++
-fmt.Printf("%d\n",cnt)
+fmt.Printf("%d\n", cnt)
 }
 func test3(cnt int) string {
 var msg string
@@ -187,18 +199,28 @@ msg = "none"
 return msg
 }
 func test4(msg string, cnt int) string {
-return fmt.Sprintf("%d: %s\n",cnt,msg)
+return fmt.Sprintf("%d: %s\n", cnt, msg)
 }
 func test5(msgs []string, cnt int) {
 cnt--
-for i,l := range msgs{fmt.Printf("%d: %s\n",i+cnt,l)
+for i, l := range msgs{fmt.Printf("%d: %s\n", i+cnt, l)
 }
 }
 func test6(msg string, cnt int) (string, int) {
-return fmt.Sprintf("%d: %s\n",cnt,msg),1
+return fmt.Sprintf("%d: %s\n", cnt, msg), 1
 }
-func (f foo)test7() {
-fmt.Println(f)
+func (f foo)test7() *qux {
+q :=&qux{}
+if len(f)== 0{
+return nil
+}
+for i, str := range f{q.cnt = i
+q.name = str
+if i > 1{
+break
+}
+}
+return q
 }
 func (q *qux)test8(name string) {
 fmt.Println(q.name == name)
@@ -213,13 +235,13 @@ fmt.Println(q.name)
 fmt.Println(test1())
 test2(2)
 fmt.Println(test3(3))
-fmt.Println(test4("hello",4))
+fmt.Println(test4("hello", 4))
 msgs := []string{"bye"}
-test5(msgs,5)
-fmt.Println(test6("hello, again",6))
+test5(msgs, 5)
+fmt.Println(test6("hello, again", 6))
 f := foo{"bye"}
-f.test7()
-q := qux{"bye bye",1}
+fmt.Println(f.test7())
+q := qux{"bye bye", 1}
 q.test8("end")
 `
 )
@@ -332,7 +354,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse main func error")
 	}
 
-	if len(p.mergeLines()) != 97 {
+	if len(p.mergeLines()) != 108 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
