@@ -670,18 +670,10 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 func (p *parserSrc) parseFuncBaseTypeName(tok token.Token, lit string) {
 	if p.paren > 0 && p.tmpFuncDecl.sig.receiverID != "" {
 		switch {
-		case tok == token.MUL, tok == token.LBRACK:
+		case tok == token.MUL:
 			// func (ri *rt) fname(pi pt) (res)
 			//          ~
-			// func (ri []rt) fname(pi pt) (res)
-			//          ~
 			p.tmpFuncDecl.sig.baseTypeName = lit
-		case tok == token.RBRACK:
-			// func (ri []rt) fname(pi pt) (res)
-			//           ~
-			if p.tmpFuncDecl.sig.baseTypeName == "[" {
-				p.tmpFuncDecl.sig.baseTypeName += lit
-			}
 		case tok == token.IDENT:
 			// func (ri rt) fname(pi pt) (res)
 			//          ~~
@@ -689,10 +681,6 @@ func (p *parserSrc) parseFuncBaseTypeName(tok token.Token, lit string) {
 			case p.preToken == token.MUL && p.tmpFuncDecl.sig.baseTypeName == "*":
 				// func (ri *rt) fname(pi pt) (res)
 				//           ~~
-				p.tmpFuncDecl.sig.baseTypeName += lit
-			case p.preToken == token.RBRACK && p.tmpFuncDecl.sig.baseTypeName == "[]":
-				// func (ri []rt) fname(pi pt) (res)
-				//            ~~
 				p.tmpFuncDecl.sig.baseTypeName += lit
 			default:
 				// func (ri rt) fname(pi pt) (res)
