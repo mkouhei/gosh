@@ -59,6 +59,21 @@ func main() {
 `
 )
 
+func TestWrite(t *testing.T) {
+	e := newEnv(false)
+	ic := make(chan bool)
+	iq := make(chan importSpec, 10)
+	for _, l := range strings.Split(testSrc, "\n") {
+		e.parserSrc.parseLine([]byte(l), iq)
+	}
+	e.write(ic)
+	time.Sleep(time.Microsecond)
+	_, err := os.Stat(e.tmpPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGoImports(t *testing.T) {
 
 	e := newEnv(true)
