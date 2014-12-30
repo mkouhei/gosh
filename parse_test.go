@@ -102,10 +102,12 @@ fmt.Printf("%d: %s\n", i + cnt, l)
 func test6(msg string, cnt int) (string, int) {
 return fmt.Sprintf("%d: %s\n", cnt, msg), 1
 }
-func (f foo) test7() *qux {
+func (f foo) test7() (*qux, *int) {
 q := &qux{}
+var c int
 if len(f) == 0 {
-return nil
+c = -1
+return nil, &c
 }
 for i, str := range f {
 q.cnt = i
@@ -114,7 +116,8 @@ if i > 1 {
 break
 }
 }
-return q
+c = 0
+return q, &c
 }
 func (q *qux) test8(name string) {
 fmt.Println(q.name == name)
@@ -209,10 +212,11 @@ for i, l := range msgs{fmt.Printf("%d: %s\n", i+cnt, l)
 func test6(msg string, cnt int) (string, int) {
 return fmt.Sprintf("%d: %s\n", cnt, msg), 1
 }
-func (f foo)test7() *qux {
+func (f foo)test7() (*qux, *int) {
 q :=&qux{}
-if len(f)== 0{
-return nil
+var c int
+if len(f)== 0{c =-1
+return nil, &c
 }
 for i, str := range f{q.cnt = i
 q.name = str
@@ -220,7 +224,8 @@ if i > 1{
 break
 }
 }
-return q
+c = 0
+return q, &c
 }
 func (q *qux)test8(name string) {
 fmt.Println(q.name == name)
@@ -354,7 +359,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse main func error")
 	}
 
-	if len(p.mergeLines()) != 108 {
+	if len(p.mergeLines()) != 110 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
