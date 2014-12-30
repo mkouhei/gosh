@@ -1024,9 +1024,15 @@ func hasSpaceBefore(tok token.Token) bool {
 	case tok == token.SHL_ASSIGN:
 	case tok == token.SHR_ASSIGN:
 	case tok == token.AND_NOT_ASSIGN:
+	case tok == token.LAND:
+	case tok == token.LOR:
+	case tok == token.LSS:
+	case tok == token.GTR:
 	case tok == token.ASSIGN:
 	case tok == token.NOT:
 	case tok == token.NEQ:
+	case tok == token.LEQ:
+	case tok == token.GEQ:
 	case tok == token.EQL:
 	case tok == token.DEFINE:
 	case tok == token.LBRACK:
