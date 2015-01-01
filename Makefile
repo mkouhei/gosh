@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-# Copyright (C) 2014 Kouhei Maeda <mkouhei@palmtb.net>
+# Copyright (C) 2014,2015 Kouhei Maeda <mkouhei@palmtb.net>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

@@ -1,7 +1,7 @@
 package main
 
 /*
-   Copyright (C) 2014 Kouhei Maeda <mkouhei@palmtb.net>
+   Copyright (C) 2014,2015 Kouhei Maeda <mkouhei@palmtb.net>
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ func Example_Run() {
 	// go version goX.X.X
 	//
 	// Gosh x.x.x
-	// Copyright (C) 2014 Kouhei Maeda
+	// Copyright (C) 2014,2015 Kouhei Maeda
 	// License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 	// This is free software, and you are welcome to redistribute it.
 	// There is NO WARRANTY, to the extent permitted by law.
