@@ -154,22 +154,21 @@ name string
 cnt int
 lines []string
 }
-qux struct {
-name string
-cnt int
-}
 ham interface {
 Write()
 Read(b bytes.Buffer) bool
 List(l []string) (int, bool)
 }
 eggs []string
+qux struct {
+name string
+cnt int
+}
 quux interface {
 Write()
 Read(b bytes.Buffer) bool
 }
-)
-`
+)`
 
 	funcResult = `func test0() bool {
 f, err := o.Stat("/tmp")
@@ -236,8 +235,7 @@ fmt.Println(q.name == name)
 fmt.Println(q.name != name)
 q.name = name
 fmt.Println(q.name)
-}
-`
+}`
 
 	mainResult = `if ! test0(){fmt.Println(test0())
 }
@@ -251,8 +249,7 @@ fmt.Println(test6("hello, again", 6))
 f := foo{"bye"}
 fmt.Println(f.test7())
 q := qux{"bye bye", 1}
-q.test8("end")
-`
+q.test8("end")`
 )
 
 func consumeChan(iq <-chan importSpec) {
@@ -301,7 +298,7 @@ func TestParseMultipleImport(t *testing.T) {
 		importSpec{"io", ""},
 		importSpec{"strings", "str"},
 		importSpec{"os", ""}}
-	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
+	if len(compareImportSpecs(el, p.imPkgs)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
 	}
 }
@@ -319,7 +316,7 @@ func TestParseDuplicateImport(t *testing.T) {
 	}
 	el := []importSpec{
 		importSpec{"fmt", ""}}
-	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
+	if len(compareImportSpecs(el, p.imPkgs)) != 0 {
 		t.Fatalf(`parse error: expected %v`, el)
 	}
 }
@@ -343,7 +340,7 @@ func TestParseLine(t *testing.T) {
 		p.parseLine([]byte(l), iq)
 	}
 
-	if len(compareImportSpecs(p.imPkgs, import1)) != 0 {
+	if len(compareImportSpecs(import1, p.imPkgs)) != 0 {
 		t.Fatal("parse import packages error")
 	}
 
@@ -351,15 +348,15 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse body error")
 	}
 
-	if len(compare(p.convertTypeDecls(), type1)) != 0 {
+	if len(compare(type1, p.convertTypeDecls())) != 0 {
 		t.Fatal("parse type decls error")
 	}
 
-	if len(compare(p.convertFuncDecls(), func1)) != 0 {
+	if len(compare(func1, p.convertFuncDecls())) != 0 {
 		t.Fatal("parse func decls error")
 	}
 
-	if len(compare(p.main, main1)) != 0 {
+	if len(compare(main1, p.main)) != 0 {
 		t.Fatal("parse main func error")
 	}
 
