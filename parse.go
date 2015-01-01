@@ -156,13 +156,11 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 
 func (p *parserSrc) parseType(tok token.Token, lit string) bool {
 	switch {
-	case p.posType == 0:
-		if tok == token.TYPE {
-			// type typeID typeName
-			// ~~~~
-			p.tFlag = true
-			p.posType = 1
-		}
+	case p.posType == 0 && tok == token.TYPE:
+		// type typeID typeName
+		// ~~~~
+		//p.tFlag = true
+		p.posType = 1
 	case p.posType == 1:
 		p.parseTypeID(tok, lit)
 	case p.posType == 2:
@@ -179,7 +177,7 @@ func (p *parserSrc) parseType(tok token.Token, lit string) bool {
 	return true
 }
 
-func (p *parserSrc) parseTypeID(tok token.Token, lit string) {
+func (p *parserSrc) parseTypeID(tok token.Token, lit string) bool {
 	// type typeID typeName
 	//      ~~~~~~
 	switch {
@@ -188,10 +186,13 @@ func (p *parserSrc) parseTypeID(tok token.Token, lit string) {
 		p.posType = 2
 	case tok == token.RPAREN && p.paren == 0:
 		p.posType = 0
+	default:
+		return false
 	}
+	return true
 }
 
-func (p *parserSrc) parseTypeName(tok token.Token, lit string) {
+func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
 	if p.tmpTypeDecl.typeID != "" {
 		switch {
 		case tok == token.LBRACK:
@@ -246,11 +247,15 @@ func (p *parserSrc) parseTypeName(tok token.Token, lit string) {
 					p.posType = 1
 				}
 			}
+		default:
+			return false
 		}
+		return true
 	}
+	return false
 }
 
-func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) {
+func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 	// fieldIDList
 	switch {
 	case tok == token.RBRACE && p.braces == 0:
@@ -280,10 +285,13 @@ func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) {
 			p.tmpTypeDecl.fieldDecls = append(p.tmpTypeDecl.fieldDecls, fieldDecl{lit, ""})
 			p.posType = 4
 		}
+	default:
+		return false
 	}
+	return true
 }
 
-func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) {
+func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) bool {
 	i := len(p.tmpTypeDecl.fieldDecls)
 	if i > 0 {
 		switch {
@@ -315,11 +323,15 @@ func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) {
 			}
 		case tok == token.SEMICOLON:
 			p.posType = 3
+		default:
+			return false
 		}
+		return true
 	}
+	return false
 }
 
-func (p *parserSrc) parseInterface(tok token.Token, lit string) {
+func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 	i := len(p.tmpTypeDecl.methSpecs)
 	switch {
 	case p.posMeth == 1:
@@ -422,7 +434,10 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) {
 			//     mname(pi pt) (res, res)
 			p.posMeth = 1
 		}
+	default:
+		return false
 	}
+	return true
 }
 
 func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
@@ -440,17 +455,19 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 		str := tokenToStr(tok, lit)
 		p.countBBP(tok)
 
+		switch {
 		// ignore packageClause
-		p.ignorePkg(tok)
+		case p.ignorePkg(tok):
 
 		// parse import declare
-		p.parseImPkg(tok, str, iq)
+		case p.parseImPkg(tok, str, iq):
 
 		// parse type
-		p.parseType(tok, str)
+		case p.parseType(tok, str):
 
 		// parse func declare
-		p.parseFunc(tok, str)
+		case p.parseFunc(tok, str):
+		}
 
 		p.preToken = tok
 
@@ -460,7 +477,6 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 		p.posFuncSig = 0
 		return true
 	}
-
 	return false
 }
 
@@ -602,7 +618,13 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 		case tok == token.IDENT:
 			p.preLit = lit
 		case tok == token.STRING:
-			p.putPackages(rmQuot(lit), p.preLit, iq)
+			var pl string
+			if p.preLit == ";" {
+				pl = ""
+			} else {
+				pl = p.preLit
+			}
+			p.putPackages(rmQuot(lit), pl, iq)
 			p.preLit = ""
 		case tok == token.SEMICOLON && p.paren == 0:
 			p.imFlag = false
@@ -616,11 +638,13 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 	switch {
-	case p.posFuncSig == 0:
-		if tok == token.FUNC {
-			p.posFuncSig = 1
-			p.preLit = ""
-		}
+	case p.posFuncSig == 0 && tok == token.FUNC:
+		//		if tok == token.FUNC {
+		p.posFuncSig = 1
+		p.preLit = ""
+		//		} else {
+		//			return false
+		//		}
 	case p.posFuncSig == 1 && p.paren > 0:
 		// receiverID
 		// func (ri rt) fname(pi pt) (res)
@@ -628,6 +652,8 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		if tok == token.IDENT {
 			p.tmpFuncDecl.sig.receiverID = lit
 			p.posFuncSig = 2
+		} else {
+			return false
 		}
 	case p.posFuncSig == 2:
 		// baseTypeName
@@ -659,6 +685,7 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 
 	default:
 		p.preLit = lit
+		return false
 	}
 	p.preToken = tok
 	return true
