@@ -155,8 +155,6 @@ func compareImportSpecs(A, B []importSpec) []importSpec {
 }
 
 func (p *parserSrc) parseType(tok token.Token, lit string) bool {
-	str := tokenToStr(tok, lit)
-
 	switch {
 	case p.posType == 0:
 		if tok == token.TYPE {
@@ -166,15 +164,15 @@ func (p *parserSrc) parseType(tok token.Token, lit string) bool {
 			p.posType = 1
 		}
 	case p.posType == 1:
-		p.parseTypeID(tok, str)
+		p.parseTypeID(tok, lit)
 	case p.posType == 2:
-		p.parseTypeName(tok, str)
+		p.parseTypeName(tok, lit)
 	case p.posType == 3:
-		p.parseStructTypeID(tok, str)
+		p.parseStructTypeID(tok, lit)
 	case p.posType == 4:
-		p.parseStructTypeName(tok, str)
+		p.parseStructTypeName(tok, lit)
 	case p.posType == 5:
-		p.parseInterface(tok, str)
+		p.parseInterface(tok, lit)
 	default:
 		return false
 	}
@@ -439,19 +437,20 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 		if tok == token.EOF {
 			break
 		}
+		str := tokenToStr(tok, lit)
 		p.countBBP(tok)
 
 		// ignore packageClause
 		p.ignorePkg(tok)
 
 		// parse import declare
-		p.parseImPkg(tok, lit, iq)
+		p.parseImPkg(tok, str, iq)
 
 		// parse type
-		p.parseType(tok, lit)
+		p.parseType(tok, str)
 
 		// parse func declare
-		p.parseFunc(tok, lit)
+		p.parseFunc(tok, str)
 
 		p.preToken = tok
 
@@ -616,8 +615,6 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 }
 
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
-	str := tokenToStr(tok, lit)
-
 	switch {
 	case p.posFuncSig == 0:
 		if tok == token.FUNC {
@@ -629,31 +626,31 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		// func (ri rt) fname(pi pt) (res)
 		//       ~~
 		if tok == token.IDENT {
-			p.tmpFuncDecl.sig.receiverID = str
+			p.tmpFuncDecl.sig.receiverID = lit
 			p.posFuncSig = 2
 		}
 	case p.posFuncSig == 2:
 		// baseTypeName
-		p.parseFuncBaseTypeName(tok, str)
+		p.parseFuncBaseTypeName(tok, lit)
 
 	case p.posFuncSig == 3, p.posFuncSig == 1 && p.paren == 0:
 		// funcName
-		p.parseFuncName(tok, str)
+		p.parseFuncName(tok, lit)
 
 	case p.posFuncSig == 4:
 		// params
-		p.parseFuncParams(tok, str)
+		p.parseFuncParams(tok, lit)
 
 	case p.posFuncSig == 5:
 		// result
-		p.parseFuncResult(tok, str)
+		p.parseFuncResult(tok, lit)
 
 	case p.posFuncSig == 6:
 		// body
 		if p.mainFlag {
-			p.parseFuncBody(&p.main, tok, str)
+			p.parseFuncBody(&p.main, tok, lit)
 		} else {
-			p.parseFuncBody(&p.tmpFuncDecl.body, tok, str)
+			p.parseFuncBody(&p.tmpFuncDecl.body, tok, lit)
 		}
 
 	case p.posFuncSig == 7:
@@ -661,7 +658,7 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		p.funcClosing(tok)
 
 	default:
-		p.preLit = str
+		p.preLit = lit
 	}
 	p.preToken = tok
 	return true
