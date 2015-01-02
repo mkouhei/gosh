@@ -99,6 +99,7 @@ type parserSrc struct {
 	// 3: fieldIDList
 	// 4: fieldType
 	// 5: method
+	// 6: closing
 	posType int
 
 	// 0: no method
@@ -171,6 +172,9 @@ func (p *parserSrc) parseType(tok token.Token, lit string) bool {
 		p.parseStructTypeName(tok, lit)
 	case p.posType == 5:
 		p.parseInterface(tok, lit)
+	case p.posType == 6 && tok == token.SEMICOLON:
+		p.posType = 0
+		p.preLit = ""
 	default:
 		return false
 	}
@@ -185,7 +189,7 @@ func (p *parserSrc) parseTypeID(tok token.Token, lit string) bool {
 		p.tmpTypeDecl.typeID = lit
 		p.posType = 2
 	case tok == token.RPAREN && p.paren == 0:
-		p.posType = 0
+		p.posType = 6
 	default:
 		return false
 	}
@@ -225,7 +229,7 @@ func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
 				if p.paren == 0 {
 					// type typeID []typeName
 					//               ~~~~~~~~
-					p.posType = 0
+					p.posType = 6
 				} else {
 					// type (
 					//    typeID []typeName
@@ -239,7 +243,7 @@ func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
 				if p.paren == 0 {
 					// type typeID typeName
 					//             ~~~~~~~~
-					p.posType = 0
+					p.posType = 6
 				} else {
 					// type (
 					//    typeID typeName
@@ -262,13 +266,14 @@ func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 		if p.preToken == token.SEMICOLON {
 			p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
 			p.tmpTypeDecl = typeDecl{}
+			p.preLit = ""
 		}
 		if p.paren == 0 {
 			// type typeID struct {
 			//     typeID []typeName
 			//     }
 			//     ~
-			p.posType = 0
+			p.posType = 6
 		} else if p.paren == 1 {
 			// type (
 			// typeID struct {
@@ -348,7 +353,7 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 			p.tmpTypeDecl = typeDecl{}
 			p.posMeth = 0
 			if p.paren == 0 {
-				p.posType = 0
+				p.posType = 6
 			} else {
 				p.posType = 1
 			}
