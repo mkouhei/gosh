@@ -461,19 +461,19 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 		p.countBBP(tok)
 
 		switch {
-		// ignore packageClause
 		case p.ignorePkg(tok):
+			// ignore packageClause
 
-		// parse import declare
 		case p.parseImPkg(tok, str, iq):
+			// parse import declare
 
-		// parse type
 		case p.parseType(tok, str):
+			// parse type
 
-		// parse func declare
 		case p.parseFunc(tok, str):
-		}
+			// parse func declare
 
+		}
 		p.preToken = tok
 
 	}
