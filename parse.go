@@ -631,9 +631,12 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 			}
 			p.putPackages(rmQuot(lit), pl, iq)
 			p.preLit = ""
-		case tok == token.SEMICOLON && p.paren == 0:
-			p.imFlag = false
-			p.preToken = tok
+		case tok == token.SEMICOLON:
+			if p.paren == 0 {
+				p.imFlag = false
+				p.preToken = tok
+				p.preLit = ""
+			}
 		}
 	default:
 		return false
