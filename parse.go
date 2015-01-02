@@ -647,12 +647,9 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 	switch {
 	case p.posFuncSig == 0 && tok == token.FUNC:
-		//		if tok == token.FUNC {
 		p.posFuncSig = 1
 		p.preLit = ""
-		//		} else {
-		//			return false
-		//		}
+
 	case p.posFuncSig == 1 && p.paren > 0:
 		// receiverID
 		// func (ri rt) fname(pi pt) (res)
@@ -660,8 +657,6 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		if tok == token.IDENT {
 			p.tmpFuncDecl.sig.receiverID = lit
 			p.posFuncSig = 2
-		} else {
-			return false
 		}
 	case p.posFuncSig == 2:
 		// baseTypeName
@@ -691,8 +686,13 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		// closing
 		p.funcClosing(tok)
 
+	case p.posFuncSig == 8 && tok == token.SEMICOLON:
+		// closing main
+		p.posFuncSig = 0
+		p.preLit = ""
 	default:
-		p.preLit = lit
+		//if tok != token.SEMICOLON {
+		//}
 		return false
 	}
 	p.preToken = tok
@@ -838,7 +838,7 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 		p.posFuncSig = 7
 	case p.preLit == "":
 		p.preLit = lit
-	case hasLineFeedAfter(tok):
+	case hasLineFeedAfter(tok), p.preToken == token.RPAREN && tok == token.LBRACE:
 		p.preLit += lit
 		b = append(b, p.preLit)
 		p.preLit = ""
@@ -856,22 +856,20 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 }
 
 func (p *parserSrc) funcClosing(tok token.Token) {
-	if tok != token.IDENT && p.paren == 0 {
-		if p.mainFlag {
-			p.posFuncSig = 8
-		} else if i := p.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
+	if p.mainFlag == true {
+		p.posFuncSig = 8
+	} else if tok != token.IDENT && p.paren == 0 {
+		if i := p.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
 			p.funcDecls[i].name = p.tmpFuncDecl.name
 			p.funcDecls[i].sig = p.tmpFuncDecl.sig
 			p.funcDecls[i].body = p.tmpFuncDecl.body
-			p.posFuncSig = 0
 		} else {
 			p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
-			p.posFuncSig = 0
 		}
+		p.posFuncSig = 0
 		p.tmpFuncDecl = funcDecl{}
 		p.mainFlag = false
 	}
-
 }
 
 func (p *parserSrc) searchFuncDecl(name string) int {

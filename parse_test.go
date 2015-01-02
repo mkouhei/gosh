@@ -237,7 +237,8 @@ q.name = name
 fmt.Println(q.name)
 }`
 
-	mainResult = `if ! test0(){fmt.Println(test0())
+	mainResult = `if ! test0(){
+fmt.Println(test0())
 }
 fmt.Println(test1())
 test2(2)
@@ -360,7 +361,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse main func error")
 	}
 
-	if len(p.mergeLines()) != 112 {
+	if len(p.mergeLines()) != 113 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
