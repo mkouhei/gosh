@@ -827,6 +827,33 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 
 }
 
+func (p *parserSrc) parseOmit(body *[]string, tok token.Token, lit string) {
+	b := *body
+	switch {
+	case tok == token.SEMICOLON:
+		if p.preLit != "" {
+			b = append(b, p.preLit)
+		}
+		p.preLit = ""
+	case p.preLit == "":
+		p.preLit = lit
+	case hasLineFeedAfter(tok), p.preToken == token.RPAREN && tok == token.LBRACE:
+		p.preLit += lit
+		b = append(b, p.preLit)
+		p.preLit = ""
+	case hasLineFeedBefore(tok):
+		b = append(b, p.preLit)
+		p.preLit = lit
+	case hasSpaceBefore(p.preToken) && hasSpaceBefore(tok):
+		p.preLit += " " + lit
+	case hasSpaceAfter(tok):
+		p.preLit += lit + " "
+	default:
+		p.preLit += lit
+	}
+	*body = b
+}
+
 func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 	b := *body
 	switch {
