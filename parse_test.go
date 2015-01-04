@@ -144,6 +144,7 @@ q := qux{"bye bye", 1}
 q.test8("end")
 }
 `
+
 	typeResult = `type (
 hoge int
 foo []string

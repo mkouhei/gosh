@@ -71,6 +71,7 @@ type parserSrc struct {
 	typeDecls []typeDecl
 	body      []string
 	main      []string
+	mainHist  []string
 
 	imFlag      bool
 	funcName    string
@@ -473,14 +474,43 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 		case p.parseFunc(tok, str):
 			// parse func declare
 
+		default:
+			// omit main
+			p.parseOmit(&p.main, tok, str)
+			if len(p.main) > 0 && p.validateMainBody() {
+				p.mainHist = append(p.mainHist, p.main...)
+				return true
+			}
 		}
 		p.preToken = tok
-
 	}
 
 	if p.posFuncSig == 8 {
 		p.posFuncSig = 0
 		return true
+	}
+	return false
+}
+
+func (p *parserSrc) validateMainBody() bool {
+	var str string
+	var tp parserSrc
+	for _, l := range p.main {
+		str += l + "\n"
+	}
+	var s scanner.Scanner
+	fset := token.NewFileSet()
+	file := fset.AddFile("", fset.Base(), len([]byte(str)))
+	s.Init(file, []byte(str), nil, scanner.ScanComments)
+	for {
+		_, tok, _ := s.Scan()
+		if tok == token.EOF {
+			break
+		}
+		tp.countBBP(tok)
+		if tp.paren == 0 && tp.braces == 0 && tp.brackets == 0 && tok == token.SEMICOLON {
+			return true
+		}
 	}
 	return false
 }
@@ -566,7 +596,11 @@ func (p *parserSrc) mergeLines() []string {
 	l = append(l, p.convertFuncDecls()...)
 	l = append(l, p.body...)
 	l = append(l, "func main() {")
-	l = append(l, p.main...)
+	if len(p.mainHist) > 0 {
+		l = append(l, p.mainHist...)
+	} else {
+		l = append(l, p.main...)
+	}
 	return append(l, "}")
 }
 
@@ -731,6 +765,7 @@ func (p *parserSrc) parseFuncName(tok token.Token, lit string) {
 		//              ~~~~~
 		if lit == "main" {
 			p.mainFlag = true
+			p.mainHist = nil
 		} else {
 			p.tmpFuncDecl.name = lit
 			p.funcName = lit
