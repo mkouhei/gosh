@@ -321,6 +321,27 @@ func TestParseMultipleImport(t *testing.T) {
 	}
 }
 
+func TestRemovePrintStmt(t *testing.T) {
+	s := []string{"i := 1",
+		"fmt.Println(i)"}
+	es := []string{"i := 1"}
+	removePrintStmt(&s)
+	if len(s) != 1 {
+		t.Fatalf("remove error: expected %v", es)
+	}
+	s2 := []string{"i := 1",
+		"if i == 1 {",
+		"fmt.Println(i)",
+		"}"}
+	es2 := []string{"i := 1",
+		"if i == 1 {",
+		"}"}
+	removePrintStmt(&s2)
+	if len(s2) != 3 {
+		t.Fatalf("remove error: expected %v, got %v", es2, s2)
+	}
+}
+
 func TestParseDuplicateImport(t *testing.T) {
 	p := parserSrc{}
 	iq := make(chan importSpec, 2)
