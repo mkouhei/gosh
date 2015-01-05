@@ -943,6 +943,16 @@ func (p *parserSrc) searchFuncDecl(name string) int {
 	return -1
 }
 
+func removePrintStmt(slice *[]string) {
+	s := *slice
+	for i, item := range s {
+		if strings.Contains(item, "fmt.Print") {
+			s = append(s[:i], s[i+1:]...)
+		}
+	}
+	*slice = s
+}
+
 func tokenToStr(tok token.Token, lit string) string {
 	var str string
 	switch {

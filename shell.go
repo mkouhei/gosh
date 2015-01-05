@@ -73,6 +73,7 @@ func (e *env) write(ic chan<- bool) {
 
 		ic <- true
 		e.parserSrc.main = nil
+		removePrintStmt(&e.parserSrc.mainHist)
 	}()
 }
 
