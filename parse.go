@@ -834,7 +834,7 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 			// func (ri rt) fname(pi pt) (res, res)
 			//                            ~~~
 			p.tmpFuncDecl.sig.result = lit
-		case strings.HasSuffix(p.tmpFuncDecl.sig.result, "[]"), strings.HasSuffix(p.tmpFuncDecl.sig.result, "*"):
+		case p.preToken == token.PERIOD, p.preToken == token.MUL, strings.HasSuffix(p.tmpFuncDecl.sig.result, "[]"):
 			p.tmpFuncDecl.sig.result += lit
 		case p.tmpFuncDecl.sig.result != "":
 			p.tmpFuncDecl.sig.result += ", " + lit
@@ -852,7 +852,7 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 		case p.tmpFuncDecl.sig.result != "":
 			p.tmpFuncDecl.sig.result += ", " + lit
 		}
-	case tok == token.RBRACK && p.preToken == token.LBRACK:
+	case tok == token.RBRACK && p.preToken == token.LBRACK, tok == token.PERIOD:
 		if p.tmpFuncDecl.sig.result != "" {
 			p.tmpFuncDecl.sig.result += lit
 		}

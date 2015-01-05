@@ -28,6 +28,8 @@ import (
 "fmt"
 o "os"
 "bytes"
+"net/http"
+"github.com/bitly/go-simplejson"
 )
 type hoge int
 type foo []string
@@ -127,6 +129,12 @@ fmt.Println(q.name != name)
 q.name = name
 fmt.Println(q.name)
 }
+func test9(url string) *simplejson.Json {
+resp, _ := http.Get(url)
+defer resp.Body.Close()
+js, _ := simplejson.NewFromReader(resp.Body)
+return js
+}
 func main() {
 if !test0() {
 fmt.Println(test0())
@@ -142,6 +150,7 @@ f := foo{"bye"}
 fmt.Println(f.test7())
 q := qux{"bye bye", 1}
 q.test8("end")
+test9("http://example.org/dummy.json")
 }
 `
 
@@ -236,6 +245,12 @@ fmt.Println(q.name == name)
 fmt.Println(q.name != name)
 q.name = name
 fmt.Println(q.name)
+}
+func test9(url string) *simplejson.Json {
+resp, _ := http.Get(url)
+defer resp.Body.Close()
+js, _ := simplejson.NewFromReader(resp.Body)
+return js
 }`
 
 	mainResult = `if ! test0(){
@@ -251,7 +266,8 @@ fmt.Println(test6("hello, again", 6))
 f := foo{"bye"}
 fmt.Println(f.test7())
 q := qux{"bye bye", 1}
-q.test8("end")`
+q.test8("end")
+test9("http://example.org/dummy.json")`
 )
 
 func consumeChan(iq <-chan importSpec) {
@@ -332,7 +348,9 @@ func TestParseLine(t *testing.T) {
 	import1 := []importSpec{
 		importSpec{"fmt", ""},
 		importSpec{"os", "o"},
-		importSpec{"bytes", ""}}
+		importSpec{"bytes", ""},
+		importSpec{"net/http", ""},
+		importSpec{"github.com/bitly/go-simplejson", ""}}
 
 	type1 := strings.Split(typeResult, "\n")
 	func1 := strings.Split(funcResult, "\n")
@@ -362,7 +380,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse main func error")
 	}
 
-	if len(p.mergeLines()) != 113 {
+	if len(p.mergeLines()) != 122 {
 		t.Fatal("parse error")
 	}
 	if p.braces != 0 {
