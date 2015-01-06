@@ -945,10 +945,14 @@ func (p *parserSrc) searchFuncDecl(name string) int {
 
 func removePrintStmt(slice *[]string) {
 	s := *slice
+	var r []int
 	for i, item := range s {
 		if strings.Contains(item, "fmt.Print") {
-			s = append(s[:i], s[i+1:]...)
+			r = append(r, i)
 		}
+	}
+	for i := len(r) - 1; i >= 0; i-- {
+		s = append(s[:r[i]], s[r[i]+1:]...)
 	}
 	*slice = s
 }

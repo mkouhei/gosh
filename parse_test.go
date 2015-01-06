@@ -331,13 +331,16 @@ func TestRemovePrintStmt(t *testing.T) {
 	}
 	s2 := []string{"i := 1",
 		"if i == 1 {",
+		`fmt.Println("helo")`,
+		"i++",
 		"fmt.Println(i)",
 		"}"}
 	es2 := []string{"i := 1",
 		"if i == 1 {",
+		"i++",
 		"}"}
 	removePrintStmt(&s2)
-	if len(s2) != 3 {
+	if len(s2) != 4 {
 		t.Fatalf("remove error: expected %v, got %v", es2, s2)
 	}
 }
