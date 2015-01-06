@@ -268,6 +268,14 @@ fmt.Println(f.test7())
 q := qux{"bye bye", 1}
 q.test8("end")
 test9("http://example.org/dummy.json")`
+
+	mainOmit = `if true {
+fmt.Println("hello")
+}
+`
+
+	mainOmitResult = `if true{fmt.Println("hello")
+}`
 )
 
 func consumeChan(iq <-chan importSpec) {
@@ -411,4 +419,19 @@ func TestParseLine(t *testing.T) {
 		t.Fatalf("braces count error: %d", p.braces)
 	}
 
+}
+
+func TestOmit(t *testing.T) {
+	p := parserSrc{}
+	iq := make(chan importSpec, 1)
+	lines := strings.Split(mainOmit, "\n")
+
+	for _, l := range lines {
+		p.parseLine([]byte(l), iq)
+	}
+
+	el := strings.Split(mainOmitResult, "\n")
+	if len(compare(el, p.main)) != 0 {
+		t.Fatal("parse omitted main func error")
+	}
 }
