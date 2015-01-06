@@ -447,7 +447,6 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 }
 
 func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
-	//	line := string(bline)
 	var s scanner.Scanner
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(bline))
