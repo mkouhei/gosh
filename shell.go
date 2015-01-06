@@ -43,6 +43,10 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 				qc <- true
 				return
 			}
+
+			// append token.SEMICOLON
+			line = append(line, 59)
+
 			if e.parserSrc.parseLine(line, iq) {
 				wc <- true
 				o = false
