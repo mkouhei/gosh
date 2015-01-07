@@ -106,7 +106,7 @@ Example::
 
   >>>
 
-* Terminate gosh to reset main declarations, or declare func main without body.::
+Terminate gosh to reset main declarations, or declare func main without body.::
 
   $ $GOSH/bin/gosh
   >>> i := i
@@ -116,7 +116,7 @@ Example::
   >>> fmt.Println(i)
   [error] # command-line-arguments
   ./gosh_tmp.go:8: undefined: i
-
+  
   >>>
 
 Limitations
@@ -127,7 +127,7 @@ Limitations
 Known issues
 ~~~~~~~~~~~~
 
-* Not evaluate when there are declared and not used valiables.::
+Not evaluate when there are declared and not used valiables.::
 
   $ $GOPATH/bin/gosh
   >>> i := 1
