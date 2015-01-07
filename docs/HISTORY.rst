@@ -1,9 +1,10 @@
 History
 -------
 
-0.2.0 (not released)
-~~~~~~~~~~~~~~~~~~~~
+0.2.0 (2015-01-08)
+~~~~~~~~~~~~~~~~~~
 
+* Enable to omit the main function.
 * Enable to re-declare function.
 * refactoring of parser import, type, function declaration with go/scanner, go/token instead of regexp.
 * Added parser of typeDecl.

@@ -14,6 +14,7 @@ Features
 --------
 
 * Interactive shell
+* Enable to omit the main function
 * Enable to omit package statement
 * Enable to omit the import statement of standard library
 * Enable to Import libraries of non-standard library
@@ -48,8 +49,8 @@ Set ``GOPATH``, and execute follows.::
 
   $ go get github.com/mkouhei/gosh
   
-Usage
------
+Basic usage
+-----------
 
 Examples::
 
@@ -74,7 +75,6 @@ or::
 
 Enable to omit import statement related with standard libraries.
 
-
 Enable to Import libraries of non-standard library
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -91,11 +91,53 @@ For example of using the some package.::
   
   (print some payload)
 
+Usage when omitting main function declarations
+----------------------------------------------
+
+Example::
+
+  $ $GOPATH/bin/gosh
+  >>> i := 1
+  
+  >>> i++
+  
+  >>> fmt.Println(i)
+  2
+
+  >>>
+
+* Terminate gosh to reset main declarations, or declare func main without body.::
+
+  $ $GOSH/bin/gosh
+  >>> i := i
+  >>> fmt.Println(i)
+  1
+  >>> func main() {}
+  >>> fmt.Println(i)
+  [error] # command-line-arguments
+  ./gosh_tmp.go:8: undefined: i
+
+  >>>
+
+Limitations
+~~~~~~~~~~~
+
+* ``fmt.Print*`` are executed only once.
+
+Known issues
+~~~~~~~~~~~~
+
+* Not evaluate when there are declared and not used valiables.::
+
+  $ $GOPATH/bin/gosh
+  >>> i := 1
+  >>> fmt.Println("helo")
+  >>>
+
 
 Roadmap
 -------
 
-* Omitting the main function
 * Tab completion
 * Enable to omit import statement of system global installed packages
 
