@@ -86,7 +86,11 @@ func (e *env) goRun() {
 	os.Chdir(e.bldDir)
 	cmd := "go"
 	args := []string{"run", tmpname}
-	if msg, err := runCmd(true, cmd, args...); err != nil {
+	omitFlag := false
+	if len(e.parserSrc.mainHist) > 0 {
+		omitFlag = true
+	}
+	if msg, err := runCmd(true, omitFlag, cmd, args...); err != nil {
 		e.logger("go run", msg, err)
 		e.parserSrc.body = nil
 		return
@@ -113,7 +117,7 @@ func (e *env) goGet(p <-chan importSpec) {
 			pkg := <-p
 			cmd := "go"
 			args := []string{"get", pkg.imPath}
-			if msg, err := runCmd(true, cmd, args...); err != nil {
+			if msg, err := runCmd(true, false, cmd, args...); err != nil {
 				e.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
@@ -127,7 +131,7 @@ func (e *env) goImports(ec chan<- bool) {
 	go func() {
 		cmd := "goimports"
 		args := []string{"-w", e.tmpPath}
-		if msg, err := runCmd(true, cmd, args...); err != nil {
+		if msg, err := runCmd(true, false, cmd, args...); err != nil {
 			e.logger("goimports", msg, err)
 			e.parserSrc.body = nil
 		}

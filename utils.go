@@ -53,14 +53,17 @@ func cleanDirs() {
 	}
 }
 
-func suppressError(m string) {
+func suppressError(m string, omitFlag bool) {
 	// suppress error message
-	if !strings.HasPrefix(m, "go install: no install location") {
+	switch {
+	case strings.HasPrefix(m, "go install: no install location"):
+	case omitFlag && strings.Contains(m, "declared and not used"):
+	default:
 		fmt.Printf("[error] %s", m)
 	}
 }
 
-func runCmd(printFlag bool, command string, args ...string) (string, error) {
+func runCmd(printFlag, omitFlag bool, command string, args ...string) (string, error) {
 	// execute command
 	cmd := exec.Command(command, args...)
 	var stdout bytes.Buffer
@@ -69,7 +72,7 @@ func runCmd(printFlag bool, command string, args ...string) (string, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		suppressError(stderr.String())
+		suppressError(stderr.String(), omitFlag)
 		return stderr.String(), err
 	}
 	if printFlag {
@@ -112,6 +115,6 @@ func goVersion(goVer string) string {
 	}
 	cmd := "go"
 	args := []string{"version"}
-	msg, _ := runCmd(false, cmd, args...)
+	msg, _ := runCmd(false, false, cmd, args...)
 	return msg
 }
