@@ -482,12 +482,14 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 			}
 		}
 		p.preToken = tok
+
+		if p.posFuncSig == 8 {
+			p.posFuncSig = 0
+			return true
+		}
+
 	}
 
-	if p.posFuncSig == 8 {
-		p.posFuncSig = 0
-		return true
-	}
 	return false
 }
 
@@ -719,13 +721,7 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		// closing
 		p.funcClosing(tok)
 
-	case p.posFuncSig == 8 && tok == token.SEMICOLON:
-		// closing main
-		p.posFuncSig = 0
-		p.preLit = ""
 	default:
-		//if tok != token.SEMICOLON {
-		//}
 		return false
 	}
 	p.preToken = tok
@@ -927,10 +923,10 @@ func (p *parserSrc) funcClosing(tok token.Token) {
 		} else {
 			p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
 		}
-		p.posFuncSig = 0
 		p.tmpFuncDecl = funcDecl{}
-		p.mainFlag = false
+		p.posFuncSig = 0
 	}
+	p.mainFlag = false
 }
 
 func (p *parserSrc) searchFuncDecl(name string) int {
