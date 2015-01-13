@@ -126,7 +126,7 @@ Not evaluate when there are declared and not used valiables.::
 
   $ $GOPATH/bin/gosh
   >>> i := 1
-  >>> fmt.Println("helo")
+  >>> fmt.Println("hello")
   >>>
 
 
