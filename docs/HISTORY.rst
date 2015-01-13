@@ -1,6 +1,11 @@
 History
 -------
 
+0.2.1 (2015-01-13)
+~~~~~~~~~~~~~~~~~~
+
+* Fixed declared function is executing immediately after func main.
+
 0.2.0 (2015-01-08)
 ~~~~~~~~~~~~~~~~~~
 
