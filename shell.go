@@ -28,13 +28,12 @@ import (
 func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 	// read from shell prompt
 	go func() {
-		o := true
 		reader := bufio.NewReader(fp)
 		for {
-			if o {
+			if e.readFlag == 0 {
 				fmt.Print(">>> ")
 			} else {
-				o = true
+				e.readFlag--
 			}
 			line, _, err := reader.ReadLine()
 			if err != nil {
@@ -49,7 +48,7 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 
 			if e.parserSrc.parseLine(line, iq) {
 				wc <- true
-				o = false
+				e.readFlag = 3
 			}
 		}
 	}()
@@ -159,11 +158,12 @@ func (e *env) shell(fp *os.File) {
 	// package queue for go get
 	iq := make(chan importSpec, 10)
 
-	e.read(fp, wc, qc, iq)
 	e.goGet(iq)
 
 loop:
 	for {
+		e.read(fp, wc, qc, iq)
+
 		select {
 		case <-wc:
 			e.write(ic)

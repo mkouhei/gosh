@@ -70,7 +70,6 @@ or::
   >>> fmt.Println("hello")
   >>> }
   hello
-  
   >>>
 
 Enable to omit import statement related with standard libraries.
@@ -98,12 +97,9 @@ Example::
 
   $ $GOPATH/bin/gosh
   >>> i := 1
-  
   >>> i++
-  
   >>> fmt.Println(i)
   2
-
   >>>
 
 Terminate gosh to reset main declarations, or declare func main without body.::
@@ -116,7 +112,6 @@ Terminate gosh to reset main declarations, or declare func main without body.::
   >>> fmt.Println(i)
   [error] # command-line-arguments
   ./gosh_tmp.go:8: undefined: i
-  
   >>>
 
 Limitations

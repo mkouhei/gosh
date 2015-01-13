@@ -30,6 +30,7 @@ type env struct {
 	debug   bool
 
 	parserSrc parserSrc
+	readFlag  int32
 }
 
 func newEnv(debug bool) env {
@@ -40,6 +41,7 @@ func newEnv(debug bool) env {
 	e.goPath = e.bldDir
 	e.debug = debug
 	e.parserSrc = parserSrc{}
+	e.readFlag = 0
 
 	setGOPATH(e.bldDir)
 	e.logger("GOPATH", os.Getenv("GOPATH"), nil)
