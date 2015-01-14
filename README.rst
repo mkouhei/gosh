@@ -60,7 +60,6 @@ Examples::
   >>> fmt.Println("hello")
   >>> }
   hello
-  
   >>>
 
 or::
