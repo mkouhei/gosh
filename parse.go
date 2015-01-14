@@ -518,6 +518,9 @@ func (p *parserSrc) validateMainBody() bool {
 
 func convertImport(pkgs []importSpec) []string {
 	// convert packages list to "import" statement
+	if len(pkgs) == 0 {
+		return []string{}
+	}
 	l := []string{"import ("}
 	for _, pkg := range pkgs {
 		l = append(l, fmt.Sprintf(`%s "%s"`, pkg.pkgName, pkg.imPath))
