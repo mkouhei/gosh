@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 )
 
 func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
@@ -61,7 +60,6 @@ func (e *env) write(ic chan<- bool) {
 		if err != nil {
 			return
 		}
-		time.Sleep(time.Microsecond)
 		f.Truncate(0)
 
 		for _, l := range e.parserSrc.mergeLines() {
@@ -120,7 +118,6 @@ func (e *env) goGet(p <-chan importSpec) {
 				e.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
-			time.Sleep(time.Nanosecond)
 		}
 	}()
 }
@@ -134,7 +131,6 @@ func (e *env) goImports(ec chan<- bool) {
 			e.logger("goimports", msg, err)
 			e.parserSrc.body = nil
 		}
-		time.Sleep(time.Nanosecond)
 		ec <- true
 
 	}()
@@ -178,6 +174,5 @@ loop:
 		}
 	}
 
-	time.Sleep(time.Nanosecond)
 	return
 }
