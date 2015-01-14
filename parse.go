@@ -551,6 +551,9 @@ func (p *parserSrc) convertFuncDecls() []string {
 }
 
 func (p *parserSrc) convertTypeDecls() []string {
+	if len(p.typeDecls) == 0 {
+		return []string{}
+	}
 	l := []string{"type ("}
 	for _, t := range p.typeDecls {
 		sig := fmt.Sprintf("%s %s {", t.typeID, t.typeName)
