@@ -329,6 +329,24 @@ func TestParseMultipleImport(t *testing.T) {
 	}
 }
 
+func TestParseDuplicateImport(t *testing.T) {
+	p := parserSrc{}
+	iq := make(chan importSpec, 2)
+
+	lines := []string{`import "fmt"`,
+		`import "fmt"`,
+	}
+
+	for _, l := range lines {
+		p.parseLine([]byte(l), iq)
+	}
+	el := []importSpec{
+		importSpec{"fmt", ""}}
+	if len(compareImportSpecs(el, p.imPkgs)) != 0 {
+		t.Fatalf(`parse error: expected %v`, el)
+	}
+}
+
 func TestRemovePrintStmt(t *testing.T) {
 	s := []string{"i := 1",
 		"fmt.Println(i)"}
@@ -350,24 +368,6 @@ func TestRemovePrintStmt(t *testing.T) {
 	removePrintStmt(&s2)
 	if len(s2) != 4 {
 		t.Fatalf("remove error: expected %v, got %v", es2, s2)
-	}
-}
-
-func TestParseDuplicateImport(t *testing.T) {
-	p := parserSrc{}
-	iq := make(chan importSpec, 2)
-
-	lines := []string{`import "fmt"`,
-		`import "fmt"`,
-	}
-
-	for _, l := range lines {
-		p.parseLine([]byte(l), iq)
-	}
-	el := []importSpec{
-		importSpec{"fmt", ""}}
-	if len(compareImportSpecs(el, p.imPkgs)) != 0 {
-		t.Fatalf(`parse error: expected %v`, el)
 	}
 }
 
