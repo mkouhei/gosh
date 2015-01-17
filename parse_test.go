@@ -324,7 +324,7 @@ func TestParseMultipleImport(t *testing.T) {
 		importSpec{"io", ""},
 		importSpec{"strings", "str"},
 		importSpec{"os", ""}}
-	if len(compareImportSpecs(el, p.imPkgs)) != 0 {
+	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
 	}
 }
@@ -334,6 +334,9 @@ func TestParseDuplicateImport(t *testing.T) {
 	iq := make(chan importSpec, 2)
 
 	lines := []string{`import "fmt"`,
+		`import "bytes"`,
+		`import "fmt"`,
+		`import "bytes"`,
 		`import "fmt"`,
 	}
 
@@ -341,8 +344,9 @@ func TestParseDuplicateImport(t *testing.T) {
 		p.parseLine([]byte(l), iq)
 	}
 	el := []importSpec{
-		importSpec{"fmt", ""}}
-	if len(compareImportSpecs(el, p.imPkgs)) != 0 {
+		importSpec{"fmt", ""},
+		importSpec{"bytes", ""}}
+	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
 		t.Fatalf(`parse error: expected %v`, el)
 	}
 }
@@ -392,7 +396,7 @@ func TestParseLine(t *testing.T) {
 		p.parseLine([]byte(l), iq)
 	}
 
-	if len(compareImportSpecs(import1, p.imPkgs)) != 0 {
+	if len(compareImportSpecs(p.imPkgs, import1)) != 0 {
 		t.Fatal("parse import packages error")
 	}
 
@@ -400,15 +404,15 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse body error")
 	}
 
-	if len(compare(type1, p.convertTypeDecls())) != 0 {
+	if len(compare(p.convertTypeDecls(), type1)) != 0 {
 		t.Fatal("parse type decls error")
 	}
 
-	if len(compare(func1, p.convertFuncDecls())) != 0 {
+	if len(compare(p.convertFuncDecls(), func1)) != 0 {
 		t.Fatal("parse func decls error")
 	}
 
-	if len(compare(main1, p.main)) != 0 {
+	if len(compare(p.main, main1)) != 0 {
 		t.Fatal("parse main func error")
 	}
 
@@ -431,7 +435,7 @@ func TestOmit(t *testing.T) {
 	}
 
 	el := strings.Split(mainOmitResult, "\n")
-	if len(compare(el, p.main)) != 0 {
+	if len(compare(p.main, el)) != 0 {
 		t.Fatal("parse omitted main func error")
 	}
 }
