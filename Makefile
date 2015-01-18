@@ -47,6 +47,18 @@ build: prebuild
 build-only:
 	go build -ldflags "-X main.version $(shell git describe --always)" -o _build/$(BIN)
 
+prebuild-docs:
+	virtualenv _build/venv
+	. _build/venv/bin/activate; \
+	pip install -U Sphinx; \
+	pip install -U sphinxcontrib-blockdiag; \
+	deactivate
+
+build-docs: prebuild-docs
+	. _build/venv/bin/activate;\
+	cd docs; \
+	make html
+
 clean:
 	@rm -f _build/$(BIN)
 
