@@ -66,3 +66,4 @@ test: prebuild
 	go tool cover -func=c.out
 	unlink c.out
 	rm -f $(BIN).test
+	rm -rf /tmp/gosh-*
