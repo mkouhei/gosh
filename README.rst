@@ -86,7 +86,6 @@ For example of using the some package.::
   >>> p, _ := somepkg.Reader(r.Body)
   >>> fmt.Println(p)
   >>> }
-  
   (print some payload)
 
 Usage when omitting main function declarations
