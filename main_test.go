@@ -24,6 +24,7 @@ import (
 
 func Example_MainVersion() {
 	os.Args = append(os.Args, "-version")
+	os.Args = append(os.Args, "-c")
 	main()
 	// Output:
 	// version:
