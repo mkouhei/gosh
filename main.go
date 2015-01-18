@@ -34,7 +34,6 @@ There is NO WARRANTY, to the extent permitted by law.
 `
 
 func run(d bool) {
-	cleanDirs()
 	e := newEnv(d)
 	fmt.Println(goVersion(goVer))
 	fmt.Printf(license, version)
@@ -43,10 +42,14 @@ func run(d bool) {
 
 func main() {
 	d := flag.Bool("d", false, "debug mode")
+	c := flag.Bool("c", false, "cleanup all Gosh's temporary files")
 	flag.Parse()
 	if *showVersion {
 		fmt.Printf("version: %s\n", version)
 		return
+	}
+	if *c {
+		cleanDirs()
 	}
 	run(*d)
 }
