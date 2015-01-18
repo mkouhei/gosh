@@ -1,6 +1,11 @@
 History
 -------
 
+0.2.3 (2015-01-18)
+~~~~~~~~~~~~~~~~~~
+
+* Fixed not running multiple gosh processes.
+
 0.2.2 (2015-01-14)
 ~~~~~~~~~~~~~~~~~~
 
