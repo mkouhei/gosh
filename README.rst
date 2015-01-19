@@ -9,6 +9,14 @@ The goal is to provide an easy-to-use interactive execution environment.
    :target: http://travis-ci.org/mkouhei/gosh
 .. image:: https://coveralls.io/repos/mkouhei/gosh/badge.png?branch=master
    :target: https://coveralls.io/r/mkouhei/gosh?branch=master
+.. image:: https://readthedocs.org/projects/gosh/badge/?version=latest
+   :target: https://readthedocs.org/projects/gosh/?badge=latest
+   :alt: Documentation Status
+
+Documentation
+=============
+
+http://gosh.readthedocs.org/
 
 Features
 --------
