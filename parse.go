@@ -75,7 +75,6 @@ type parserSrc struct {
 
 	imFlag      bool
 	funcName    string
-	typeFlag    string
 	tFlag       bool
 	mainFlag    bool
 	preToken    token.Token

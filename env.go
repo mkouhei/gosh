@@ -24,7 +24,6 @@ import (
 
 type env struct {
 	bldDir  string
-	tmpName string
 	tmpPath string
 	goPath  string
 	debug   bool
