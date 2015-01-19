@@ -332,3 +332,4 @@ epub_exclude_files = ['search.html']
 #epub_use_index = True
 
 blockdiag_fontpath = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
+blockdiag_html_image_format = "SVG"
