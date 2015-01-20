@@ -224,15 +224,8 @@ func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
 			switch {
 			case p.preToken == token.RBRACK && p.tmpTypeDecl.typeName == "[]":
 				p.tmpTypeDecl.typeName += lit
-				if i := p.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
-					p.typeDecls[i].typeID = p.tmpTypeDecl.typeID
-					p.typeDecls[i].typeName = p.tmpTypeDecl.typeName
-					p.typeDecls[i].fieldDecls = p.tmpTypeDecl.fieldDecls
-					p.typeDecls[i].methSpecs = p.tmpTypeDecl.methSpecs
-				} else {
-					p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
-				}
-				p.tmpTypeDecl = typeDecl{}
+				p.appendTypeDecl()
+
 				if p.paren == 0 {
 					// type typeID []typeName
 					//               ~~~~~~~~
@@ -245,15 +238,8 @@ func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
 				}
 			default:
 				p.tmpTypeDecl.typeName = lit
-				if i := p.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
-					p.typeDecls[i].typeID = p.tmpTypeDecl.typeID
-					p.typeDecls[i].typeName = p.tmpTypeDecl.typeName
-					p.typeDecls[i].fieldDecls = p.tmpTypeDecl.fieldDecls
-					p.typeDecls[i].methSpecs = p.tmpTypeDecl.methSpecs
-				} else {
-					p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
-				}
-				p.tmpTypeDecl = typeDecl{}
+				p.appendTypeDecl()
+
 				if p.paren == 0 {
 					// type typeID typeName
 					//             ~~~~~~~~
@@ -278,15 +264,7 @@ func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 	switch {
 	case tok == token.RBRACE && p.braces == 0:
 		if p.preToken == token.SEMICOLON {
-			if i := p.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
-				p.typeDecls[i].typeID = p.tmpTypeDecl.typeID
-				p.typeDecls[i].typeName = p.tmpTypeDecl.typeName
-				p.typeDecls[i].fieldDecls = p.tmpTypeDecl.fieldDecls
-				p.typeDecls[i].methSpecs = p.tmpTypeDecl.methSpecs
-			} else {
-				p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
-			}
-			p.tmpTypeDecl = typeDecl{}
+			p.appendTypeDecl()
 			p.preLit = ""
 		}
 		if p.paren == 0 {
@@ -370,15 +348,8 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 		case tok == token.LPAREN:
 			p.posMeth = 2
 		case tok == token.RBRACE && p.braces == 0:
-			if i := p.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
-				p.typeDecls[i].typeID = p.tmpTypeDecl.typeID
-				p.typeDecls[i].typeName = p.tmpTypeDecl.typeName
-				p.typeDecls[i].fieldDecls = p.tmpTypeDecl.fieldDecls
-				p.typeDecls[i].methSpecs = p.tmpTypeDecl.methSpecs
-			} else {
-				p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
-			}
-			p.tmpTypeDecl = typeDecl{}
+			p.appendTypeDecl()
+
 			p.posMeth = 0
 			if p.paren == 0 {
 				p.posType = 6
@@ -978,6 +949,18 @@ func (p *parserSrc) searchTypeDecl(typeID string) int {
 		}
 	}
 	return -1
+}
+
+func (p *parserSrc) appendTypeDecl() {
+	if i := p.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
+		p.typeDecls[i].typeID = p.tmpTypeDecl.typeID
+		p.typeDecls[i].typeName = p.tmpTypeDecl.typeName
+		p.typeDecls[i].fieldDecls = p.tmpTypeDecl.fieldDecls
+		p.typeDecls[i].methSpecs = p.tmpTypeDecl.methSpecs
+	} else {
+		p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
+	}
+	p.tmpTypeDecl = typeDecl{}
 }
 
 func removePrintStmt(slice *[]string) {
