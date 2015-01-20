@@ -31,15 +31,23 @@ o "os"
 "net/http"
 "github.com/bitly/go-simplejson"
 )
+type hoge []int
 type hoge int
+type foo string
 type foo []string
 type (
 bar string
 baz int
 spam struct {
 name string
+}
+spam struct {
+name string
 cnt int
 lines []string
+}
+ham interface {
+Write()
 }
 ham interface {
 Write()
