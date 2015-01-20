@@ -170,7 +170,7 @@ Gosh supoorts declaration of type.::
   hello
   >>>
 
-Gosh does not yet supports re-declarations of type.
+Gosh supports re-declarations of type. (>= v0.2.3-6-g415df66)
 
 Declaration of function
 =======================
