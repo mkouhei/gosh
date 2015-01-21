@@ -49,15 +49,13 @@ build-only:
 
 prebuild-docs:
 	virtualenv _build/venv
-	. _build/venv/bin/activate; \
-	pip install -U Sphinx; \
-	pip install -U sphinxcontrib-blockdiag; \
-	deactivate
+	_build/venv/bin/pip install -U Sphinx sphinxcontrib-blockdiag
 
 build-docs: prebuild-docs
 	. _build/venv/bin/activate;\
 	cd docs; \
-	make html
+	make html; \
+	deactivate
 
 clean:
 	@rm -f _build/$(BIN)
