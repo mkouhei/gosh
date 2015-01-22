@@ -62,10 +62,8 @@ func (e *env) write(ic chan<- bool) {
 		}
 		f.Truncate(0)
 
-		for _, l := range e.parserSrc.mergeLines() {
-			f.WriteString(fmt.Sprintf("%s\n", l))
-			e.logger("write", l, nil)
-		}
+		f.WriteString(concatLines(e.parserSrc.mergeLines(), "\n"))
+		e.logger("write", concatLines(e.parserSrc.mergeLines(), "\n"), nil)
 		f.Sync()
 		if err := f.Close(); err != nil {
 			e.logger("writer", "", err)
@@ -81,13 +79,12 @@ func (e *env) write(ic chan<- bool) {
 func (e *env) goRun() {
 	// execute `go run'
 	os.Chdir(e.bldDir)
-	cmd := "go"
 	args := []string{"run", tmpname}
 	omitFlag := false
 	if len(e.parserSrc.mainHist) > 0 {
 		omitFlag = true
 	}
-	if msg, err := runCmd(true, omitFlag, cmd, args...); err != nil {
+	if msg, err := runCmd(true, omitFlag, "go", args...); err != nil {
 		e.logger("go run", msg, err)
 		e.parserSrc.body = nil
 		return
@@ -96,14 +93,19 @@ func (e *env) goRun() {
 
 func (e *env) removeImport(msg string, pkg importSpec) {
 	// remove package from env.parser.imPkg
-	var key string
-	if pkg.pkgName == "" {
-		key = pkg.imPath
-	} else {
-		key = pkg.pkgName
-	}
-	if strings.Contains(msg, fmt.Sprintf(`package %s: unrecognized import path "%s"`, key, key)) {
+	if strings.Contains(msg,
+		fmt.Sprintf(`package %s: unrecognized import path "%s"`,
+			pkgName(pkg.pkgName, pkg.imPath),
+			pkgName(pkg.pkgName, pkg.imPath))) {
 		removeImportPackage(&e.parserSrc.imPkgs, importSpec{pkg.imPath, pkg.pkgName})
+	}
+}
+
+func pkgName(name, path string) string {
+	if name == "" {
+		return path
+	} else {
+		return name
 	}
 }
 
@@ -112,9 +114,8 @@ func (e *env) goGet(p <-chan importSpec) {
 	go func() {
 		for {
 			pkg := <-p
-			cmd := "go"
 			args := []string{"get", pkg.imPath}
-			if msg, err := runCmd(true, false, cmd, args...); err != nil {
+			if msg, err := runCmd(true, false, "go", args...); err != nil {
 				e.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
@@ -125,9 +126,8 @@ func (e *env) goGet(p <-chan importSpec) {
 func (e *env) goImports(ec chan<- bool) {
 	// execute `goimports'
 	go func() {
-		cmd := "goimports"
 		args := []string{"-w", e.tmpPath}
-		if msg, err := runCmd(true, false, cmd, args...); err != nil {
+		if msg, err := runCmd(true, false, "goimports", args...); err != nil {
 			e.logger("goimports", msg, err)
 			e.parserSrc.body = nil
 		}

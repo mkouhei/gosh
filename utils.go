@@ -118,3 +118,18 @@ func goVersion(goVer string) string {
 	msg, _ := runCmd(false, false, cmd, args...)
 	return msg
 }
+
+func concatLines(lines []string, sep string) string {
+	var str string
+	for _, l := range lines {
+		str += l + sep
+	}
+	return str
+}
+
+func appendLines(lines, base []string) []string {
+	for _, l := range lines {
+		base = append(base, l)
+	}
+	return base
+}

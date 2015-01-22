@@ -113,9 +113,8 @@ type parserSrc struct {
 func (p *parserSrc) putPackages(imPath, pkgName string, iq chan<- importSpec) {
 	// put package to queue of `go get'
 	if !searchPackage(importSpec{imPath, pkgName}, p.imPkgs) {
-		is := importSpec{imPath, pkgName}
-		p.imPkgs = append(p.imPkgs, is)
-		iq <- is
+		p.imPkgs = append(p.imPkgs, importSpec{imPath, pkgName})
+		iq <- importSpec{imPath, pkgName}
 	}
 }
 
@@ -492,15 +491,11 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 }
 
 func (p *parserSrc) validateMainBody() bool {
-	var str string
 	var tp parserSrc
-	for _, l := range p.main {
-		str += l + "\n"
-	}
 	var s scanner.Scanner
 	fset := token.NewFileSet()
-	file := fset.AddFile("", fset.Base(), len([]byte(str)))
-	s.Init(file, []byte(str), nil, scanner.ScanComments)
+	file := fset.AddFile("", fset.Base(), len([]byte(concatLines(p.main, "\n"))))
+	s.Init(file, []byte(concatLines(p.main, "\n")), nil, scanner.ScanComments)
 	for {
 		_, tok, _ := s.Scan()
 		if tok == token.EOF {
@@ -535,11 +530,7 @@ func (p *parserSrc) convertFuncDecls() []string {
 		}
 
 		lines = append(lines, convertFuncSig(rcv, fun.name, fun.sig.params, fun.sig.result))
-
-		for _, l := range fun.body {
-			lines = append(lines, l)
-		}
-		lines = append(lines, "}")
+		lines = append(appendLines(fun.body, lines), "}")
 	}
 	return lines
 }
@@ -649,13 +640,11 @@ func (p *parserSrc) ignorePkg(tok token.Token) bool {
 }
 
 func rmQuot(lit string) string {
-	pat := `"(.|\S+|[\S/]+)"`
-	re := regexp.MustCompile(pat)
-	grp := re.FindStringSubmatch(lit)
-	if len(grp) == 0 {
+	re := regexp.MustCompile(`"(.|\S+|[\S/]+)"`)
+	if len(re.FindStringSubmatch(lit)) == 0 {
 		return lit
 	}
-	return grp[1]
+	return re.FindStringSubmatch(lit)[1]
 }
 
 func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec) bool {
@@ -668,13 +657,7 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 		case tok == token.IDENT:
 			p.preLit = lit
 		case tok == token.STRING:
-			var pl string
-			if p.preLit == ";" {
-				pl = ""
-			} else {
-				pl = p.preLit
-			}
-			p.putPackages(rmQuot(lit), pl, iq)
+			p.putPackages(rmQuot(lit), litSemicolon(p.preLit), iq)
 			p.preLit = ""
 		case tok == token.SEMICOLON:
 			if p.paren == 0 {
@@ -687,6 +670,14 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 		return false
 	}
 	return true
+}
+
+func litSemicolon(lit string) string {
+	if lit == ";" {
+		return ""
+	} else {
+		return lit
+	}
 }
 
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
