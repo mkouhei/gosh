@@ -534,14 +534,7 @@ func (p *parserSrc) convertFuncDecls() []string {
 			rcv = fmt.Sprintf("(%s %s)", fun.sig.receiverID, fun.sig.baseTypeName)
 		}
 
-		switch {
-		case fun.sig.result == "":
-			lines = append(lines, fmt.Sprintf("func %s%s(%s) {", rcv, fun.name, fun.sig.params))
-		case strings.Contains(fun.sig.result, ","):
-			lines = append(lines, fmt.Sprintf("func %s%s(%s) (%s) {", rcv, fun.name, fun.sig.params, fun.sig.result))
-		default:
-			lines = append(lines, fmt.Sprintf("func %s%s(%s) %s {", rcv, fun.name, fun.sig.params, fun.sig.result))
-		}
+		lines = append(lines, convertFuncSig(rcv, fun.name, fun.sig.params, fun.sig.result))
 
 		for _, l := range fun.body {
 			lines = append(lines, l)
@@ -549,6 +542,19 @@ func (p *parserSrc) convertFuncDecls() []string {
 		lines = append(lines, "}")
 	}
 	return lines
+}
+
+func convertFuncSig(rcv, name, params, result string) string {
+	var line string
+	switch {
+	case result == "":
+		line = fmt.Sprintf("func %s%s(%s) {", rcv, name, params)
+	case strings.Contains(result, ","):
+		line = fmt.Sprintf("func %s%s(%s) (%s) {", rcv, name, params, result)
+	default:
+		line = fmt.Sprintf("func %s%s(%s) %s {", rcv, name, params, result)
+	}
+	return line
 }
 
 func (p *parserSrc) convertTypeDecls() []string {
