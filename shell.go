@@ -102,11 +102,13 @@ func (e *env) removeImport(msg string, pkg imptSpec) {
 }
 
 func pkgName(name, path string) string {
+	s := ""
 	if name == "" {
-		return path
+		s = path
 	} else {
-		return name
+		s = name
 	}
+	return s
 }
 
 func (e *env) goGet(imptQ <-chan imptSpec) {

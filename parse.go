@@ -673,11 +673,13 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpe
 }
 
 func litSemicolon(lit string) string {
+	s := ""
 	if lit == ";" {
-		return ""
+		s = ""
 	} else {
-		return lit
+		s = lit
 	}
+	return s
 }
 
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
