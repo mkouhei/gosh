@@ -26,7 +26,7 @@ import (
 	"sync/atomic"
 )
 
-type importSpec struct {
+type imptSpec struct {
 	imPath  string
 	pkgName string
 }
@@ -66,7 +66,7 @@ type parserSrc struct {
 	braces   int32
 	paren    int32
 
-	imPkgs    []importSpec
+	imPkgs    []imptSpec
 	funcDecls []funcDecl
 	typeDecls []typeDecl
 	body      []string
@@ -110,15 +110,15 @@ type parserSrc struct {
 	posMeth int
 }
 
-func (p *parserSrc) putPackages(imPath, pkgName string, imptQ chan<- importSpec) {
+func (p *parserSrc) putPackages(imPath, pkgName string, imptQ chan<- imptSpec) {
 	// put package to queue of `go get'
-	if !searchPackage(importSpec{imPath, pkgName}, p.imPkgs) {
-		p.imPkgs = append(p.imPkgs, importSpec{imPath, pkgName})
-		imptQ <- importSpec{imPath, pkgName}
+	if !searchPackage(imptSpec{imPath, pkgName}, p.imPkgs) {
+		p.imPkgs = append(p.imPkgs, imptSpec{imPath, pkgName})
+		imptQ <- imptSpec{imPath, pkgName}
 	}
 }
 
-func searchPackage(pkg importSpec, pkgs []importSpec) bool {
+func searchPackage(pkg imptSpec, pkgs []imptSpec) bool {
 	// search item from []string
 	for _, l := range pkgs {
 		if pkg.imPath == l.imPath && pkg.pkgName == l.pkgName {
@@ -128,7 +128,7 @@ func searchPackage(pkg importSpec, pkgs []importSpec) bool {
 	return false
 }
 
-func removeImportPackage(slice *[]importSpec, pkg importSpec) {
+func removeImportPackage(slice *[]imptSpec, pkg imptSpec) {
 	s := *slice
 	for i, item := range s {
 		if item.imPath == pkg.imPath && item.pkgName == pkg.pkgName {
@@ -138,12 +138,12 @@ func removeImportPackage(slice *[]importSpec, pkg importSpec) {
 	*slice = s
 }
 
-func compareImportSpecs(A, B []importSpec) []importSpec {
-	m := make(map[importSpec]int)
+func compareImportSpecs(A, B []imptSpec) []imptSpec {
+	m := make(map[imptSpec]int)
 	for _, b := range B {
 		m[b]++
 	}
-	var ret []importSpec
+	var ret []imptSpec
 	for _, a := range A {
 		if m[a] > 0 {
 			m[a]--
@@ -443,7 +443,7 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 	return true
 }
 
-func (p *parserSrc) parseLine(bline []byte, imptQ chan<- importSpec) bool {
+func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 	var s scanner.Scanner
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(bline))
@@ -509,7 +509,7 @@ func (p *parserSrc) validateMainBody() bool {
 	return false
 }
 
-func convertImport(pkgs []importSpec) []string {
+func convertImport(pkgs []imptSpec) []string {
 	// convert packages list to "import" statement
 	if len(pkgs) == 0 {
 		return []string{}
@@ -647,7 +647,7 @@ func rmQuot(lit string) string {
 	return re.FindStringSubmatch(lit)[1]
 }
 
-func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- importSpec) bool {
+func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpec) bool {
 	switch {
 	case tok == token.IMPORT:
 		p.imFlag = true

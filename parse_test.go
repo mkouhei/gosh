@@ -286,7 +286,7 @@ fmt.Println("hello")
 }`
 )
 
-func consumeChan(imptQ <-chan importSpec) {
+func consumeChan(imptQ <-chan imptSpec) {
 	go func() {
 		for {
 			<-imptQ
@@ -296,8 +296,8 @@ func consumeChan(imptQ <-chan importSpec) {
 
 func TestParseImportFail(t *testing.T) {
 	p := parserSrc{}
-	p.imPkgs = append(p.imPkgs, importSpec{})
-	imptQ := make(chan importSpec, 1)
+	p.imPkgs = append(p.imPkgs, imptSpec{})
+	imptQ := make(chan imptSpec, 1)
 	consumeChan(imptQ)
 
 	lines := []string{"import fmt"}
@@ -306,14 +306,14 @@ func TestParseImportFail(t *testing.T) {
 		p.parseLine([]byte(l), imptQ)
 	}
 
-	if len(compareImportSpecs(p.imPkgs, []importSpec{})) != 1 {
+	if len(compareImportSpecs(p.imPkgs, []imptSpec{})) != 1 {
 		t.Fatal("parse error: expected nil")
 	}
 }
 
 func TestParseMultipleImport(t *testing.T) {
 	p := parserSrc{}
-	imptQ := make(chan importSpec, 4)
+	imptQ := make(chan imptSpec, 4)
 
 	lines := []string{`import "fmt"`,
 		`import "io"`,
@@ -327,11 +327,11 @@ func TestParseMultipleImport(t *testing.T) {
 		p.parseLine([]byte(l), imptQ)
 	}
 
-	el := []importSpec{
-		importSpec{"fmt", ""},
-		importSpec{"io", ""},
-		importSpec{"strings", "str"},
-		importSpec{"os", ""}}
+	el := []imptSpec{
+		imptSpec{"fmt", ""},
+		imptSpec{"io", ""},
+		imptSpec{"strings", "str"},
+		imptSpec{"os", ""}}
 	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
 		t.Fatalf("parse error: expected %v", el)
 	}
@@ -339,7 +339,7 @@ func TestParseMultipleImport(t *testing.T) {
 
 func TestParseDuplicateImport(t *testing.T) {
 	p := parserSrc{}
-	imptQ := make(chan importSpec, 2)
+	imptQ := make(chan imptSpec, 2)
 
 	lines := []string{`import "fmt"`,
 		`import "bytes"`,
@@ -351,9 +351,9 @@ func TestParseDuplicateImport(t *testing.T) {
 	for _, l := range lines {
 		p.parseLine([]byte(l), imptQ)
 	}
-	el := []importSpec{
-		importSpec{"fmt", ""},
-		importSpec{"bytes", ""}}
+	el := []imptSpec{
+		imptSpec{"fmt", ""},
+		imptSpec{"bytes", ""}}
 	if len(compareImportSpecs(p.imPkgs, el)) != 0 {
 		t.Fatalf(`parse error: expected %v`, el)
 	}
@@ -385,16 +385,16 @@ func TestRemovePrintStmt(t *testing.T) {
 
 func TestParseLine(t *testing.T) {
 	p := parserSrc{}
-	imptQ := make(chan importSpec, 10)
+	imptQ := make(chan imptSpec, 10)
 
 	lines := strings.Split(src, "\n")
 
-	import1 := []importSpec{
-		importSpec{"fmt", ""},
-		importSpec{"os", "o"},
-		importSpec{"bytes", ""},
-		importSpec{"net/http", ""},
-		importSpec{"github.com/bitly/go-simplejson", ""}}
+	import1 := []imptSpec{
+		imptSpec{"fmt", ""},
+		imptSpec{"os", "o"},
+		imptSpec{"bytes", ""},
+		imptSpec{"net/http", ""},
+		imptSpec{"github.com/bitly/go-simplejson", ""}}
 
 	type1 := strings.Split(typeResult, "\n")
 	func1 := strings.Split(funcResult, "\n")
@@ -435,7 +435,7 @@ func TestParseLine(t *testing.T) {
 
 func TestOmit(t *testing.T) {
 	p := parserSrc{}
-	imptQ := make(chan importSpec, 1)
+	imptQ := make(chan imptSpec, 1)
 	lines := strings.Split(mainOmit, "\n")
 
 	for _, l := range lines {

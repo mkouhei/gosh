@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-func (e *env) read(fp *os.File, wrCh, quitCh chan<- bool, imptQ chan<- importSpec) {
+func (e *env) read(fp *os.File, wrCh, quitCh chan<- bool, imptQ chan<- imptSpec) {
 	// read from shell prompt
 	go func() {
 		reader := bufio.NewReader(fp)
@@ -91,13 +91,13 @@ func (e *env) goRun() {
 	}
 }
 
-func (e *env) removeImport(msg string, pkg importSpec) {
+func (e *env) removeImport(msg string, pkg imptSpec) {
 	// remove package from env.parser.imPkg
 	if strings.Contains(msg,
 		fmt.Sprintf(`package %s: unrecognized import path "%s"`,
 			pkgName(pkg.pkgName, pkg.imPath),
 			pkgName(pkg.pkgName, pkg.imPath))) {
-		removeImportPackage(&e.parserSrc.imPkgs, importSpec{pkg.imPath, pkg.pkgName})
+		removeImportPackage(&e.parserSrc.imPkgs, imptSpec{pkg.imPath, pkg.pkgName})
 	}
 }
 
@@ -109,7 +109,7 @@ func pkgName(name, path string) string {
 	}
 }
 
-func (e *env) goGet(imptQ <-chan importSpec) {
+func (e *env) goGet(imptQ <-chan imptSpec) {
 	// execute `go get'
 	go func() {
 		for {
@@ -152,7 +152,7 @@ func (e *env) shell(fp *os.File) {
 	// execute channel
 	execCh := make(chan bool)
 	// package queue for go get
-	imptQ := make(chan importSpec, 10)
+	imptQ := make(chan imptSpec, 10)
 
 	e.goGet(imptQ)
 

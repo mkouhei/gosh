@@ -62,7 +62,7 @@ func main() {
 func TestWrite(t *testing.T) {
 	e := newEnv(false)
 	imptCh := make(chan bool)
-	imptQ := make(chan importSpec, 10)
+	imptQ := make(chan imptSpec, 10)
 	for _, l := range strings.Split(testSrc, "\n") {
 		e.parserSrc.parseLine([]byte(l), imptQ)
 	}
@@ -171,8 +171,8 @@ func TestRead(t *testing.T) {
 
 func ExampleGoGet() {
 	e := newEnv(false)
-	imptQ := make(chan importSpec, 1)
-	imptQ <- importSpec{"fmt", ""}
+	imptQ := make(chan imptSpec, 1)
+	imptQ <- imptSpec{"fmt", ""}
 	e.goGet(imptQ)
 	// Output:
 	//
@@ -208,34 +208,36 @@ func ExampleGoRunFail() {
 
 func TestRemoveImport(t *testing.T) {
 	e := newEnv(false)
-	pkgs := []importSpec{
-		importSpec{"fmt", ""},
-		importSpec{"os", ""},
-		importSpec{"hoge", ""},
-		importSpec{"io", ""}}
-	pkgs2 := []importSpec{
-		importSpec{"fmt", ""},
-		importSpec{"os", ""},
-		importSpec{"io", ""}}
+	pkgs := []imptSpec{
+		imptSpec{"fmt", ""},
+		imptSpec{"os", ""},
+		imptSpec{"hoge", ""},
+		imptSpec{"io", ""}}
+	pkgs2 := []imptSpec{
+		imptSpec{"fmt", ""},
+		imptSpec{"os", ""},
+		imptSpec{"io", ""}}
 	e.parserSrc.imPkgs = pkgs
 
-	e.removeImport("dummy message", importSpec{"hoge", ""})
+	e.removeImport("dummy message", imptSpec{"hoge", ""})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
-	e.removeImport("package moge: unrecognized import path \"moge\"", importSpec{"hoge", ""})
+	e.removeImport("package moge: unrecognized import path \"moge\"",
+		imptSpec{"hoge", ""})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
-	e.removeImport("package hoge: unrecognized import path \"hoge\"", importSpec{"hoge", ""})
+	e.removeImport("package hoge: unrecognized import path \"hoge\"",
+		imptSpec{"hoge", ""})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}
 
-	e.parserSrc.imPkgs = append(e.parserSrc.imPkgs, importSpec{"foo", "F"})
-	e.removeImport("package F: unrecognized import path \"F\"", importSpec{"foo", "F"})
+	e.parserSrc.imPkgs = append(e.parserSrc.imPkgs, imptSpec{"foo", "F"})
+	e.removeImport("package F: unrecognized import path \"F\"", imptSpec{"foo", "F"})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}
