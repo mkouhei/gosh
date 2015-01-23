@@ -32,7 +32,7 @@ type imptSpec struct {
 }
 
 type signature struct {
-	receiverID   string
+	recvID       string
 	baseTypeName string
 	params       string
 	result       string
@@ -83,7 +83,7 @@ type parserSrc struct {
 	tmpTypeDecl typeDecl
 
 	// 0: nofunc
-	// 1: receiverID
+	// 1: recvID
 	// 2: baseTypeName
 	// 3: name
 	// 4: params
@@ -525,8 +525,8 @@ func (p *parserSrc) convertFuncDecls() []string {
 	var lines []string
 	for _, fun := range p.funcDecls {
 		rcv := ""
-		if fun.sig.receiverID != "" && fun.sig.baseTypeName != "" {
-			rcv = fmt.Sprintf("(%s %s)", fun.sig.receiverID, fun.sig.baseTypeName)
+		if fun.sig.recvID != "" && fun.sig.baseTypeName != "" {
+			rcv = fmt.Sprintf("(%s %s)", fun.sig.recvID, fun.sig.baseTypeName)
 		}
 
 		lines = append(lines, convertFuncSig(rcv, fun.name, fun.sig.params, fun.sig.result))
@@ -687,11 +687,11 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		p.preLit = ""
 
 	case p.posFuncSig == 1 && p.paren > 0:
-		// receiverID
+		// recvID
 		// func (ri rt) fname(pi pt) (res)
 		//       ~~
 		if tok == token.IDENT {
-			p.tmpFuncDecl.sig.receiverID = lit
+			p.tmpFuncDecl.sig.recvID = lit
 			p.posFuncSig = 2
 		}
 	case p.posFuncSig == 2:
@@ -730,7 +730,7 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 }
 
 func (p *parserSrc) parseFuncBaseTypeName(tok token.Token, lit string) {
-	if p.paren > 0 && p.tmpFuncDecl.sig.receiverID != "" {
+	if p.paren > 0 && p.tmpFuncDecl.sig.recvID != "" {
 		switch {
 		case tok == token.MUL:
 			// func (ri *rt) fname(pi pt) (res)
