@@ -113,9 +113,8 @@ func goVersion(goVer string) string {
 	if goVer != "" {
 		return goVer
 	}
-	cmd := "go"
 	args := []string{"version"}
-	msg, _ := runCmd(false, false, cmd, args...)
+	msg, _ := runCmd(false, false, "go", args...)
 	return msg
 }
 
