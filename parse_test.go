@@ -286,10 +286,10 @@ fmt.Println("hello")
 }`
 )
 
-func consumeChan(iq <-chan importSpec) {
+func consumeChan(imptQ <-chan importSpec) {
 	go func() {
 		for {
-			<-iq
+			<-imptQ
 		}
 	}()
 }
@@ -297,13 +297,13 @@ func consumeChan(iq <-chan importSpec) {
 func TestParseImportFail(t *testing.T) {
 	p := parserSrc{}
 	p.imPkgs = append(p.imPkgs, importSpec{})
-	iq := make(chan importSpec, 1)
-	consumeChan(iq)
+	imptQ := make(chan importSpec, 1)
+	consumeChan(imptQ)
 
 	lines := []string{"import fmt"}
 
 	for _, l := range lines {
-		p.parseLine([]byte(l), iq)
+		p.parseLine([]byte(l), imptQ)
 	}
 
 	if len(compareImportSpecs(p.imPkgs, []importSpec{})) != 1 {
@@ -313,7 +313,7 @@ func TestParseImportFail(t *testing.T) {
 
 func TestParseMultipleImport(t *testing.T) {
 	p := parserSrc{}
-	iq := make(chan importSpec, 4)
+	imptQ := make(chan importSpec, 4)
 
 	lines := []string{`import "fmt"`,
 		`import "io"`,
@@ -324,7 +324,7 @@ func TestParseMultipleImport(t *testing.T) {
 	}
 
 	for _, l := range lines {
-		p.parseLine([]byte(l), iq)
+		p.parseLine([]byte(l), imptQ)
 	}
 
 	el := []importSpec{
@@ -339,7 +339,7 @@ func TestParseMultipleImport(t *testing.T) {
 
 func TestParseDuplicateImport(t *testing.T) {
 	p := parserSrc{}
-	iq := make(chan importSpec, 2)
+	imptQ := make(chan importSpec, 2)
 
 	lines := []string{`import "fmt"`,
 		`import "bytes"`,
@@ -349,7 +349,7 @@ func TestParseDuplicateImport(t *testing.T) {
 	}
 
 	for _, l := range lines {
-		p.parseLine([]byte(l), iq)
+		p.parseLine([]byte(l), imptQ)
 	}
 	el := []importSpec{
 		importSpec{"fmt", ""},
@@ -385,7 +385,7 @@ func TestRemovePrintStmt(t *testing.T) {
 
 func TestParseLine(t *testing.T) {
 	p := parserSrc{}
-	iq := make(chan importSpec, 10)
+	imptQ := make(chan importSpec, 10)
 
 	lines := strings.Split(src, "\n")
 
@@ -401,7 +401,7 @@ func TestParseLine(t *testing.T) {
 	main1 := strings.Split(mainResult, "\n")
 
 	for _, l := range lines {
-		p.parseLine([]byte(l), iq)
+		p.parseLine([]byte(l), imptQ)
 	}
 
 	if len(compareImportSpecs(p.imPkgs, import1)) != 0 {
@@ -435,11 +435,11 @@ func TestParseLine(t *testing.T) {
 
 func TestOmit(t *testing.T) {
 	p := parserSrc{}
-	iq := make(chan importSpec, 1)
+	imptQ := make(chan importSpec, 1)
 	lines := strings.Split(mainOmit, "\n")
 
 	for _, l := range lines {
-		p.parseLine([]byte(l), iq)
+		p.parseLine([]byte(l), imptQ)
 	}
 
 	el := strings.Split(mainOmitResult, "\n")

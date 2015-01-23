@@ -127,8 +127,9 @@ func concatLines(lines []string, sep string) string {
 }
 
 func appendLines(lines, base []string) []string {
+	bLines := base
 	for _, l := range lines {
-		base = append(base, l)
+		bLines = append(bLines, l)
 	}
-	return base
+	return bLines
 }

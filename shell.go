@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
+func (e *env) read(fp *os.File, wrCh, quitCh chan<- bool, imptQ chan<- importSpec) {
 	// read from shell prompt
 	go func() {
 		reader := bufio.NewReader(fp)
@@ -38,22 +38,22 @@ func (e *env) read(fp *os.File, wc, qc chan<- bool, iq chan<- importSpec) {
 			if err != nil {
 				e.logger("read", "", err)
 				cleanDir(e.bldDir)
-				qc <- true
+				quitCh <- true
 				return
 			}
 
 			// append token.SEMICOLON
 			line = append(line, 59)
 
-			if e.parserSrc.parseLine(line, iq) {
-				wc <- true
+			if e.parserSrc.parseLine(line, imptQ) {
+				wrCh <- true
 				e.readFlag = 3
 			}
 		}
 	}()
 }
 
-func (e *env) write(ic chan<- bool) {
+func (e *env) write(imptCh chan<- bool) {
 	// write tmporary source code file
 	go func() {
 		f, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
@@ -70,7 +70,7 @@ func (e *env) write(ic chan<- bool) {
 			return
 		}
 
-		ic <- true
+		imptCh <- true
 		e.parserSrc.main = nil
 		removePrintStmt(&e.parserSrc.mainHist)
 	}()
@@ -109,11 +109,11 @@ func pkgName(name, path string) string {
 	}
 }
 
-func (e *env) goGet(p <-chan importSpec) {
+func (e *env) goGet(imptQ <-chan importSpec) {
 	// execute `go get'
 	go func() {
 		for {
-			pkg := <-p
+			pkg := <-imptQ
 			args := []string{"get", pkg.imPath}
 			if msg, err := runCmd(true, false, "go", args...); err != nil {
 				e.removeImport(msg, pkg)
@@ -123,7 +123,7 @@ func (e *env) goGet(p <-chan importSpec) {
 	}()
 }
 
-func (e *env) goImports(ec chan<- bool) {
+func (e *env) goImports(execCh chan<- bool) {
 	// execute `goimports'
 	go func() {
 		args := []string{"-w", e.tmpPath}
@@ -131,7 +131,7 @@ func (e *env) goImports(ec chan<- bool) {
 			e.logger("goimports", msg, err)
 			e.parserSrc.body = nil
 		}
-		ec <- true
+		execCh <- true
 
 	}()
 }
@@ -144,30 +144,30 @@ func (e *env) shell(fp *os.File) {
 	}
 
 	// quit channel
-	qc := make(chan bool)
+	quitCh := make(chan bool)
 	// write channel
-	wc := make(chan bool)
+	wrCh := make(chan bool)
 	// import channel
-	ic := make(chan bool)
+	imptCh := make(chan bool)
 	// execute channel
-	ec := make(chan bool)
+	execCh := make(chan bool)
 	// package queue for go get
-	iq := make(chan importSpec, 10)
+	imptQ := make(chan importSpec, 10)
 
-	e.goGet(iq)
+	e.goGet(imptQ)
 
 loop:
 	for {
-		e.read(fp, wc, qc, iq)
+		e.read(fp, wrCh, quitCh, imptQ)
 
 		select {
-		case <-wc:
-			e.write(ic)
-		case <-ic:
-			e.goImports(ec)
-		case <-ec:
+		case <-wrCh:
+			e.write(imptCh)
+		case <-imptCh:
+			e.goImports(execCh)
+		case <-execCh:
 			e.goRun()
-		case <-qc:
+		case <-quitCh:
 			cleanDir(e.bldDir)
 			fmt.Println("[gosh] terminated")
 			break loop

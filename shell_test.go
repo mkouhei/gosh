@@ -61,12 +61,12 @@ func main() {
 
 func TestWrite(t *testing.T) {
 	e := newEnv(false)
-	ic := make(chan bool)
-	iq := make(chan importSpec, 10)
+	imptCh := make(chan bool)
+	imptQ := make(chan importSpec, 10)
 	for _, l := range strings.Split(testSrc, "\n") {
-		e.parserSrc.parseLine([]byte(l), iq)
+		e.parserSrc.parseLine([]byte(l), imptQ)
 	}
-	e.write(ic)
+	e.write(imptCh)
 	time.Sleep(time.Microsecond)
 	_, err := os.Stat(e.tmpPath)
 	if err != nil {
@@ -87,13 +87,13 @@ func TestGoImports(t *testing.T) {
 
 	time.Sleep(time.Microsecond)
 
-	ec := make(chan bool)
-	e.goImports(ec)
+	execCh := make(chan bool)
+	e.goImports(execCh)
 
 	time.Sleep(time.Microsecond)
 
 	lines := []string{}
-	if <-ec {
+	if <-execCh {
 		fp2, err := os.Open(e.tmpPath)
 		if err != nil {
 			t.Fatal(err)
@@ -122,13 +122,13 @@ func TestGoImportsFail(t *testing.T) {
 
 	time.Sleep(time.Microsecond)
 
-	ec := make(chan bool)
-	e.goImports(ec)
+	execCh := make(chan bool)
+	e.goImports(execCh)
 
 	time.Sleep(time.Microsecond)
 
 	lines := []string{}
-	if <-ec {
+	if <-execCh {
 		fp2, err := os.Open(e.tmpPath)
 		if err != nil {
 			t.Fatal(err)
@@ -171,9 +171,9 @@ func TestRead(t *testing.T) {
 
 func ExampleGoGet() {
 	e := newEnv(false)
-	iq := make(chan importSpec, 1)
-	iq <- importSpec{"fmt", ""}
-	e.goGet(iq)
+	imptQ := make(chan importSpec, 1)
+	imptQ <- importSpec{"fmt", ""}
+	e.goGet(imptQ)
 	// Output:
 	//
 }

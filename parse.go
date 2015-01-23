@@ -110,11 +110,11 @@ type parserSrc struct {
 	posMeth int
 }
 
-func (p *parserSrc) putPackages(imPath, pkgName string, iq chan<- importSpec) {
+func (p *parserSrc) putPackages(imPath, pkgName string, imptQ chan<- importSpec) {
 	// put package to queue of `go get'
 	if !searchPackage(importSpec{imPath, pkgName}, p.imPkgs) {
 		p.imPkgs = append(p.imPkgs, importSpec{imPath, pkgName})
-		iq <- importSpec{imPath, pkgName}
+		imptQ <- importSpec{imPath, pkgName}
 	}
 }
 
@@ -443,7 +443,7 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 	return true
 }
 
-func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
+func (p *parserSrc) parseLine(bline []byte, imptQ chan<- importSpec) bool {
 	var s scanner.Scanner
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(bline))
@@ -461,7 +461,7 @@ func (p *parserSrc) parseLine(bline []byte, iq chan<- importSpec) bool {
 		case p.ignorePkg(tok):
 			// ignore packageClause
 
-		case p.parseImPkg(tok, str, iq):
+		case p.parseImPkg(tok, str, imptQ):
 			// parse import declare
 
 		case p.parseType(tok, str):
@@ -647,7 +647,7 @@ func rmQuot(lit string) string {
 	return re.FindStringSubmatch(lit)[1]
 }
 
-func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec) bool {
+func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- importSpec) bool {
 	switch {
 	case tok == token.IMPORT:
 		p.imFlag = true
@@ -657,7 +657,7 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, iq chan<- importSpec
 		case tok == token.IDENT:
 			p.preLit = lit
 		case tok == token.STRING:
-			p.putPackages(rmQuot(lit), litSemicolon(p.preLit), iq)
+			p.putPackages(rmQuot(lit), litSemicolon(p.preLit), imptQ)
 			p.preLit = ""
 		case tok == token.SEMICOLON:
 			if p.paren == 0 {
