@@ -44,7 +44,7 @@ type funcDecl struct {
 	body []string
 }
 
-type methodSpecs struct {
+type methSpecs struct {
 	name string
 	sig  signature
 }
@@ -53,7 +53,7 @@ type typeDecl struct {
 	typeID     string
 	typeName   string
 	fieldDecls []fieldDecl
-	methSpecs  []methodSpecs
+	methSpecs  []methSpecs
 }
 
 type fieldDecl struct {
@@ -343,7 +343,7 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 		//     ~~~~~
 		switch {
 		case tok == token.IDENT:
-			p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methodSpecs{lit, signature{}})
+			p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methSpecs{lit, signature{}})
 		case tok == token.LPAREN:
 			p.posMeth = 2
 		case tok == token.RBRACE && p.braces == 0:
