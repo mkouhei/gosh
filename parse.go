@@ -220,42 +220,33 @@ func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
 			p.posType = 5
 			p.posMeth = 1
 		case tok == token.IDENT:
-			switch {
-			case p.preToken == token.RBRACK && p.tmpTypeDecl.typeName == "[]":
-				p.tmpTypeDecl.typeName += lit
-				p.appendTypeDecl()
-
-				if p.paren == 0 {
-					// type typeID []typeName
-					//               ~~~~~~~~
-					p.posType = 6
-				} else {
-					// type (
-					//    typeID []typeName
-					//             ~~~~~~~~
-					p.posType = 1
-				}
-			default:
-				p.tmpTypeDecl.typeName = lit
-				p.appendTypeDecl()
-
-				if p.paren == 0 {
-					// type typeID typeName
-					//             ~~~~~~~~
-					p.posType = 6
-				} else {
-					// type (
-					//    typeID typeName
-					//           ~~~~~~~~
-					p.posType = 1
-				}
-			}
+			p.parseTypeNameToken(tok, lit)
 		default:
 			return false
 		}
 		return true
 	}
 	return false
+}
+
+func (p *parserSrc) parseTypeNameToken(tok token.Token, lit string) {
+	if p.preToken == token.RBRACK && p.tmpTypeDecl.typeName == "[]" {
+		p.tmpTypeDecl.typeName += lit
+	} else {
+		p.tmpTypeDecl.typeName = lit
+	}
+
+	p.appendTypeDecl()
+	if p.paren == 0 {
+		// type typeID typeName | type typeID []typeName
+		//             ~~~~~~~~                 ~~~~~~~~
+		p.posType = 6
+	} else {
+		// type (
+		//    typeID typeName | typeID []typeName
+		//           ~~~~~~~~ |          ~~~~~~~~
+		p.posType = 1
+	}
 }
 
 func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
