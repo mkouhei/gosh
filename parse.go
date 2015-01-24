@@ -329,94 +329,17 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 	i := len(p.tmpTypeDecl.methSpecs)
 	switch {
 	case p.posMeth == 1:
-		// type typeID interface {
-		//     mname(pi pt) res
-		//     ~~~~~
-		switch {
-		case tok == token.IDENT:
-			p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methSpecs{lit, signature{}})
-		case tok == token.LPAREN:
-			p.posMeth = 2
-		case tok == token.RBRACE && p.braces == 0:
-			p.appendTypeDecl()
-
-			p.posMeth = 0
-			if p.paren == 0 {
-				p.posType = 6
-			} else {
-				p.posType = 1
-			}
-		}
+		p.parseIFMethName(tok, lit)
 	case p.posMeth == 2:
-		switch {
-		case tok == token.IDENT:
-			// type typeID interface {
-			//     mname(pi pt) res
-			//           ~~
-			if p.tmpTypeDecl.methSpecs[i-1].sig.params == "" {
-				p.tmpTypeDecl.methSpecs[i-1].sig.params = lit
-				p.posMeth = 3
-			}
-		case tok == token.RPAREN:
-			p.posMeth = 4
-		}
+		p.parseIFMethParamID(tok, lit, i)
 	case p.posMeth == 3:
 		if p.tmpTypeDecl.methSpecs[i-1].sig.params != "" {
-			switch {
-			case tok == token.RPAREN:
-				p.posMeth = 4
-			case tok == token.LBRACK:
-				// type typeID interface {
-				//     mname(pi []pt) res
-				//              ~
-				p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
-			case tok == token.RBRACK, tok == token.PERIOD:
-				// type typeID interface {
-				//     mname(pi []pt) res
-				//               ~
-				// or
-				// type typeID interface {
-				//     mname(pi pn.pt) res
-				//                ~
-				p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
-			case tok == token.IDENT:
-				if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, "[]") {
-					// type typeID interface {
-					//     mname(pi []pt) res
-					//                ~~
-					p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
-				} else if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, ".") {
-					// type typeID interface {
-					//     mname(pi pn.pt) res
-					//                 ~~
-					p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
-				} else {
-					// type typeID interface {
-					//     mname(pi pt) res
-					//              ~~
-					p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
-				}
-			}
+			p.parseIFMethParamType(tok, lit, i)
 		}
 	case p.posMeth == 4:
 		switch {
 		case tok == token.IDENT:
-			if p.preToken == token.COMMA {
-				// type typeID interface {
-				//     mname(pi pt) (res, res)
-				//                        ~~~
-				if p.tmpTypeDecl.methSpecs[i-1].sig.result != "" {
-					p.tmpTypeDecl.methSpecs[i-1].sig.result += ", " + lit
-				}
-			} else {
-				// type typeID interface {
-				//     mname(pi pt) res
-				//                  ~~~
-				// or
-				//     mname(pi pt) (res, res)
-				//                   ~~~
-				p.tmpTypeDecl.methSpecs[i-1].sig.result = lit
-			}
+			p.parseIFMethResult(tok, lit, i)
 		case tok == token.SEMICOLON:
 			// type typeID interface {
 			//     mname(pi pt)
@@ -432,6 +355,99 @@ func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
 		return false
 	}
 	return true
+}
+
+func (p *parserSrc) parseIFMethName(tok token.Token, lit string) {
+	// type typeID interface {
+	//     mname(pi pt) res
+	//     ~~~~~
+	switch {
+	case tok == token.IDENT:
+		p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methSpecs{lit, signature{}})
+	case tok == token.LPAREN:
+		p.posMeth = 2
+	case tok == token.RBRACE && p.braces == 0:
+		p.appendTypeDecl()
+
+		p.posMeth = 0
+		if p.paren == 0 {
+			p.posType = 6
+		} else {
+			p.posType = 1
+		}
+	}
+}
+
+func (p *parserSrc) parseIFMethParamID(tok token.Token, lit string, i int) {
+	switch {
+	case tok == token.IDENT:
+		// type typeID interface {
+		//     mname(pi pt) res
+		//           ~~
+		if p.tmpTypeDecl.methSpecs[i-1].sig.params == "" {
+			p.tmpTypeDecl.methSpecs[i-1].sig.params = lit
+			p.posMeth = 3
+		}
+	case tok == token.RPAREN:
+		p.posMeth = 4
+	}
+}
+
+func (p *parserSrc) parseIFMethParamType(tok token.Token, lit string, i int) {
+	switch {
+	case tok == token.RPAREN:
+		p.posMeth = 4
+	case tok == token.LBRACK:
+		// type typeID interface {
+		//     mname(pi []pt) res
+		//              ~
+		p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
+	case tok == token.RBRACK, tok == token.PERIOD:
+		// type typeID interface {
+		//     mname(pi []pt) res
+		//               ~
+		// or
+		// type typeID interface {
+		//     mname(pi pn.pt) res
+		//                ~
+		p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
+	case tok == token.IDENT:
+		if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, "[]") {
+			// type typeID interface {
+			//     mname(pi []pt) res
+			//                ~~
+			p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
+		} else if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, ".") {
+			// type typeID interface {
+			//     mname(pi pn.pt) res
+			//                 ~~
+			p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
+		} else {
+			// type typeID interface {
+			//     mname(pi pt) res
+			//              ~~
+			p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
+		}
+	}
+}
+
+func (p *parserSrc) parseIFMethResult(tok token.Token, lit string, i int) {
+	if p.preToken == token.COMMA {
+		// type typeID interface {
+		//     mname(pi pt) (res, res)
+		//                        ~~~
+		if p.tmpTypeDecl.methSpecs[i-1].sig.result != "" {
+			p.tmpTypeDecl.methSpecs[i-1].sig.result += ", " + lit
+		}
+	} else {
+		// type typeID interface {
+		//     mname(pi pt) res
+		//                  ~~~
+		// or
+		//     mname(pi pt) (res, res)
+		//                   ~~~
+		p.tmpTypeDecl.methSpecs[i-1].sig.result = lit
+	}
 }
 
 func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
