@@ -412,22 +412,27 @@ func (p *parserSrc) parseIFMethParamType(tok token.Token, lit string, i int) {
 		//                ~
 		p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
 	case tok == token.IDENT:
-		if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, "[]") {
-			// type typeID interface {
-			//     mname(pi []pt) res
-			//                ~~
-			p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
-		} else if strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, ".") {
-			// type typeID interface {
-			//     mname(pi pn.pt) res
-			//                 ~~
-			p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
-		} else {
-			// type typeID interface {
-			//     mname(pi pt) res
-			//              ~~
-			p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
-		}
+		p.parseIFMethParamTypeIdent(tok, lit, i)
+	}
+}
+
+func (p *parserSrc) parseIFMethParamTypeIdent(tok token.Token, lit string, i int) {
+	switch {
+	case strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, "[]"):
+		// type typeID interface {
+		//     mname(pi []pt) res
+		//                ~~
+		p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
+	case strings.HasSuffix(p.tmpTypeDecl.methSpecs[i-1].sig.params, "."):
+		// type typeID interface {
+		//     mname(pi pn.pt) res
+		//                 ~~
+		p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
+	default:
+		// type typeID interface {
+		//     mname(pi pt) res
+		//              ~~
+		p.tmpTypeDecl.methSpecs[i-1].sig.params += " " + lit
 	}
 }
 
