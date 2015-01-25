@@ -307,13 +307,11 @@ func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) bool {
 			if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "" {
 				p.tmpTypeDecl.fieldDecls[i-1].fieldType = lit
 			}
-		case tok == token.RBRACK:
+		case isSliceRBrack(tok, p.preToken):
 			// type typeID struct {
 			//     typeID []typeName
 			//             ~
-			if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "[" {
-				p.tmpTypeDecl.fieldDecls[i-1].fieldType += lit
-			}
+			p.tmpTypeDecl.fieldDecls[i-1].fieldType += lit
 		case tok == token.SEMICOLON:
 			p.posType = 3
 		default:
@@ -816,7 +814,7 @@ func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
 			p.tmpFuncDecl.sig.params += " " + lit
 
 		}
-	case tok == token.RBRACK && p.preToken == token.LBRACK:
+	case isSliceRBrack(tok, p.preToken):
 		// func (ri rt) fname(pi []pt) (res)
 		//                        ~
 		if p.tmpFuncDecl.sig.params != "" {
@@ -861,7 +859,7 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 		case p.tmpFuncDecl.sig.result != "":
 			p.tmpFuncDecl.sig.result += ", " + lit
 		}
-	case tok == token.RBRACK && p.preToken == token.LBRACK, tok == token.PERIOD:
+	case isSliceRBrack(tok, p.preToken), tok == token.PERIOD:
 		if p.tmpFuncDecl.sig.result != "" {
 			p.tmpFuncDecl.sig.result += lit
 		}
@@ -971,6 +969,13 @@ func (p *parserSrc) appendTypeDecl() {
 		p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
 	}
 	p.tmpTypeDecl = typeDecl{}
+}
+
+func isSliceRBrack(tok, preToken token.Token) bool {
+	if tok == token.RBRACK && preToken == token.LBRACK {
+		return true
+	}
+	return false
 }
 
 func removePrintStmt(slice *[]string) {
