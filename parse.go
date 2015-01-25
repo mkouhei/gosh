@@ -229,7 +229,7 @@ func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
 }
 
 func (p *parserSrc) parseTypeNameToken(tok token.Token, lit string) {
-	if p.preToken == token.RBRACK && p.tmpTypeDecl.typeName == "[]" {
+	if isSliceName(p.preToken, p.tmpTypeDecl.typeName) {
 		p.tmpTypeDecl.typeName += lit
 	} else {
 		p.tmpTypeDecl.typeName = lit
@@ -289,7 +289,7 @@ func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) bool {
 	if i > 0 {
 		switch {
 		case tok == token.IDENT && p.braces > 0:
-			if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "[]" {
+			if isSliceName(p.preToken, p.tmpTypeDecl.fieldDecls[i-1].fieldType) {
 				// type typeID struct {
 				//     typeID []typeName
 				//              ~~~~~~~~
@@ -973,6 +973,13 @@ func (p *parserSrc) appendTypeDecl() {
 
 func isSliceRBrack(tok, preToken token.Token) bool {
 	if tok == token.RBRACK && preToken == token.LBRACK {
+		return true
+	}
+	return false
+}
+
+func isSliceName(preToken token.Token, tmpStr string) bool {
+	if preToken == token.RBRACK && tmpStr == "[]" {
 		return true
 	}
 	return false
