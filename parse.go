@@ -196,37 +196,36 @@ func (p *parserSrc) parseTypeID(tok token.Token, lit string) bool {
 }
 
 func (p *parserSrc) parseTypeName(tok token.Token, lit string) bool {
-	if p.tmpTypeDecl.typeID != "" {
-		switch {
-		case tok == token.LBRACK:
-			// type typeID []typeName
-			//             ~
-			p.tmpTypeDecl.typeName = lit
-		case tok == token.RBRACK:
-			// type typeID []typeName
-			//              ~
-			if p.tmpTypeDecl.typeName == "[" {
-				p.tmpTypeDecl.typeName += lit
-			}
-		case tok == token.STRUCT:
-			// type typeID struct {
-			//             ~~~~~~
-			p.tmpTypeDecl.typeName = lit
-			p.posType = 3
-		case tok == token.INTERFACE:
-			// type typeID interface {
-			//             ~~~~~~~~~
-			p.tmpTypeDecl.typeName = lit
-			p.posType = 5
-			p.posMeth = 1
-		case tok == token.IDENT:
-			p.parseTypeNameToken(tok, lit)
-		default:
-			return false
-		}
-		return true
+	if p.tmpTypeDecl.typeID == "" {
+		return false
 	}
-	return false
+
+	switch {
+	case tok == token.LBRACK:
+		// type typeID []typeName
+		//             ~
+		p.tmpTypeDecl.typeName = lit
+	case isSliceRBrack(tok, p.preToken):
+		// type typeID []typeName
+		//              ~
+		p.tmpTypeDecl.typeName += lit
+	case tok == token.STRUCT:
+		// type typeID struct {
+		//             ~~~~~~
+		p.tmpTypeDecl.typeName = lit
+		p.posType = 3
+	case tok == token.INTERFACE:
+		// type typeID interface {
+		//             ~~~~~~~~~
+		p.tmpTypeDecl.typeName = lit
+		p.posType = 5
+		p.posMeth = 1
+	case tok == token.IDENT:
+		p.parseTypeNameToken(tok, lit)
+	default:
+		return false
+	}
+	return true
 }
 
 func (p *parserSrc) parseTypeNameToken(tok token.Token, lit string) {
