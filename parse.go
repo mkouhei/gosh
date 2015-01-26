@@ -566,29 +566,9 @@ func (p *parserSrc) convertTypeDecls() []string {
 		sig := fmt.Sprintf("%s %s {", t.typeID, t.typeName)
 		switch {
 		case len(t.methSpecs) > 0:
-			l = append(l, sig)
-			for _, m := range t.methSpecs {
-				sig = fmt.Sprintf("%s%s(%s)", m.sig.baseTypeName, m.name, m.sig.params)
-				if m.sig.result != "" {
-					if strings.Index(m.sig.result, ",") == -1 {
-						sig += " " + m.sig.result
-					} else {
-						sig += " (" + m.sig.result + ")"
-					}
-				}
-				l = append(l, sig)
-			}
-			l = append(l, "}")
+			t.convertMethSpecs(&l, sig)
 		case len(t.fieldDecls) > 0:
-			l = append(l, sig)
-			for _, f := range t.fieldDecls {
-				if f.fieldType == "" {
-					l = append(l, f.idList)
-				} else {
-					l = append(l, fmt.Sprintf("%s %s", f.idList, f.fieldType))
-				}
-			}
-			l = append(l, "}")
+			t.convertFieldDecls(&l, sig)
 		default:
 			// rewrite sig
 			sig = fmt.Sprintf("%s %s", t.typeID, t.typeName)
@@ -597,6 +577,38 @@ func (p *parserSrc) convertTypeDecls() []string {
 	}
 	l = append(l, ")")
 	return l
+}
+
+func (t *typeDecl) convertMethSpecs(lines *[]string, sig string) {
+	l := *lines
+	l = append(l, sig)
+	for _, m := range t.methSpecs {
+		s := fmt.Sprintf("%s%s(%s)", m.sig.baseTypeName, m.name, m.sig.params)
+		if m.sig.result != "" {
+			if strings.Index(m.sig.result, ",") == -1 {
+				s += " " + m.sig.result
+			} else {
+				s += " (" + m.sig.result + ")"
+			}
+		}
+		l = append(l, s)
+	}
+	l = append(l, "}")
+	*lines = l
+}
+
+func (t *typeDecl) convertFieldDecls(lines *[]string, sig string) {
+	l := *lines
+	l = append(l, sig)
+	for _, f := range t.fieldDecls {
+		if f.fieldType == "" {
+			l = append(l, f.idList)
+		} else {
+			l = append(l, fmt.Sprintf("%s %s", f.idList, f.fieldType))
+		}
+	}
+	l = append(l, "}")
+	*lines = l
 }
 
 func (p *parserSrc) mergeLines() []string {
