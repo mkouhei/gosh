@@ -795,28 +795,8 @@ func (p *parserSrc) parseFuncName(tok token.Token, lit string) {
 
 func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
 	switch {
-	case tok == token.IDENT:
-		if p.tmpFuncDecl.sig.params == "" {
-			// func (ri rt) fname(pi pt) (res)
-			//                    ~~
-			p.tmpFuncDecl.sig.params = lit
-		} else {
-			if p.preToken == token.COMMA {
-				// func (ri rt) fname(pi pt, pi pt) (res)
-				//                           ~~
-				p.tmpFuncDecl.sig.params += ", " + lit
-			} else if p.preToken == token.MUL || p.preToken == token.RBRACK {
-				// func (ri rt) fname(pi *pt) (res)
-				//                        ~
-				// func (ri rt) fname(pi []pt) (res)
-				//                         ~
-				p.tmpFuncDecl.sig.params += lit
-			} else {
-				// func (ri rt) fname(pi pt) (res)
-				//                       ~~
-				p.tmpFuncDecl.sig.params += " " + lit
-			}
-		}
+	case p.parseFuncParamsIdent(tok, lit):
+
 	case tok == token.MUL, tok == token.LBRACK:
 		if p.tmpFuncDecl.sig.params != "" {
 			// func (ri rt) fname(pi *pt) (res)
@@ -837,7 +817,34 @@ func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
 	case p.mainFlag && tok == token.RPAREN:
 		p.posFuncSig = 6
 	}
+}
 
+func (p *parserSrc) parseFuncParamsIdent(tok token.Token, lit string) bool {
+	if tok != token.IDENT {
+		return false
+	}
+
+	switch {
+	case p.tmpFuncDecl.sig.params == "":
+		// func (ri rt) fname(pi pt) (res)
+		//                    ~~
+		p.tmpFuncDecl.sig.params = lit
+	case p.preToken == token.COMMA:
+		// func (ri rt) fname(pi pt, pi pt) (res)
+		//                           ~~
+		p.tmpFuncDecl.sig.params += ", " + lit
+	case p.preToken == token.MUL, p.preToken == token.RBRACK:
+		// func (ri rt) fname(pi *pt) (res)
+		//                        ~
+		// func (ri rt) fname(pi []pt) (res)
+		//                         ~
+		p.tmpFuncDecl.sig.params += lit
+	default:
+		// func (ri rt) fname(pi pt) (res)
+		//                       ~~
+		p.tmpFuncDecl.sig.params += " " + lit
+	}
+	return true
 }
 
 func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
