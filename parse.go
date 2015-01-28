@@ -316,6 +316,8 @@ func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) bool {
 		p.tmpTypeDecl.fieldDecls[i-1].fieldType += lit
 	case tok == token.SEMICOLON:
 		p.posType = 3
+	default:
+		return false
 	}
 	return true
 }
