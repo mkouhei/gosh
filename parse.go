@@ -286,40 +286,38 @@ func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 
 func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) bool {
 	i := len(p.tmpTypeDecl.fieldDecls)
-	if i > 0 {
-		switch {
-		case tok == token.IDENT && p.braces > 0:
-			if isSliceName(p.preToken, p.tmpTypeDecl.fieldDecls[i-1].fieldType) {
-				// type typeID struct {
-				//     typeID []typeName
-				//              ~~~~~~~~
-				p.tmpTypeDecl.fieldDecls[i-1].fieldType += lit
-			} else {
-				// type typeID struct {
-				//     typeID typeName
-				//            ~~~~~~~~
-				p.tmpTypeDecl.fieldDecls[i-1].fieldType = lit
-			}
-		case tok == token.LBRACK:
-			// type typeID struct {
-			//     typeID []typeName
-			//            ~
-			if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "" {
-				p.tmpTypeDecl.fieldDecls[i-1].fieldType = lit
-			}
-		case isSliceRBrack(tok, p.preToken):
-			// type typeID struct {
-			//     typeID []typeName
-			//             ~
-			p.tmpTypeDecl.fieldDecls[i-1].fieldType += lit
-		case tok == token.SEMICOLON:
-			p.posType = 3
-		default:
-			return false
-		}
-		return true
+	if i <= 0 {
+		return false
 	}
-	return false
+	switch {
+	case tok == token.IDENT && p.braces > 0:
+		if isSliceName(p.preToken, p.tmpTypeDecl.fieldDecls[i-1].fieldType) {
+			// type typeID struct {
+			//     typeID []typeName
+			//              ~~~~~~~~
+			p.tmpTypeDecl.fieldDecls[i-1].fieldType += lit
+		} else {
+			// type typeID struct {
+			//     typeID typeName
+			//            ~~~~~~~~
+			p.tmpTypeDecl.fieldDecls[i-1].fieldType = lit
+		}
+	case tok == token.LBRACK:
+		// type typeID struct {
+		//     typeID []typeName
+		//            ~
+		if p.tmpTypeDecl.fieldDecls[i-1].fieldType == "" {
+			p.tmpTypeDecl.fieldDecls[i-1].fieldType = lit
+		}
+	case isSliceRBrack(tok, p.preToken):
+		// type typeID struct {
+		//     typeID []typeName
+		//             ~
+		p.tmpTypeDecl.fieldDecls[i-1].fieldType += lit
+	case tok == token.SEMICOLON:
+		p.posType = 3
+	}
+	return true
 }
 
 func (p *parserSrc) parseInterface(tok token.Token, lit string) bool {
