@@ -434,13 +434,11 @@ func (t *typeDecl) parseIFMethParamTypeIdent(tok token.Token, lit string, i int)
 }
 
 func (p *parserSrc) parseIFMethResult(tok token.Token, lit string, i int) {
-	if p.preToken == token.COMMA {
+	if p.preToken == token.COMMA && p.tmpTypeDecl.methSpecs[i-1].sig.result != "" {
 		// type typeID interface {
 		//     mname(pi pt) (res, res)
 		//                        ~~~
-		if p.tmpTypeDecl.methSpecs[i-1].sig.result != "" {
-			p.tmpTypeDecl.methSpecs[i-1].sig.result += ", " + lit
-		}
+		p.tmpTypeDecl.methSpecs[i-1].sig.result += ", " + lit
 	} else {
 		// type typeID interface {
 		//     mname(pi pt) res
