@@ -859,18 +859,7 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 			p.tmpFuncDecl.sig.result += ", " + lit
 		}
 	case tok == token.MUL, tok == token.LBRACK:
-		switch {
-		case p.preToken == token.RPAREN:
-			// func (ri rt) fname(pi pt) *res
-			//                           ~
-			p.tmpFuncDecl.sig.result = lit
-		case p.preToken == token.LPAREN:
-			// func (ri rt) fname(pi pt) (*res, res)
-			//                             ~~~
-			p.tmpFuncDecl.sig.result = lit
-		case p.tmpFuncDecl.sig.result != "":
-			p.tmpFuncDecl.sig.result += ", " + lit
-		}
+		p.parseFuncResultPointer(lit)
 	case isSliceRBrack(tok, p.preToken), tok == token.PERIOD:
 		if p.tmpFuncDecl.sig.result != "" {
 			p.tmpFuncDecl.sig.result += lit
@@ -879,6 +868,17 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 		p.posFuncSig = 6
 	}
 
+}
+
+func (p *parserSrc) parseFuncResultPointer(lit string) {
+	switch {
+	case p.preToken == token.RPAREN, p.preToken == token.LPAREN:
+		// func (ri rt) fname(pi pt) *res | func (ri rt) fname(pi pt) (*res, res)
+		//                           ~                                  ~~~
+		p.tmpFuncDecl.sig.result = lit
+	case p.tmpFuncDecl.sig.result != "":
+		p.tmpFuncDecl.sig.result += ", " + lit
+	}
 }
 
 func (p *parserSrc) parseOmit(body *[]string, tok token.Token, lit string) {
