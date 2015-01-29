@@ -187,7 +187,7 @@ func (p *parserSrc) parseTypeID(tok token.Token, lit string) bool {
 	case tok == token.IDENT && p.tmpTypeDecl.typeID == "":
 		p.tmpTypeDecl.typeID = lit
 		p.posType = 2
-	case tok == token.RPAREN && p.paren == 0:
+	case p.isOutOfParen(tok):
 		p.posType = 6
 	default:
 		return false
@@ -810,7 +810,7 @@ func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
 		if p.tmpFuncDecl.sig.params != "" {
 			p.tmpFuncDecl.sig.params += lit
 		}
-	case tok == token.RPAREN && p.paren == 0:
+	case p.isOutOfParen(tok):
 		p.posFuncSig = 5
 	case p.mainFlag && tok == token.RPAREN:
 		p.posFuncSig = 6
@@ -855,7 +855,7 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 		if p.tmpFuncDecl.sig.result != "" {
 			p.tmpFuncDecl.sig.result += lit
 		}
-	case p.paren == 0 && (tok == token.RPAREN || tok == token.LBRACE):
+	case p.isOutOfParen(tok), p.paren == 0 && tok == token.LBRACE:
 		p.posFuncSig = 6
 	}
 }
@@ -1000,6 +1000,13 @@ func isSliceRBrack(tok, preToken token.Token) bool {
 
 func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
 	if tok == token.RBRACE && p.braces == 0 {
+		return true
+	}
+	return false
+}
+
+func (p *parserSrc) isOutOfParen(tok token.Token) bool {
+	if tok == token.RPAREN && p.paren == 0 {
 		return true
 	}
 	return false
