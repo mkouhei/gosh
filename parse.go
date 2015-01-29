@@ -248,13 +248,6 @@ func (p *parserSrc) parseTypeNameToken(tok token.Token, lit string) {
 	}
 }
 
-func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
-	if tok == token.RBRACE && p.braces == 0 {
-		return true
-	}
-	return false
-}
-
 func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 	// fieldIDList
 	switch {
@@ -1000,6 +993,13 @@ func (p *parserSrc) appendTypeDecl() {
 
 func isSliceRBrack(tok, preToken token.Token) bool {
 	if tok == token.RBRACK && preToken == token.LBRACK {
+		return true
+	}
+	return false
+}
+
+func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
+	if tok == token.RBRACE && p.braces == 0 {
 		return true
 	}
 	return false
