@@ -248,7 +248,7 @@ func (p *parserSrc) parseTypeNameToken(tok token.Token, lit string) {
 	}
 }
 
-func (p *parserSrc) isOutOfParen(tok token.Token) bool {
+func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
 	if tok == token.RBRACE && p.braces == 0 {
 		return true
 	}
@@ -258,7 +258,7 @@ func (p *parserSrc) isOutOfParen(tok token.Token) bool {
 func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 	// fieldIDList
 	switch {
-	case p.isOutOfParen(tok):
+	case p.isOutOfBrace(tok):
 		if p.preToken == token.SEMICOLON {
 			p.appendTypeDecl()
 			p.preLit = ""
@@ -370,7 +370,7 @@ func (p *parserSrc) parseIFMethName(tok token.Token, lit string) {
 		p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methSpecs{lit, signature{}})
 	case tok == token.LPAREN:
 		p.posMeth = 2
-	case p.isOutOfParen(tok):
+	case p.isOutOfBrace(tok):
 		p.appendTypeDecl()
 
 		p.posMeth = 0
@@ -930,7 +930,7 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 		b = append(b, p.preLit)
 		p.preLit = ""
 	case tok == token.LBRACE && p.braces == 1:
-	case p.isOutOfParen(tok):
+	case p.isOutOfBrace(tok):
 		p.posFuncSig = 7
 	case p.preLit == "":
 		p.preLit = lit
