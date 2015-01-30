@@ -669,8 +669,10 @@ func (p *parserSrc) countBBP(tok token.Token) {
 
 func (p *parserSrc) ignorePkg(tok token.Token) bool {
 	switch {
-	case tok == token.PACKAGE, tok == token.IDENT && p.preToken == token.PACKAGE:
-		p.preToken = tok
+	case tok == token.PACKAGE:
+		p.stackToken.push(tokenLit{tok, ""})
+	case len(p.stackToken) > 0 && p.stackToken[0].tok == token.PACKAGE:
+		p.stackToken.pop()
 	default:
 		return false
 	}
