@@ -61,6 +61,11 @@ type fieldDecl struct {
 	fieldType string
 }
 
+type tokenLit struct {
+	tok token.Token
+	lit string
+}
+
 type parserSrc struct {
 	brackets int32
 	braces   int32
@@ -81,6 +86,8 @@ type parserSrc struct {
 	preLit      string
 	tmpFuncDecl funcDecl
 	tmpTypeDecl typeDecl
+
+	stackToken stackToken
 
 	// 0: nofunc
 	// 1: recvID
@@ -108,6 +115,18 @@ type parserSrc struct {
 	// 3: param typeName
 	// 4: result
 	posMeth int
+}
+
+type stackToken []tokenLit
+
+func (s *stackToken) push(v tokenLit) {
+	*s = append(*s, v)
+}
+
+func (s *stackToken) pop() tokenLit {
+	ret := (*s)[len(*s)-1]
+	*s = (*s)[0 : len(*s)-1]
+	return ret
 }
 
 func (p *parserSrc) putPackages(imPath, pkgName string, imptQ chan<- imptSpec) {
