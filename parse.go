@@ -992,7 +992,7 @@ func (p *parserSrc) funcClosing(tok token.Token) {
 	if p.mainFlag == true {
 		p.posFuncSig = 8
 	} else if tok != token.IDENT && p.paren == 0 {
-		if i := p.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
+		if i := p.funcDecls.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
 			p.funcDecls[i].name = p.tmpFuncDecl.name
 			p.funcDecls[i].sig = p.tmpFuncDecl.sig
 			p.funcDecls[i].body = p.tmpFuncDecl.body
@@ -1005,8 +1005,8 @@ func (p *parserSrc) funcClosing(tok token.Token) {
 	p.mainFlag = false
 }
 
-func (p *parserSrc) searchFuncDecl(name string) int {
-	for i, fnc := range p.funcDecls {
+func (s *funcDecls) searchFuncDecl(name string) int {
+	for i, fnc := range *s {
 		if fnc.name == name {
 			return i
 		}
