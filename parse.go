@@ -606,7 +606,7 @@ func (s *typeDecls) convertTypeDecls() []string {
 		sig := fmt.Sprintf("%s %s {", t.typeID, t.typeName)
 		switch {
 		case len(t.methSpecs) > 0:
-			t.convertMethSpecs(&l, sig)
+			t.methSpecs.convertMethSpecs(&l, sig)
 		case len(t.fieldDecls) > 0:
 			t.fieldDecls.convertFieldDecls(&l, sig)
 		default:
@@ -619,19 +619,19 @@ func (s *typeDecls) convertTypeDecls() []string {
 	return l
 }
 
-func (t *typeDecl) convertMethSpecs(lines *[]string, sig string) {
+func (s *methSpecs) convertMethSpecs(lines *[]string, sig string) {
 	l := *lines
 	l = append(l, sig)
-	for _, m := range t.methSpecs {
-		s := fmt.Sprintf("%s%s(%s)", m.sig.baseTypeName, m.name, m.sig.params)
+	for _, m := range *s {
+		str := fmt.Sprintf("%s%s(%s)", m.sig.baseTypeName, m.name, m.sig.params)
 		if m.sig.result != "" {
 			if strings.Index(m.sig.result, ",") == -1 {
-				s += " " + m.sig.result
+				str += " " + m.sig.result
 			} else {
-				s += " (" + m.sig.result + ")"
+				str += " (" + m.sig.result + ")"
 			}
 		}
-		l = append(l, s)
+		l = append(l, str)
 	}
 	l = append(l, "}")
 	*lines = l
