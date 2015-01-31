@@ -78,7 +78,6 @@ type parserSrc struct {
 	main      []string
 	mainHist  []string
 
-	imFlag      bool
 	funcName    string
 	tFlag       bool
 	mainFlag    bool
@@ -709,21 +708,23 @@ func rmQuot(lit string) string {
 
 func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpec) bool {
 	switch {
-	case tok == token.IMPORT:
-		p.imFlag = true
-		p.preToken = tok
-	case p.imFlag:
+	case len(p.stackToken) == 0 && tok == token.IMPORT:
+		p.stackToken.push(tokenLit{tok, lit})
+	case p.stackToken.checkStackType(token.IMPORT):
 		switch {
 		case tok == token.IDENT:
-			p.preLit = lit
+			p.stackToken.push(tokenLit{tok, lit})
 		case tok == token.STRING:
-			p.putPackages(rmQuot(lit), litSemicolon(p.preLit), imptQ)
-			p.preLit = ""
+			var s string
+			if p.stackToken.checkLatestItem(token.IMPORT) {
+				s = ""
+			} else {
+				s = p.stackToken.pop().lit
+			}
+			p.putPackages(rmQuot(lit), litSemicolon(s), imptQ)
 		case tok == token.SEMICOLON:
 			if p.paren == 0 {
-				p.imFlag = false
-				p.preToken = tok
-				p.preLit = ""
+				p.stackToken.clear()
 			}
 		}
 	default:
