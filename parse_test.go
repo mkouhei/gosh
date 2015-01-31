@@ -412,7 +412,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse body error")
 	}
 
-	if len(compare(p.convertTypeDecls(), type1)) != 0 {
+	if len(compare(p.typeDecls.convertTypeDecls(), type1)) != 0 {
 		t.Fatal("parse type decls error")
 	}
 
