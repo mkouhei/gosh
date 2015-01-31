@@ -150,10 +150,10 @@ func (s *stackToken) checkStackType(tok token.Token) bool {
 	return false
 }
 
-func (p *parserSrc) putPackages(imPath, pkgName string, imptQ chan<- imptSpec) {
+func (s *imPkgs) putPackages(imPath, pkgName string, imptQ chan<- imptSpec) {
 	// put package to queue of `go get'
-	if !searchPackage(imptSpec{imPath, pkgName}, p.imPkgs) {
-		p.imPkgs = append(p.imPkgs, imptSpec{imPath, pkgName})
+	if !searchPackage(imptSpec{imPath, pkgName}, *s) {
+		*s = append(*s, imptSpec{imPath, pkgName})
 		imptQ <- imptSpec{imPath, pkgName}
 	}
 }
@@ -721,7 +721,7 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpe
 			} else {
 				s = p.stackToken.pop().lit
 			}
-			p.putPackages(rmQuot(lit), litSemicolon(s), imptQ)
+			p.imPkgs.putPackages(rmQuot(lit), litSemicolon(s), imptQ)
 		case tok == token.SEMICOLON:
 			if p.paren == 0 {
 				p.stackToken.clear()
