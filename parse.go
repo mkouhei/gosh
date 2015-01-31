@@ -554,13 +554,13 @@ func (p *parserSrc) validateMainBody() bool {
 	return false
 }
 
-func convertImport(pkgs []imptSpec) []string {
+func (s *imPkgs) convertImport() []string {
 	// convert packages list to "import" statement
-	if len(pkgs) == 0 {
+	if len(*s) == 0 {
 		return []string{}
 	}
 	l := []string{"import ("}
-	for _, pkg := range pkgs {
+	for _, pkg := range *s {
 		l = append(l, fmt.Sprintf(`%s "%s"`, pkg.pkgName, pkg.imPath))
 	}
 	return append(l, ")")
@@ -650,7 +650,7 @@ func (t *typeDecl) convertFieldDecls(lines *[]string, sig string) {
 func (p *parserSrc) mergeLines() []string {
 	// merge "package", "import", "func", "func main".
 	l := []string{"package main"}
-	l = append(l, convertImport(p.imPkgs)...)
+	l = append(l, p.imPkgs.convertImport()...)
 	l = append(l, p.convertTypeDecls()...)
 	l = append(l, p.convertFuncDecls()...)
 	l = append(l, p.body...)
