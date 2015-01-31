@@ -52,7 +52,7 @@ type methSpecs struct {
 type typeDecl struct {
 	typeID     string
 	typeName   string
-	fieldDecls []fieldDecl
+	fieldDecls fieldDecls
 	methSpecs  []methSpecs
 }
 
@@ -69,6 +69,7 @@ type tokenLit struct {
 type imPkgs []imptSpec
 type funcDecls []funcDecl
 type typeDecls []typeDecl
+type fieldDecls []fieldDecl
 
 type parserSrc struct {
 	brackets int32
@@ -606,7 +607,7 @@ func (s *typeDecls) convertTypeDecls() []string {
 		case len(t.methSpecs) > 0:
 			t.convertMethSpecs(&l, sig)
 		case len(t.fieldDecls) > 0:
-			t.convertFieldDecls(&l, sig)
+			t.fieldDecls.convertFieldDecls(&l, sig)
 		default:
 			// rewrite sig
 			sig = fmt.Sprintf("%s %s", t.typeID, t.typeName)
@@ -635,10 +636,10 @@ func (t *typeDecl) convertMethSpecs(lines *[]string, sig string) {
 	*lines = l
 }
 
-func (t *typeDecl) convertFieldDecls(lines *[]string, sig string) {
+func (s *fieldDecls) convertFieldDecls(lines *[]string, sig string) {
 	l := *lines
 	l = append(l, sig)
-	for _, f := range t.fieldDecls {
+	for _, f := range *s {
 		if f.fieldType == "" {
 			l = append(l, f.idList)
 		} else {
