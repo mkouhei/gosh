@@ -97,7 +97,7 @@ func (e *env) removeImport(msg string, pkg imptSpec) {
 		fmt.Sprintf(`package %s: unrecognized import path "%s"`,
 			pkgName(pkg.pkgName, pkg.imPath),
 			pkgName(pkg.pkgName, pkg.imPath))) {
-		removeImportPackage(&e.parserSrc.imPkgs, imptSpec{pkg.imPath, pkg.pkgName})
+		e.parserSrc.imPkgs.removeImportPackage(imptSpec{pkg.imPath, pkg.pkgName})
 	}
 }
 

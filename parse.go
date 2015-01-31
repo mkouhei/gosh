@@ -66,12 +66,14 @@ type tokenLit struct {
 	lit string
 }
 
+type imPkgs []imptSpec
+
 type parserSrc struct {
 	brackets int32
 	braces   int32
 	paren    int32
 
-	imPkgs    []imptSpec
+	imPkgs    imPkgs
 	funcDecls []funcDecl
 	typeDecls []typeDecl
 	body      []string
@@ -166,14 +168,12 @@ func searchPackage(pkg imptSpec, pkgs []imptSpec) bool {
 	return false
 }
 
-func removeImportPackage(slice *[]imptSpec, pkg imptSpec) {
-	s := *slice
-	for i, item := range s {
+func (s *imPkgs) removeImportPackage(pkg imptSpec) {
+	for i, item := range *s {
 		if item.imPath == pkg.imPath && item.pkgName == pkg.pkgName {
-			s = append(s[:i], s[i+1:]...)
+			*s = append((*s)[:i], (*s)[i+1:]...)
 		}
 	}
-	*slice = s
 }
 
 func compareImportSpecs(A, B []imptSpec) []imptSpec {
