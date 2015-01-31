@@ -129,6 +129,12 @@ func (s *stackToken) pop() tokenLit {
 	return ret
 }
 
+func (s *stackToken) clear() {
+	for len(*s) > 0 {
+		s.pop()
+	}
+}
+
 func (s *stackToken) checkStackType(tok token.Token) bool {
 	if len(*s) > 0 && (*s)[0].tok == tok {
 		return true
@@ -679,7 +685,7 @@ func (p *parserSrc) ignorePkg(tok token.Token) bool {
 	case tok == token.PACKAGE:
 		p.stackToken.push(tokenLit{tok, ""})
 	case p.stackToken.checkStackType(token.PACKAGE):
-		p.stackToken.pop()
+		p.stackToken.clear()
 	default:
 		return false
 	}
