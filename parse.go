@@ -503,7 +503,7 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 		p.countBBP(tok)
 
 		switch {
-		case p.ignorePkg(tok):
+		case p.stackToken.ignorePkg(tok):
 			// ignore packageClause
 
 		case p.parseImPkg(tok, str, imptQ):
@@ -686,12 +686,12 @@ func (p *parserSrc) countBBP(tok token.Token) {
 	}
 }
 
-func (p *parserSrc) ignorePkg(tok token.Token) bool {
+func (s *stackToken) ignorePkg(tok token.Token) bool {
 	switch {
 	case tok == token.PACKAGE:
-		p.stackToken.push(tokenLit{tok, ""})
-	case p.stackToken.checkStackType(token.PACKAGE):
-		p.stackToken.clear()
+		s.push(tokenLit{tok, ""})
+	case s.checkStackType(token.PACKAGE):
+		s.clear()
 	default:
 		return false
 	}
