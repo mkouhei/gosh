@@ -53,7 +53,7 @@ type typeDecl struct {
 	typeID     string
 	typeName   string
 	fieldDecls fieldDecls
-	methSpecs  []methSpec
+	methSpecs  methSpecs
 }
 
 type fieldDecl struct {
@@ -70,6 +70,7 @@ type imPkgs []imptSpec
 type funcDecls []funcDecl
 type typeDecls []typeDecl
 type fieldDecls []fieldDecl
+type methSpecs []methSpec
 
 type parserSrc struct {
 	brackets int32
@@ -450,27 +451,27 @@ func (p *parserSrc) parseIFMethParamType(tok token.Token, lit string, i int) {
 		//                ~
 		p.tmpTypeDecl.methSpecs[i-1].sig.params += lit
 	case tok == token.IDENT:
-		p.tmpTypeDecl.parseIFMethParamTypeIdent(tok, lit, i)
+		p.tmpTypeDecl.methSpecs.parseIFMethParamTypeIdent(tok, lit, i)
 	}
 }
 
-func (t *typeDecl) parseIFMethParamTypeIdent(tok token.Token, lit string, i int) {
+func (s *methSpecs) parseIFMethParamTypeIdent(tok token.Token, lit string, i int) {
 	switch {
-	case strings.HasSuffix(t.methSpecs[i-1].sig.params, "[]"):
+	case strings.HasSuffix((*s)[i-1].sig.params, "[]"):
 		// type typeID interface {
 		//     mname(pi []pt) res
 		//                ~~
-		t.methSpecs[i-1].sig.params += lit
-	case strings.HasSuffix(t.methSpecs[i-1].sig.params, "."):
+		(*s)[i-1].sig.params += lit
+	case strings.HasSuffix((*s)[i-1].sig.params, "."):
 		// type typeID interface {
 		//     mname(pi pn.pt) res
 		//                 ~~
-		t.methSpecs[i-1].sig.params += lit
+		(*s)[i-1].sig.params += lit
 	default:
 		// type typeID interface {
 		//     mname(pi pt) res
 		//              ~~
-		t.methSpecs[i-1].sig.params += " " + lit
+		(*s)[i-1].sig.params += " " + lit
 	}
 }
 
