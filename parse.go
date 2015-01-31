@@ -129,6 +129,13 @@ func (s *stackToken) pop() tokenLit {
 	return ret
 }
 
+func (s *stackToken) checkStackType(tok token.Token) bool {
+	if len(*s) > 0 && (*s)[0].tok == tok {
+		return true
+	}
+	return false
+}
+
 func (p *parserSrc) putPackages(imPath, pkgName string, imptQ chan<- imptSpec) {
 	// put package to queue of `go get'
 	if !searchPackage(imptSpec{imPath, pkgName}, p.imPkgs) {
@@ -671,7 +678,7 @@ func (p *parserSrc) ignorePkg(tok token.Token) bool {
 	switch {
 	case tok == token.PACKAGE:
 		p.stackToken.push(tokenLit{tok, ""})
-	case len(p.stackToken) > 0 && p.stackToken[0].tok == token.PACKAGE:
+	case p.stackToken.checkStackType(token.PACKAGE):
 		p.stackToken.pop()
 	default:
 		return false
