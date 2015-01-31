@@ -416,7 +416,7 @@ func TestParseLine(t *testing.T) {
 		t.Fatal("parse type decls error")
 	}
 
-	if len(compare(p.convertFuncDecls(), func1)) != 0 {
+	if len(compare(p.funcDecls.convertFuncDecls(), func1)) != 0 {
 		t.Fatal("parse func decls error")
 	}
 

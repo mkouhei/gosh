@@ -67,6 +67,7 @@ type tokenLit struct {
 }
 
 type imPkgs []imptSpec
+type funcDecls []funcDecl
 
 type parserSrc struct {
 	brackets int32
@@ -74,7 +75,7 @@ type parserSrc struct {
 	paren    int32
 
 	imPkgs    imPkgs
-	funcDecls []funcDecl
+	funcDecls funcDecls
 	typeDecls []typeDecl
 	body      []string
 	main      []string
@@ -566,9 +567,9 @@ func (s *imPkgs) convertImport() []string {
 	return append(l, ")")
 }
 
-func (p *parserSrc) convertFuncDecls() []string {
+func (s *funcDecls) convertFuncDecls() []string {
 	var lines []string
-	for _, fun := range p.funcDecls {
+	for _, fun := range *s {
 		rcv := ""
 		if fun.sig.recvID != "" && fun.sig.baseTypeName != "" {
 			rcv = fmt.Sprintf("(%s %s)", fun.sig.recvID, fun.sig.baseTypeName)
@@ -652,7 +653,7 @@ func (p *parserSrc) mergeLines() []string {
 	l := []string{"package main"}
 	l = append(l, p.imPkgs.convertImport()...)
 	l = append(l, p.convertTypeDecls()...)
-	l = append(l, p.convertFuncDecls()...)
+	l = append(l, p.funcDecls.convertFuncDecls()...)
 	l = append(l, p.body...)
 	l = append(l, "func main() {")
 	if len(p.mainHist) > 0 {
