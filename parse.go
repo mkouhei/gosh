@@ -129,6 +129,13 @@ func (s *stackToken) pop() tokenLit {
 	return ret
 }
 
+func (s *stackToken) checkLatestItem(tok token.Token) bool {
+	if (*s)[len(*s)-1].tok == tok {
+		return true
+	}
+	return false
+}
+
 func (s *stackToken) clear() {
 	for len(*s) > 0 {
 		s.pop()
