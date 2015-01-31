@@ -44,7 +44,7 @@ type funcDecl struct {
 	body []string
 }
 
-type methSpecs struct {
+type methSpec struct {
 	name string
 	sig  signature
 }
@@ -53,7 +53,7 @@ type typeDecl struct {
 	typeID     string
 	typeName   string
 	fieldDecls fieldDecls
-	methSpecs  []methSpecs
+	methSpecs  []methSpec
 }
 
 type fieldDecl struct {
@@ -401,7 +401,7 @@ func (p *parserSrc) parseIFMethName(tok token.Token, lit string) {
 	//     ~~~~~
 	switch {
 	case tok == token.IDENT:
-		p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methSpecs{lit, signature{}})
+		p.tmpTypeDecl.methSpecs = append(p.tmpTypeDecl.methSpecs, methSpec{lit, signature{}})
 	case tok == token.LPAREN:
 		p.posMeth = 2
 	case p.isOutOfBrace(tok):
