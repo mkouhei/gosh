@@ -1014,8 +1014,8 @@ func (p *parserSrc) searchFuncDecl(name string) int {
 	return -1
 }
 
-func (p *parserSrc) searchTypeDecl(typeID string) int {
-	for i, t := range p.typeDecls {
+func (s *typeDecls) searchTypeDecl(typeID string) int {
+	for i, t := range *s {
 		if t.typeID == typeID {
 			return i
 		}
@@ -1024,7 +1024,7 @@ func (p *parserSrc) searchTypeDecl(typeID string) int {
 }
 
 func (p *parserSrc) appendTypeDecl() {
-	if i := p.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
+	if i := p.typeDecls.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
 		p.typeDecls[i].typeID = p.tmpTypeDecl.typeID
 		p.typeDecls[i].typeName = p.tmpTypeDecl.typeName
 		p.typeDecls[i].fieldDecls = p.tmpTypeDecl.fieldDecls
