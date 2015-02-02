@@ -172,6 +172,16 @@ func searchPackage(pkg imptSpec, pkgs []imptSpec) bool {
 	return false
 }
 
+func (p *parserSrc) removeImport(msg string, pkg imptSpec) {
+	// remove package from env.parser.imPkg
+	if strings.Contains(msg,
+		fmt.Sprintf(`package %s: unrecognized import path "%s"`,
+			pkgName(pkg.pkgName, pkg.imPath),
+			pkgName(pkg.pkgName, pkg.imPath))) {
+		p.imPkgs.removeImportPackage(imptSpec{pkg.imPath, pkg.pkgName})
+	}
+}
+
 func (s *imPkgs) removeImportPackage(pkg imptSpec) {
 	for i, item := range *s {
 		if item.imPath == pkg.imPath && item.pkgName == pkg.pkgName {

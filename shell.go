@@ -21,7 +21,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func (e *env) read(fp *os.File, wrCh, quitCh chan<- bool, imptQ chan<- imptSpec) {
@@ -88,16 +87,6 @@ func (e *env) goRun() {
 		e.logger("go run", msg, err)
 		e.parserSrc.body = nil
 		return
-	}
-}
-
-func (p *parserSrc) removeImport(msg string, pkg imptSpec) {
-	// remove package from env.parser.imPkg
-	if strings.Contains(msg,
-		fmt.Sprintf(`package %s: unrecognized import path "%s"`,
-			pkgName(pkg.pkgName, pkg.imPath),
-			pkgName(pkg.pkgName, pkg.imPath))) {
-		p.imPkgs.removeImportPackage(imptSpec{pkg.imPath, pkg.pkgName})
 	}
 }
 
