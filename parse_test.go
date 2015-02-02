@@ -461,25 +461,25 @@ func TestRemoveImport(t *testing.T) {
 		imptSpec{"io", ""}}
 	e.parserSrc.imPkgs = pkgs
 
-	e.parserSrc.removeImport("dummy message", imptSpec{"hoge", ""})
+	e.parserSrc.imPkgs.removeImport("dummy message", imptSpec{"hoge", ""})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
-	e.parserSrc.removeImport("package moge: unrecognized import path \"moge\"",
+	e.parserSrc.imPkgs.removeImport("package moge: unrecognized import path \"moge\"",
 		imptSpec{"hoge", ""})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs)) != 0 {
 		t.Fatal("fail filtering")
 	}
 
-	e.parserSrc.removeImport("package hoge: unrecognized import path \"hoge\"",
+	e.parserSrc.imPkgs.removeImport("package hoge: unrecognized import path \"hoge\"",
 		imptSpec{"hoge", ""})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}
 
 	e.parserSrc.imPkgs = append(e.parserSrc.imPkgs, imptSpec{"foo", "F"})
-	e.parserSrc.removeImport("package F: unrecognized import path \"F\"", imptSpec{"foo", "F"})
+	e.parserSrc.imPkgs.removeImport("package F: unrecognized import path \"F\"", imptSpec{"foo", "F"})
 	if len(compareImportSpecs(e.parserSrc.imPkgs, pkgs2)) != 0 {
 		t.Fatal("fail remove package")
 	}

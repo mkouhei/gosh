@@ -107,7 +107,7 @@ func (e *env) goGet(imptQ <-chan imptSpec) {
 			pkg := <-imptQ
 			args := []string{"get", pkg.imPath}
 			if msg, err := runCmd(true, false, "go", args...); err != nil {
-				e.parserSrc.removeImport(msg, pkg)
+				e.parserSrc.imPkgs.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
 		}
