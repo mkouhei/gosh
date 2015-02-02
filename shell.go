@@ -91,13 +91,13 @@ func (e *env) goRun() {
 	}
 }
 
-func (e *env) removeImport(msg string, pkg imptSpec) {
+func (p *parserSrc) removeImport(msg string, pkg imptSpec) {
 	// remove package from env.parser.imPkg
 	if strings.Contains(msg,
 		fmt.Sprintf(`package %s: unrecognized import path "%s"`,
 			pkgName(pkg.pkgName, pkg.imPath),
 			pkgName(pkg.pkgName, pkg.imPath))) {
-		e.parserSrc.imPkgs.removeImportPackage(imptSpec{pkg.imPath, pkg.pkgName})
+		p.imPkgs.removeImportPackage(imptSpec{pkg.imPath, pkg.pkgName})
 	}
 }
 
@@ -118,7 +118,7 @@ func (e *env) goGet(imptQ <-chan imptSpec) {
 			pkg := <-imptQ
 			args := []string{"get", pkg.imPath}
 			if msg, err := runCmd(true, false, "go", args...); err != nil {
-				e.removeImport(msg, pkg)
+				e.parserSrc.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
 		}
