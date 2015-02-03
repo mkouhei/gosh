@@ -71,6 +71,7 @@ type funcDecls []funcDecl
 type typeDecls []typeDecl
 type fieldDecls []fieldDecl
 type methSpecs []methSpec
+type queue []tokenLit
 
 type parserSrc struct {
 	brackets int32
@@ -92,7 +93,7 @@ type parserSrc struct {
 	tmpFuncDecl funcDecl
 	tmpTypeDecl typeDecl
 
-	stackToken stackToken
+	queue queue
 
 	// 0: nofunc
 	// 1: recvID
@@ -122,33 +123,34 @@ type parserSrc struct {
 	posMeth int
 }
 
-type stackToken []tokenLit
-
-func (s *stackToken) push(v tokenLit) {
-	*s = append(*s, v)
+func (q *queue) push(v tokenLit) {
+	*q = append(*q, v)
 }
 
-func (s *stackToken) pop() tokenLit {
-	ret := (*s)[len(*s)-1]
-	*s = (*s)[0 : len(*s)-1]
+func (q *queue) pop() tokenLit {
+	ret := (*q)[len(*q)-1]
+	*q = (*q)[0 : len(*q)-1]
 	return ret
 }
 
-func (s *stackToken) checkLatestItem(tok token.Token) bool {
-	if (*s)[len(*s)-1].tok == tok {
+	return ret
+}
+
+func (q *queue) checkLatestItem(tok token.Token) bool {
+	if (*q)[len(*q)-1].tok == tok {
 		return true
 	}
 	return false
 }
 
-func (s *stackToken) clear() {
-	for len(*s) > 0 {
-		s.pop()
+func (q *queue) clear() {
+	for len(*q) > 0 {
+		q.pop()
 	}
 }
 
-func (s *stackToken) checkStackType(tok token.Token) bool {
-	if len(*s) > 0 && (*s)[0].tok == tok {
+func (q *queue) checkQueueType(tok token.Token) bool {
+	if len(*q) > 0 && (*q)[0].tok == tok {
 		return true
 	}
 	return false
@@ -517,7 +519,7 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 		p.countBBP(tok)
 
 		switch {
-		case p.stackToken.ignorePkg(tok):
+		case p.queue.ignorePkg(tok):
 			// ignore packageClause
 
 		case p.parseImPkg(tok, str, imptQ):
@@ -700,12 +702,12 @@ func (p *parserSrc) countBBP(tok token.Token) {
 	}
 }
 
-func (s *stackToken) ignorePkg(tok token.Token) bool {
+func (q *queue) ignorePkg(tok token.Token) bool {
 	switch {
 	case tok == token.PACKAGE:
-		s.push(tokenLit{tok, ""})
-	case s.checkStackType(token.PACKAGE):
-		s.clear()
+		q.push(tokenLit{tok, ""})
+	case q.checkQueueType(token.PACKAGE):
+		q.clear()
 	default:
 		return false
 	}
@@ -722,23 +724,23 @@ func rmQuot(lit string) string {
 
 func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpec) bool {
 	switch {
-	case len(p.stackToken) == 0 && tok == token.IMPORT:
-		p.stackToken.push(tokenLit{tok, lit})
-	case p.stackToken.checkStackType(token.IMPORT):
+	case len(p.queue) == 0 && tok == token.IMPORT:
+		p.queue.push(tokenLit{tok, lit})
+	case p.queue.checkQueueType(token.IMPORT):
 		switch {
 		case tok == token.IDENT:
-			p.stackToken.push(tokenLit{tok, lit})
+			p.queue.push(tokenLit{tok, lit})
 		case tok == token.STRING:
 			var s string
-			if p.stackToken.checkLatestItem(token.IMPORT) {
+			if p.queue.checkLatestItem(token.IMPORT) {
 				s = ""
 			} else {
-				s = p.stackToken.pop().lit
+				s = p.queue.pop().lit
 			}
 			p.imPkgs.putPackages(rmQuot(lit), litSemicolon(s), imptQ)
 		case tok == token.SEMICOLON:
 			if p.paren == 0 {
-				p.stackToken.clear()
+				p.queue.clear()
 			}
 		}
 	default:
