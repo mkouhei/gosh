@@ -133,6 +133,9 @@ func (q *queue) pop() tokenLit {
 	return ret
 }
 
+func (q *queue) dequeue() tokenLit {
+	ret := (*q)[0]
+	*q = (*q)[1:len(*q)]
 	return ret
 }
 
