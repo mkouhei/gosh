@@ -66,6 +66,12 @@ type tokenLit struct {
 	lit string
 }
 
+type cnt struct {
+	brackets int32
+	braces   int32
+	paren    int32
+}
+
 type imPkgs []imptSpec
 type funcDecls []funcDecl
 type typeDecls []typeDecl
@@ -74,9 +80,7 @@ type methSpecs []methSpec
 type queue []tokenLit
 
 type parserSrc struct {
-	brackets int32
-	braces   int32
-	paren    int32
+	cnt cnt
 
 	imPkgs    imPkgs
 	funcDecls funcDecls
@@ -293,7 +297,7 @@ func (p *parserSrc) parseTypeNameToken(tok token.Token, lit string) {
 	}
 
 	p.appendTypeDecl()
-	if p.paren == 0 {
+	if p.cnt.paren == 0 {
 		// type typeID typeName | type typeID []typeName
 		//             ~~~~~~~~                 ~~~~~~~~
 		p.posType = 6
@@ -313,13 +317,13 @@ func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 			p.appendTypeDecl()
 			p.preLit = ""
 		}
-		if p.paren == 0 {
+		if p.cnt.paren == 0 {
 			// type typeID struct {
 			//     typeID []typeName
 			//     }
 			//     ~
 			p.posType = 6
-		} else if p.paren == 1 {
+		} else if p.cnt.paren == 1 {
 			// type (
 			// typeID struct {
 			//     typeID []typeName
@@ -327,7 +331,7 @@ func (p *parserSrc) parseStructTypeID(tok token.Token, lit string) bool {
 			//     ~
 			p.posType = 1
 		}
-	case tok == token.IDENT && p.braces > 0:
+	case tok == token.IDENT && p.cnt.braces > 0:
 		if p.preToken == token.LBRACE || p.preToken == token.SEMICOLON {
 			// type typeID struct {
 			//     typeID typeName
@@ -347,7 +351,7 @@ func (p *parserSrc) parseStructTypeName(tok token.Token, lit string) bool {
 		return false
 	}
 	switch {
-	case tok == token.IDENT && p.braces > 0:
+	case tok == token.IDENT && p.cnt.braces > 0:
 		if isSliceName(p.preToken, p.tmpTypeDecl.fieldDecls[i-1].fieldType) {
 			// type typeID struct {
 			//     typeID []typeName
@@ -424,7 +428,7 @@ func (p *parserSrc) parseIFMethName(tok token.Token, lit string) {
 		p.appendTypeDecl()
 
 		p.posMeth = 0
-		if p.paren == 0 {
+		if p.cnt.paren == 0 {
 			p.posType = 6
 		} else {
 			p.posType = 1
@@ -520,9 +524,9 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 		}
 		str := tokenToStr(tok, lit)
 
-		countParen(&p.paren, tok)
-		countBrace(&p.braces, tok)
-		countBracket(&p.brackets, tok)
+		countParen(&p.cnt.paren, tok)
+		countBrace(&p.cnt.braces, tok)
+		countBracket(&p.cnt.brackets, tok)
 
 		switch {
 		case p.queue.ignorePkg(tok):
@@ -569,11 +573,11 @@ func (p *parserSrc) validateMainBody() bool {
 			break
 		}
 
-		countParen(&tp.paren, tok)
-		countBrace(&tp.braces, tok)
-		countBracket(&tp.brackets, tok)
+		countParen(&tp.cnt.paren, tok)
+		countBrace(&tp.cnt.braces, tok)
+		countBracket(&tp.cnt.brackets, tok)
 
-		if tp.paren == 0 && tp.braces == 0 && tp.brackets == 0 && tok == token.SEMICOLON {
+		if tp.cnt.paren == 0 && tp.cnt.braces == 0 && tp.cnt.brackets == 0 && tok == token.SEMICOLON {
 			return true
 		}
 	}
@@ -756,7 +760,7 @@ func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpe
 			}
 			p.imPkgs.putPackages(rmQuot(lit), litSemicolon(s), imptQ)
 		case tok == token.SEMICOLON:
-			if p.paren == 0 {
+			if p.cnt.paren == 0 {
 				p.queue.clear()
 			}
 		}
@@ -782,7 +786,7 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		p.posFuncSig = 1
 		p.preLit = ""
 
-	case p.posFuncSig == 1 && p.paren > 0:
+	case p.posFuncSig == 1 && p.cnt.paren > 0:
 		// recvID
 		// func (ri rt) fname(pi pt) (res)
 		//       ~~
@@ -794,7 +798,7 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 		// baseTypeName
 		p.parseFuncBaseTypeName(tok, lit)
 
-	case p.posFuncSig == 3, p.posFuncSig == 1 && p.paren == 0:
+	case p.posFuncSig == 3, p.posFuncSig == 1 && p.cnt.paren == 0:
 		// funcName
 		p.parseFuncName(tok, lit)
 
@@ -826,7 +830,7 @@ func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 }
 
 func (p *parserSrc) parseFuncBaseTypeName(tok token.Token, lit string) {
-	if p.paren > 0 && p.tmpFuncDecl.sig.recvID != "" {
+	if p.cnt.paren > 0 && p.tmpFuncDecl.sig.recvID != "" {
 		switch {
 		case tok == token.MUL:
 			// func (ri *rt) fname(pi pt) (res)
@@ -852,7 +856,7 @@ func (p *parserSrc) parseFuncBaseTypeName(tok token.Token, lit string) {
 }
 
 func (p *parserSrc) parseFuncName(tok token.Token, lit string) {
-	if p.paren == 0 && tok == token.IDENT && p.tmpFuncDecl.name == "" {
+	if p.cnt.paren == 0 && tok == token.IDENT && p.tmpFuncDecl.name == "" {
 		// func (ri rt) fname(pi pt) (res)
 		//              ~~~~~
 		if lit == "main" {
@@ -930,7 +934,7 @@ func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
 		if p.tmpFuncDecl.sig.result != "" {
 			p.tmpFuncDecl.sig.result += lit
 		}
-	case p.isOutOfParen(tok), p.paren == 0 && tok == token.LBRACE:
+	case p.isOutOfParen(tok), p.cnt.paren == 0 && tok == token.LBRACE:
 		p.posFuncSig = 6
 	}
 }
@@ -997,7 +1001,7 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 	case tok == token.SEMICOLON:
 		b = append(b, p.preLit)
 		p.preLit = ""
-	case tok == token.LBRACE && p.braces == 1:
+	case tok == token.LBRACE && p.cnt.braces == 1:
 	case p.isOutOfBrace(tok):
 		p.posFuncSig = 7
 	case p.preLit == "":
@@ -1022,7 +1026,7 @@ func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
 func (p *parserSrc) funcClosing(tok token.Token) {
 	if p.mainFlag == true {
 		p.posFuncSig = 8
-	} else if tok != token.IDENT && p.paren == 0 {
+	} else if tok != token.IDENT && p.cnt.paren == 0 {
 		if i := p.funcDecls.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
 			p.funcDecls[i].name = p.tmpFuncDecl.name
 			p.funcDecls[i].sig = p.tmpFuncDecl.sig
@@ -1074,14 +1078,14 @@ func isSliceRBrack(tok, preToken token.Token) bool {
 }
 
 func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
-	if tok == token.RBRACE && p.braces == 0 {
+	if tok == token.RBRACE && p.cnt.braces == 0 {
 		return true
 	}
 	return false
 }
 
 func (p *parserSrc) isOutOfParen(tok token.Token) bool {
-	if tok == token.RPAREN && p.paren == 0 {
+	if tok == token.RPAREN && p.cnt.paren == 0 {
 		return true
 	}
 	return false
