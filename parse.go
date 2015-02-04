@@ -519,7 +519,10 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 			break
 		}
 		str := tokenToStr(tok, lit)
-		p.countBBP(tok)
+
+		countParen(&p.paren, tok)
+		countBrace(&p.braces, tok)
+		countBracket(&p.brackets, tok)
 
 		switch {
 		case p.queue.ignorePkg(tok):
@@ -565,7 +568,11 @@ func (p *parserSrc) validateMainBody() bool {
 		if tok == token.EOF {
 			break
 		}
-		tp.countBBP(tok)
+
+		countParen(&tp.paren, tok)
+		countBrace(&tp.braces, tok)
+		countBracket(&tp.brackets, tok)
+
 		if tp.paren == 0 && tp.braces == 0 && tp.brackets == 0 && tok == token.SEMICOLON {
 			return true
 		}
@@ -682,26 +689,33 @@ func (p *parserSrc) mergeLines() []string {
 	return append(l, "}")
 }
 
-func (p *parserSrc) countBBP(tok token.Token) {
-	switch {
-	case tok == token.LBRACE:
-		// {
-		atomic.AddInt32(&p.braces, 1)
-	case tok == token.RBRACE:
-		// }
-		atomic.AddInt32(&p.braces, -1)
-	case tok == token.LBRACK:
+func countBracket(c *int32, tok token.Token) {
+	if tok == token.LBRACK {
 		// [
-		atomic.AddInt32(&p.brackets, 1)
-	case tok == token.RBRACK:
+		atomic.AddInt32(c, 1)
+	} else if tok == token.RBRACK {
 		// ]
-		atomic.AddInt32(&p.brackets, -1)
-	case tok == token.LPAREN:
-		// (
-		atomic.AddInt32(&p.paren, 1)
-	case tok == token.RPAREN:
-		// )
-		atomic.AddInt32(&p.paren, -1)
+		atomic.AddInt32(c, -1)
+	}
+}
+
+func countBrace(c *int32, tok token.Token) {
+	if tok == token.LBRACE {
+		// [
+		atomic.AddInt32(c, 1)
+	} else if tok == token.RBRACE {
+		// ]
+		atomic.AddInt32(c, -1)
+	}
+}
+
+func countParen(c *int32, tok token.Token) {
+	if tok == token.LPAREN {
+		// [
+		atomic.AddInt32(c, 1)
+	} else if tok == token.RPAREN {
+		// ]
+		atomic.AddInt32(c, -1)
 	}
 }
 
