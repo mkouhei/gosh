@@ -43,7 +43,7 @@ name string
 }
 spam struct {
 name string
-cnt int
+i, j int
 lines []string
 }
 ham interface {
@@ -169,7 +169,7 @@ bar string
 baz int
 spam struct {
 name string
-cnt int
+i, j int
 lines []string
 }
 ham interface {
