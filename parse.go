@@ -220,14 +220,7 @@ func (p *parserSrc) parseType(tok token.Token, lit string) bool {
 }
 
 func (p *parserSrc) storeTypeDecl(tok token.Token, lit string, c *cnt) {
-	switch {
-	case tok == token.LPAREN, tok == token.RPAREN:
-		countParen(&c.paren, tok)
-	case tok == token.LBRACE, tok == token.RBRACE:
-		countBrace(&c.braces, tok)
-	case tok == token.LBRACK, tok == token.RBRACK:
-		countBracket(&c.brackets, tok)
-	}
+	c.countAllBrackets(tok)
 
 	switch {
 	case p.tmpTypeDecl.setTypeID(tok, lit):
@@ -377,9 +370,7 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 		}
 		str := tokenToStr(tok, lit)
 
-		countParen(&p.cnt.paren, tok)
-		countBrace(&p.cnt.braces, tok)
-		countBracket(&p.cnt.brackets, tok)
+		p.cnt.countAllBrackets(tok)
 
 		switch {
 		case p.queue.ignorePkg(tok):
@@ -426,9 +417,7 @@ func (p *parserSrc) validateMainBody() bool {
 			break
 		}
 
-		countParen(&tp.cnt.paren, tok)
-		countBrace(&tp.cnt.braces, tok)
-		countBracket(&tp.cnt.brackets, tok)
+		tp.cnt.countAllBrackets(tok)
 
 		if tp.cnt.paren == 0 && tp.cnt.braces == 0 && tp.cnt.brackets == 0 && tok == token.SEMICOLON {
 			return true
@@ -574,6 +563,12 @@ func countParen(c *int32, tok token.Token) {
 		// ]
 		atomic.AddInt32(c, -1)
 	}
+}
+
+func (c *cnt) countAllBrackets(tok token.Token) {
+	countParen(&c.paren, tok)
+	countBrace(&c.braces, tok)
+	countBracket(&c.brackets, tok)
 }
 
 func (q *queue) ignorePkg(tok token.Token) bool {
