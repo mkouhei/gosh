@@ -111,6 +111,42 @@ type parserSrc struct {
 	posFuncSig int
 }
 
+func countBracket(c *int32, tok token.Token) {
+	if tok == token.LBRACK {
+		// [
+		atomic.AddInt32(c, 1)
+	} else if tok == token.RBRACK {
+		// ]
+		atomic.AddInt32(c, -1)
+	}
+}
+
+func countBrace(c *int32, tok token.Token) {
+	if tok == token.LBRACE {
+		// [
+		atomic.AddInt32(c, 1)
+	} else if tok == token.RBRACE {
+		// ]
+		atomic.AddInt32(c, -1)
+	}
+}
+
+func countParen(c *int32, tok token.Token) {
+	if tok == token.LPAREN {
+		// [
+		atomic.AddInt32(c, 1)
+	} else if tok == token.RPAREN {
+		// ]
+		atomic.AddInt32(c, -1)
+	}
+}
+
+func (c *cnt) countAllBrackets(tok token.Token) {
+	countParen(&c.paren, tok)
+	countBrace(&c.braces, tok)
+	countBracket(&c.brackets, tok)
+}
+
 func (q *queue) push(v tokenLit) {
 	*q = append(*q, v)
 }
@@ -145,6 +181,108 @@ func (q *queue) checkQueueType(tok token.Token) bool {
 		return true
 	}
 	return false
+}
+
+func isOpenedParen(str string) bool {
+	if strings.HasPrefix(str, "(") && !strings.HasSuffix(str, ")") {
+		return true
+	}
+	return false
+}
+
+func rmQuot(lit string) string {
+	re := regexp.MustCompile(`"(.|\S+|[\S/]+)"`)
+	if len(re.FindStringSubmatch(lit)) == 0 {
+		return lit
+	}
+	return re.FindStringSubmatch(lit)[1]
+}
+
+func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
+	var s scanner.Scanner
+	fset := token.NewFileSet()
+	file := fset.AddFile("", fset.Base(), len(bline))
+	s.Init(file, bline, nil, scanner.ScanComments)
+
+	for {
+		_, tok, lit := s.Scan()
+		if tok == token.EOF {
+			break
+		}
+		str := tokenToStr(tok, lit)
+
+		p.cnt.countAllBrackets(tok)
+
+		switch {
+		case p.queue.ignorePkg(tok):
+			// ignore packageClause
+
+		case p.parseImPkg(tok, str, imptQ):
+			// parse import declare
+
+		case p.parseType(tok, str):
+			// parse type
+
+		case p.parseFunc(tok, str):
+			// parse func declare
+
+		default:
+			// omit main
+			p.parseOmit(&p.main, tok, str)
+			if len(p.main) > 0 && p.validateMainBody() {
+				p.mainHist = append(p.mainHist, p.main...)
+				return true
+			}
+		}
+		p.preToken = tok
+
+		if p.posFuncSig == 8 {
+			p.posFuncSig = 0
+			return true
+		}
+
+	}
+
+	return false
+}
+
+func (q *queue) ignorePkg(tok token.Token) bool {
+	switch {
+	case tok == token.PACKAGE:
+		q.push(tokenLit{tok, ""})
+	case q.checkQueueType(token.PACKAGE):
+		q.clear()
+	default:
+		return false
+	}
+	return true
+}
+
+func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpec) bool {
+	switch {
+	case len(p.queue) == 0 && tok == token.IMPORT:
+		p.queue.push(tokenLit{tok, lit})
+	case p.queue.checkQueueType(token.IMPORT):
+		switch {
+		case tok == token.IDENT:
+			p.queue.push(tokenLit{tok, lit})
+		case tok == token.STRING:
+			var s string
+			if p.queue.checkLatestItem(token.IMPORT) {
+				s = ""
+			} else {
+				s = p.queue.pop().lit
+			}
+			p.imPkgs.putPackages(rmQuot(lit), litSemicolon(s), imptQ)
+		case tok == token.SEMICOLON:
+			if p.cnt.paren == 0 {
+				p.queue.clear()
+			}
+		}
+	default:
+		return false
+	}
+	return true
 }
 
 func (s *imPkgs) putPackages(imPath, pkgName string, imptQ chan<- imptSpec) {
@@ -341,65 +479,35 @@ func (t *typeDecl) setInterface(tok token.Token, lit string, c *cnt) bool {
 	return true
 }
 
-func isOpenedParen(str string) bool {
-	if strings.HasPrefix(str, "(") && !strings.HasSuffix(str, ")") {
+func (s *typeDecls) searchTypeDecl(typeID string) int {
+	for i, t := range *s {
+		if t.typeID == typeID {
+			return i
+		}
+	}
+	return -1
+}
+
+func (p *parserSrc) appendTypeDecl() {
+	if i := p.typeDecls.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
+		p.typeDecls[i] = p.tmpTypeDecl
+	} else {
+		p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
+	}
+	p.tmpTypeDecl = typeDecl{}
+}
+
+func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
+	if tok == token.RBRACE && p.cnt.braces == 0 {
 		return true
 	}
 	return false
 }
 
-func isClosedParan(str string) bool {
-	if strings.HasPrefix(str, "(") && strings.HasSuffix(str, ")") {
+func (p *parserSrc) isOutOfParen(tok token.Token) bool {
+	if tok == token.RPAREN && p.cnt.paren == 0 {
 		return true
 	}
-	return false
-}
-
-func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
-	var s scanner.Scanner
-	fset := token.NewFileSet()
-	file := fset.AddFile("", fset.Base(), len(bline))
-	s.Init(file, bline, nil, scanner.ScanComments)
-
-	for {
-		_, tok, lit := s.Scan()
-		if tok == token.EOF {
-			break
-		}
-		str := tokenToStr(tok, lit)
-
-		p.cnt.countAllBrackets(tok)
-
-		switch {
-		case p.queue.ignorePkg(tok):
-			// ignore packageClause
-
-		case p.parseImPkg(tok, str, imptQ):
-			// parse import declare
-
-		case p.parseType(tok, str):
-			// parse type
-
-		case p.parseFunc(tok, str):
-			// parse func declare
-
-		default:
-			// omit main
-			p.parseOmit(&p.main, tok, str)
-			if len(p.main) > 0 && p.validateMainBody() {
-				p.mainHist = append(p.mainHist, p.main...)
-				return true
-			}
-		}
-		p.preToken = tok
-
-		if p.posFuncSig == 8 {
-			p.posFuncSig = 0
-			return true
-		}
-
-	}
-
 	return false
 }
 
@@ -531,99 +639,6 @@ func (p *parserSrc) mergeLines() []string {
 		l = append(l, p.main...)
 	}
 	return append(l, "}")
-}
-
-func countBracket(c *int32, tok token.Token) {
-	if tok == token.LBRACK {
-		// [
-		atomic.AddInt32(c, 1)
-	} else if tok == token.RBRACK {
-		// ]
-		atomic.AddInt32(c, -1)
-	}
-}
-
-func countBrace(c *int32, tok token.Token) {
-	if tok == token.LBRACE {
-		// [
-		atomic.AddInt32(c, 1)
-	} else if tok == token.RBRACE {
-		// ]
-		atomic.AddInt32(c, -1)
-	}
-}
-
-func countParen(c *int32, tok token.Token) {
-	if tok == token.LPAREN {
-		// [
-		atomic.AddInt32(c, 1)
-	} else if tok == token.RPAREN {
-		// ]
-		atomic.AddInt32(c, -1)
-	}
-}
-
-func (c *cnt) countAllBrackets(tok token.Token) {
-	countParen(&c.paren, tok)
-	countBrace(&c.braces, tok)
-	countBracket(&c.brackets, tok)
-}
-
-func (q *queue) ignorePkg(tok token.Token) bool {
-	switch {
-	case tok == token.PACKAGE:
-		q.push(tokenLit{tok, ""})
-	case q.checkQueueType(token.PACKAGE):
-		q.clear()
-	default:
-		return false
-	}
-	return true
-}
-
-func rmQuot(lit string) string {
-	re := regexp.MustCompile(`"(.|\S+|[\S/]+)"`)
-	if len(re.FindStringSubmatch(lit)) == 0 {
-		return lit
-	}
-	return re.FindStringSubmatch(lit)[1]
-}
-
-func (p *parserSrc) parseImPkg(tok token.Token, lit string, imptQ chan<- imptSpec) bool {
-	switch {
-	case len(p.queue) == 0 && tok == token.IMPORT:
-		p.queue.push(tokenLit{tok, lit})
-	case p.queue.checkQueueType(token.IMPORT):
-		switch {
-		case tok == token.IDENT:
-			p.queue.push(tokenLit{tok, lit})
-		case tok == token.STRING:
-			var s string
-			if p.queue.checkLatestItem(token.IMPORT) {
-				s = ""
-			} else {
-				s = p.queue.pop().lit
-			}
-			p.imPkgs.putPackages(rmQuot(lit), litSemicolon(s), imptQ)
-		case tok == token.SEMICOLON:
-			if p.cnt.paren == 0 {
-				p.queue.clear()
-			}
-		}
-	default:
-		return false
-	}
-	return true
-}
-
-func litSemicolon(lit string) string {
-	s := ""
-	if lit == ";" {
-		s = ""
-	} else {
-		s = lit
-	}
-	return s
 }
 
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
@@ -895,24 +910,6 @@ func (s *funcDecls) searchFuncDecl(name string) int {
 	return -1
 }
 
-func (s *typeDecls) searchTypeDecl(typeID string) int {
-	for i, t := range *s {
-		if t.typeID == typeID {
-			return i
-		}
-	}
-	return -1
-}
-
-func (p *parserSrc) appendTypeDecl() {
-	if i := p.typeDecls.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
-		p.typeDecls[i] = p.tmpTypeDecl
-	} else {
-		p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
-	}
-	p.tmpTypeDecl = typeDecl{}
-}
-
 func isSliceRBrack(tok, preToken token.Token) bool {
 	if tok == token.RBRACK && preToken == token.LBRACK {
 		return true
@@ -920,18 +917,21 @@ func isSliceRBrack(tok, preToken token.Token) bool {
 	return false
 }
 
-func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
-	if tok == token.RBRACE && p.cnt.braces == 0 {
+func isClosedParan(str string) bool {
+	if strings.HasPrefix(str, "(") && strings.HasSuffix(str, ")") {
 		return true
 	}
 	return false
 }
 
-func (p *parserSrc) isOutOfParen(tok token.Token) bool {
-	if tok == token.RPAREN && p.cnt.paren == 0 {
-		return true
+func litSemicolon(lit string) string {
+	s := ""
+	if lit == ";" {
+		s = ""
+	} else {
+		s = lit
 	}
-	return false
+	return s
 }
 
 func removePrintStmt(slice *[]string) {
