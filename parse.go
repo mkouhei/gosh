@@ -937,13 +937,6 @@ func (p *parserSrc) isOutOfParen(tok token.Token) bool {
 	return false
 }
 
-func isSliceName(preToken token.Token, tmpStr string) bool {
-	if preToken == token.RBRACK && tmpStr == "[]" {
-		return true
-	}
-	return false
-}
-
 func removePrintStmt(slice *[]string) {
 	s := *slice
 	var r []int
