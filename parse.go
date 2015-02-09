@@ -906,10 +906,7 @@ func (s *typeDecls) searchTypeDecl(typeID string) int {
 
 func (p *parserSrc) appendTypeDecl() {
 	if i := p.typeDecls.searchTypeDecl(p.tmpTypeDecl.typeID); i != -1 {
-		p.typeDecls[i].typeID = p.tmpTypeDecl.typeID
-		p.typeDecls[i].typeName = p.tmpTypeDecl.typeName
-		p.typeDecls[i].fieldDecls = p.tmpTypeDecl.fieldDecls
-		p.typeDecls[i].methSpecs = p.tmpTypeDecl.methSpecs
+		p.typeDecls[i] = p.tmpTypeDecl
 	} else {
 		p.typeDecls = append(p.typeDecls, p.tmpTypeDecl)
 	}
