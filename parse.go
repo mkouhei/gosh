@@ -285,9 +285,7 @@ func (t *typeDecl) setStruct(tok token.Token, lit string, c *cnt) bool {
 	case tok == token.SEMICOLON && c.braces > 0:
 		t.fieldDecls = append(t.fieldDecls, fieldDecl{})
 	case tok == token.RBRACE && c.braces == 0:
-		q := &t.fieldDecls
-		*q = (*q)[0 : len(*q)-1]
-		t.fieldDecls = *q
+		t.fieldDecls = t.fieldDecls[0 : len(t.fieldDecls)-1]
 	default:
 		return false
 	}
