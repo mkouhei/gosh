@@ -113,30 +113,24 @@ type parserSrc struct {
 
 func countBracket(c *int32, tok token.Token) {
 	if tok == token.LBRACK {
-		// [
 		atomic.AddInt32(c, 1)
 	} else if tok == token.RBRACK {
-		// ]
 		atomic.AddInt32(c, -1)
 	}
 }
 
 func countBrace(c *int32, tok token.Token) {
 	if tok == token.LBRACE {
-		// [
 		atomic.AddInt32(c, 1)
 	} else if tok == token.RBRACE {
-		// ]
 		atomic.AddInt32(c, -1)
 	}
 }
 
 func countParen(c *int32, tok token.Token) {
 	if tok == token.LPAREN {
-		// [
 		atomic.AddInt32(c, 1)
 	} else if tok == token.RPAREN {
-		// ]
 		atomic.AddInt32(c, -1)
 	}
 }
