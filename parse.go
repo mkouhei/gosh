@@ -209,17 +209,9 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 
 		switch {
 		case p.queue.ignorePkg(tok):
-			// ignore packageClause
-
 		case p.parseImPkg(tok, str, imptQ):
-			// parse import declare
-
 		case p.parseType(tok, str):
-			// parse type
-
 		case p.parseFunc(tok, str):
-			// parse func declare
-
 		default:
 			// omit main
 			p.parseOmit(&p.main, tok, str)
