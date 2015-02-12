@@ -875,9 +875,7 @@ func (p *parserSrc) funcClosing(tok token.Token) {
 		p.posFuncSig = 8
 	} else if tok != token.IDENT && p.cnt.paren == 0 {
 		if i := p.funcDecls.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
-			p.funcDecls[i].name = p.tmpFuncDecl.name
-			p.funcDecls[i].sig = p.tmpFuncDecl.sig
-			p.funcDecls[i].body = p.tmpFuncDecl.body
+			p.funcDecls[i] = p.tmpFuncDecl
 		} else {
 			p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
 		}
