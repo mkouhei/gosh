@@ -192,6 +192,14 @@ func rmQuot(lit string) string {
 	return re.FindStringSubmatch(lit)[1]
 }
 
+func rmParen(lit string) string {
+	str := lit
+	if isClosedParen(lit) {
+		str = lit[1 : len(lit)-1]
+	}
+	return str
+}
+
 func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 	var s scanner.Scanner
 	fset := token.NewFileSet()
@@ -440,10 +448,8 @@ func (t *typeDecl) setInterface(tok token.Token, lit string, c *cnt) bool {
 			e.sig.params += lit
 		}
 	case isClosedParen(e.sig.params) && tok == token.SEMICOLON:
-		e.sig.params = e.sig.params[1 : len(e.sig.params)-1]
-		if isClosedParen(e.sig.result) {
-			e.sig.result = e.sig.result[1 : len(e.sig.result)-1]
-		}
+		e.sig.params = rmParen(e.sig.params)
+		e.sig.result = rmParen(e.sig.result)
 		t.methSpecs[n-1] = *e
 		e = &methSpec{}
 		t.methSpecs = append(t.methSpecs, *e)
