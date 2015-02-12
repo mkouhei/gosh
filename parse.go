@@ -439,15 +439,15 @@ func (t *typeDecl) setInterface(tok token.Token, lit string, c *cnt) bool {
 		} else {
 			e.sig.params += lit
 		}
-	case isClosedParan(e.sig.params) && tok == token.SEMICOLON:
+	case isClosedParen(e.sig.params) && tok == token.SEMICOLON:
 		e.sig.params = e.sig.params[1 : len(e.sig.params)-1]
-		if isClosedParan(e.sig.result) {
+		if isClosedParen(e.sig.result) {
 			e.sig.result = e.sig.result[1 : len(e.sig.result)-1]
 		}
 		t.methSpecs[n-1] = *e
 		e = &methSpec{}
 		t.methSpecs = append(t.methSpecs, *e)
-	case isClosedParan(e.sig.params) && e.sig.result == "":
+	case isClosedParen(e.sig.params) && e.sig.result == "":
 		e.sig.result += lit
 	case isOpenedParen(e.sig.result):
 		if tok == token.COMMA {
@@ -903,7 +903,7 @@ func isSliceRBrack(tok, preToken token.Token) bool {
 	return false
 }
 
-func isClosedParan(str string) bool {
+func isClosedParen(str string) bool {
 	if strings.HasPrefix(str, "(") && strings.HasSuffix(str, ")") {
 		return true
 	}
