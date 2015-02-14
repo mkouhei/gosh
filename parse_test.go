@@ -387,7 +387,7 @@ func TestParseLine(t *testing.T) {
 	p := parserSrc{}
 	imptQ := make(chan imptSpec, 10)
 
-	lines := strings.Split(src, "\n")
+	lines := strings.SplitAfter(src, "\n")
 
 	import1 := []imptSpec{
 		imptSpec{"fmt", ""},

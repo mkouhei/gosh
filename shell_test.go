@@ -63,7 +63,7 @@ func TestWrite(t *testing.T) {
 	e := newEnv(false)
 	imptCh := make(chan bool)
 	imptQ := make(chan imptSpec, 10)
-	for _, l := range strings.Split(testSrc, "\n") {
+	for _, l := range strings.SplitAfter(testSrc, "\n") {
 		e.parserSrc.parseLine([]byte(l), imptQ)
 	}
 	e.write(imptCh)
