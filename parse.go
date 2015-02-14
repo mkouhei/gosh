@@ -98,17 +98,6 @@ type parserSrc struct {
 	tmpTypeDecl typeDecl
 
 	queue queue
-
-	// 0: nofunc
-	// 1: recvID
-	// 2: baseTypeName
-	// 3: name
-	// 4: params
-	// 5: result
-	// 6: body
-	// 7: close
-	// 8: close main
-	posFuncSig int
 }
 
 func countBracket(c *int32, tok token.Token) {
@@ -230,11 +219,10 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 		}
 		p.preToken = tok
 
-		if p.posFuncSig == 8 {
-			p.posFuncSig = 0
+		if p.mainFlag {
+			p.mainFlag = false
 			return true
 		}
-
 	}
 
 	return false
@@ -416,7 +404,7 @@ func (t *typeDecl) setStruct(tok token.Token, lit string, c *cnt) bool {
 		e.fieldType = lit
 	case tok == token.SEMICOLON && c.braces > 0:
 		t.fieldDecls = append(t.fieldDecls, fieldDecl{})
-	case tok == token.RBRACE && c.braces == 0:
+	case c.isOutOfBrace(tok):
 		t.fieldDecls = t.fieldDecls[0 : len(t.fieldDecls)-1]
 	default:
 		return false
@@ -461,7 +449,7 @@ func (t *typeDecl) setInterface(tok token.Token, lit string, c *cnt) bool {
 		} else {
 			e.sig.result += lit
 		}
-	case tok == token.RBRACE && c.braces == 0:
+	case c.isOutOfBrace(tok):
 		q := &t.methSpecs
 		*q = (*q)[0 : len(*q)-1]
 		t.methSpecs = *q
@@ -489,8 +477,8 @@ func (p *parserSrc) appendTypeDecl() {
 	p.tmpTypeDecl = typeDecl{}
 }
 
-func (p *parserSrc) isOutOfBrace(tok token.Token) bool {
-	if tok == token.RBRACE && p.cnt.braces == 0 {
+func (c *cnt) isOutOfBrace(tok token.Token) bool {
+	if tok == token.RBRACE && c.braces == 0 {
 		return true
 	}
 	return false
@@ -501,6 +489,187 @@ func (p *parserSrc) isOutOfParen(tok token.Token) bool {
 		return true
 	}
 	return false
+}
+
+func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
+	switch {
+	case len(p.queue) == 0 && tok == token.FUNC:
+		p.queue.push(tokenLit{tok, lit})
+	case p.queue.checkQueueType(token.FUNC):
+		p.queue.push(tokenLit{tok, lit})
+		if tok == token.SEMICOLON && p.cnt.paren == 0 && p.cnt.braces == 0 {
+			c := cnt{}
+			pt := tokenLit{}
+			for len(p.queue) > 0 {
+				t := p.queue.dequeue()
+				p.storeFuncDecl(t.tok, t.lit, &c, &pt)
+
+			}
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func (p *parserSrc) appendFuncDecl() {
+	p.tmpFuncDecl.sig.params = rmParen(p.tmpFuncDecl.sig.params)
+	p.tmpFuncDecl.sig.result = rmParen(p.tmpFuncDecl.sig.result)
+	removeEmptyLine(&p.tmpFuncDecl.body)
+	if p.tmpFuncDecl.name == "main" {
+		p.main = p.tmpFuncDecl.body
+		p.mainFlag = true
+	} else if i := p.funcDecls.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
+		p.funcDecls[i] = p.tmpFuncDecl
+	} else {
+		p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
+	}
+	p.tmpFuncDecl = funcDecl{}
+}
+
+func (p *parserSrc) storeFuncDecl(tok token.Token, lit string, c *cnt, pt *tokenLit) {
+	c.countAllBrackets(tok)
+
+	switch {
+	case p.tmpFuncDecl.setFuncRecv(tok, lit, c):
+	case p.tmpFuncDecl.setFuncName(tok, lit, c):
+	case p.tmpFuncDecl.setFuncParams(tok, lit, c):
+	case p.tmpFuncDecl.setFuncResult(tok, lit, c):
+	case p.setFuncBody(tok, lit, c, pt):
+	}
+}
+
+func (f *funcDecl) setFuncRecv(tok token.Token, lit string, c *cnt) bool {
+	switch {
+	case f.name != "", c.paren == 0, c.braces != 0:
+		return false
+	}
+
+	switch {
+	case f.sig.recvID == "" && tok == token.LPAREN, f.sig.baseTypeName != "" && tok == token.RPAREN:
+	case f.sig.recvID == "":
+		f.sig.recvID = lit
+	case f.sig.recvID != "" && f.sig.baseTypeName == "":
+		f.sig.baseTypeName = lit
+	case f.sig.baseTypeName == "[", f.sig.baseTypeName == "[]", f.sig.baseTypeName == "*":
+		f.sig.baseTypeName += lit
+	default:
+		return false
+	}
+	return true
+}
+
+func (f *funcDecl) setFuncName(tok token.Token, lit string, c *cnt) bool {
+	if f.name != "" || c.paren != 0 || c.braces != 0 || tok == token.LPAREN || tok == token.RPAREN {
+		return false
+	}
+	if tok == token.IDENT {
+		f.name = lit
+		return true
+	}
+	return false
+}
+
+func (f *funcDecl) setFuncParams(tok token.Token, lit string, c *cnt) bool {
+	switch {
+	case f.name == "":
+		return false
+	}
+	switch {
+	case f.sig.params == "" && tok == token.LPAREN:
+		f.sig.params = lit
+	case f.sig.params == "(" && tok == token.RPAREN:
+		f.sig.params += lit
+	case isOpenedParen(f.sig.params):
+		switch {
+		case tok == token.MUL, tok == token.LBRACK, tok == token.RBRACK:
+			f.sig.params += lit
+		case tok == token.COMMA:
+			f.sig.params = f.sig.params[:len(f.sig.params)-1] + lit + " "
+		case tok == token.RPAREN:
+			f.sig.params = f.sig.params[:len(f.sig.params)-1] + lit
+		default:
+			f.sig.params += lit + " "
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func (f *funcDecl) setFuncResult(tok token.Token, lit string, c *cnt) bool {
+	if f.sig.params == "" {
+		return false
+	}
+	if tok == token.LBRACE {
+		if isOpenedParen(f.sig.result) {
+			f.sig.result += ")"
+		} else if f.sig.result == "" {
+			f.sig.result = "()"
+		}
+		return false
+	}
+	if isOpenedParen(f.sig.params) && isClosedParen(f.sig.result) {
+		return false
+	}
+	switch {
+	case tok == token.LPAREN:
+	case tok == token.RPAREN:
+	case tok == token.IDENT:
+	case tok == token.COMMA:
+	case tok == token.LBRACK:
+	case tok == token.RBRACK:
+	case tok == token.MUL:
+	case tok == token.PERIOD:
+	default:
+		return false
+	}
+	switch {
+	case f.sig.result == "":
+		if tok != token.LPAREN {
+			f.sig.result = "("
+		}
+		f.sig.result += lit
+	case isOpenedParen(f.sig.result):
+		if tok == token.COMMA {
+			f.sig.result += lit + " "
+		} else {
+			f.sig.result += lit
+		}
+	default:
+		return false
+	}
+	return true
+}
+
+func (p *parserSrc) setFuncBody(tok token.Token, lit string, c *cnt, pt *tokenLit) bool {
+	if p.tmpFuncDecl.sig.result == "" {
+		return false
+	}
+	switch {
+	case c.paren == 0 && c.isOutOfBrace(tok):
+		p.appendFuncDecl()
+	case tok == token.SEMICOLON:
+		p.tmpFuncDecl.body = append(p.tmpFuncDecl.body, "")
+	case len(p.tmpFuncDecl.body) == 0 && tok == token.LBRACE:
+		p.tmpFuncDecl.body = append(p.tmpFuncDecl.body, "")
+	case hasLineFeedAfter(tok), pt.tok == token.RPAREN && tok == token.LBRACE:
+		p.tmpFuncDecl.body[len(p.tmpFuncDecl.body)-1] += lit
+		p.tmpFuncDecl.body = append(p.tmpFuncDecl.body, "")
+	case hasLineFeedBefore(tok):
+		p.tmpFuncDecl.body = append(p.tmpFuncDecl.body, "")
+		p.tmpFuncDecl.body[len(p.tmpFuncDecl.body)-1] += lit
+	case hasSpaceBefore(pt.tok) && hasSpaceBefore(tok):
+		p.tmpFuncDecl.body[len(p.tmpFuncDecl.body)-1] += " " + lit
+	case hasSpaceAfter(tok):
+		p.tmpFuncDecl.body[len(p.tmpFuncDecl.body)-1] += lit + " "
+	default:
+		p.tmpFuncDecl.body[len(p.tmpFuncDecl.body)-1] += lit
+		*pt = tokenLit{tok, lit}
+		return false
+	}
+	*pt = tokenLit{tok, lit}
+	return true
 }
 
 func (p *parserSrc) validateMainBody() bool {
@@ -633,194 +802,6 @@ func (p *parserSrc) mergeLines() []string {
 	return append(l, "}")
 }
 
-func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
-	switch {
-	case p.posFuncSig == 0 && tok == token.FUNC:
-		p.posFuncSig = 1
-		p.preLit = ""
-
-	case p.posFuncSig == 1 && p.cnt.paren > 0:
-		// recvID
-		// func (ri rt) fname(pi pt) (res)
-		//       ~~
-		if tok == token.IDENT {
-			p.tmpFuncDecl.sig.recvID = lit
-			p.posFuncSig = 2
-		}
-	case p.posFuncSig == 2:
-		// baseTypeName
-		p.parseFuncBaseTypeName(tok, lit)
-
-	case p.posFuncSig == 3, p.posFuncSig == 1 && p.cnt.paren == 0:
-		// funcName
-		p.parseFuncName(tok, lit)
-
-	case p.posFuncSig == 4:
-		// params
-		p.parseFuncParams(tok, lit)
-
-	case p.posFuncSig == 5:
-		// result
-		p.parseFuncResult(tok, lit)
-
-	case p.posFuncSig == 6:
-		// body
-		if p.mainFlag {
-			p.parseFuncBody(&p.main, tok, lit)
-		} else {
-			p.parseFuncBody(&p.tmpFuncDecl.body, tok, lit)
-		}
-
-	case p.posFuncSig == 7:
-		// closing
-		p.funcClosing(tok)
-
-	default:
-		return false
-	}
-	p.preToken = tok
-	return true
-}
-
-func (p *parserSrc) parseFuncBaseTypeName(tok token.Token, lit string) {
-	if p.cnt.paren > 0 && p.tmpFuncDecl.sig.recvID != "" {
-		switch {
-		case tok == token.MUL:
-			// func (ri *rt) fname(pi pt) (res)
-			//          ~
-			p.tmpFuncDecl.sig.baseTypeName = lit
-		case tok == token.IDENT:
-			// func (ri rt) fname(pi pt) (res)
-			//          ~~
-			switch {
-			case p.preToken == token.MUL && p.tmpFuncDecl.sig.baseTypeName == "*":
-				// func (ri *rt) fname(pi pt) (res)
-				//           ~~
-				p.tmpFuncDecl.sig.baseTypeName += lit
-			default:
-				// func (ri rt) fname(pi pt) (res)
-				//          ~~
-				p.tmpFuncDecl.sig.baseTypeName = lit
-			}
-			p.posFuncSig = 3
-		}
-	}
-
-}
-
-func (p *parserSrc) parseFuncName(tok token.Token, lit string) {
-	if p.cnt.paren == 0 && tok == token.IDENT && p.tmpFuncDecl.name == "" {
-		// func (ri rt) fname(pi pt) (res)
-		//              ~~~~~
-		if lit == "main" {
-			p.mainFlag = true
-			p.mainHist = nil
-		} else {
-			p.tmpFuncDecl.name = lit
-			p.funcName = lit
-		}
-		p.posFuncSig = 4
-	}
-}
-
-func (p *parserSrc) parseFuncParams(tok token.Token, lit string) {
-	switch {
-	case p.parseFuncParamsIdent(tok, lit):
-
-	case tok == token.MUL, tok == token.LBRACK:
-		if p.tmpFuncDecl.sig.params != "" {
-			// func (ri rt) fname(pi *pt) (res)
-			//                       ~
-			// func (ri rt) fname(pi []pt) (res)
-			//                       ~
-			p.tmpFuncDecl.sig.params += " " + lit
-
-		}
-	case isSliceRBrack(tok, p.preToken):
-		// func (ri rt) fname(pi []pt) (res)
-		//                        ~
-		if p.tmpFuncDecl.sig.params != "" {
-			p.tmpFuncDecl.sig.params += lit
-		}
-	case p.isOutOfParen(tok):
-		p.posFuncSig = 5
-	case p.mainFlag && tok == token.RPAREN:
-		p.posFuncSig = 6
-	}
-}
-
-func (p *parserSrc) parseFuncParamsIdent(tok token.Token, lit string) bool {
-	if tok != token.IDENT {
-		return false
-	}
-
-	switch {
-	case p.tmpFuncDecl.sig.params == "":
-		// func (ri rt) fname(pi pt) (res)
-		//                    ~~
-		p.tmpFuncDecl.sig.params = lit
-	case p.preToken == token.COMMA:
-		// func (ri rt) fname(pi pt, pi pt) (res)
-		//                           ~~
-		p.tmpFuncDecl.sig.params += ", " + lit
-	case p.preToken == token.MUL, p.preToken == token.RBRACK:
-		// func (ri rt) fname(pi *pt) (res)
-		//                        ~
-		// func (ri rt) fname(pi []pt) (res)
-		//                         ~
-		p.tmpFuncDecl.sig.params += lit
-	default:
-		// func (ri rt) fname(pi pt) (res)
-		//                       ~~
-		p.tmpFuncDecl.sig.params += " " + lit
-	}
-	return true
-}
-
-func (p *parserSrc) parseFuncResult(tok token.Token, lit string) {
-	switch {
-	case tok == token.IDENT:
-		p.parseFuncResutlType(lit)
-	case tok == token.MUL, tok == token.LBRACK:
-		p.parseFuncResultPointer(lit)
-	case isSliceRBrack(tok, p.preToken), tok == token.PERIOD:
-		if p.tmpFuncDecl.sig.result != "" {
-			p.tmpFuncDecl.sig.result += lit
-		}
-	case p.isOutOfParen(tok), p.cnt.paren == 0 && tok == token.LBRACE:
-		p.posFuncSig = 6
-	}
-}
-
-func (p *parserSrc) parseFuncResutlType(lit string) {
-	switch {
-	case p.preToken == token.RPAREN:
-		// func (ri rt) fname(pi pt) res
-		//                           ~~~
-		p.tmpFuncDecl.sig.result = lit
-		p.posFuncSig = 6
-	case p.preToken == token.LPAREN:
-		// func (ri rt) fname(pi pt) (res, res)
-		//                            ~~~
-		p.tmpFuncDecl.sig.result = lit
-	case p.preToken == token.PERIOD, p.preToken == token.MUL, strings.HasSuffix(p.tmpFuncDecl.sig.result, "[]"):
-		p.tmpFuncDecl.sig.result += lit
-	case p.tmpFuncDecl.sig.result != "":
-		p.tmpFuncDecl.sig.result += ", " + lit
-	}
-}
-
-func (p *parserSrc) parseFuncResultPointer(lit string) {
-	switch {
-	case p.preToken == token.RPAREN, p.preToken == token.LPAREN:
-		// func (ri rt) fname(pi pt) *res | func (ri rt) fname(pi pt) (*res, res)
-		//                           ~                                  ~~~
-		p.tmpFuncDecl.sig.result = lit
-	case p.tmpFuncDecl.sig.result != "":
-		p.tmpFuncDecl.sig.result += ", " + lit
-	}
-}
-
 func (p *parserSrc) parseOmit(body *[]string, tok token.Token, lit string) {
 	b := *body
 	switch {
@@ -848,49 +829,6 @@ func (p *parserSrc) parseOmit(body *[]string, tok token.Token, lit string) {
 	*body = b
 }
 
-func (p *parserSrc) parseFuncBody(body *[]string, tok token.Token, lit string) {
-	b := *body
-	switch {
-	case tok == token.SEMICOLON:
-		b = append(b, p.preLit)
-		p.preLit = ""
-	case tok == token.LBRACE && p.cnt.braces == 1:
-	case p.isOutOfBrace(tok):
-		p.posFuncSig = 7
-	case p.preLit == "":
-		p.preLit = lit
-	case hasLineFeedAfter(tok), p.preToken == token.RPAREN && tok == token.LBRACE:
-		p.preLit += lit
-		b = append(b, p.preLit)
-		p.preLit = ""
-	case hasLineFeedBefore(tok):
-		b = append(b, p.preLit)
-		p.preLit = lit
-	case hasSpaceBefore(p.preToken) && hasSpaceBefore(tok):
-		p.preLit += " " + lit
-	case hasSpaceAfter(tok):
-		p.preLit += lit + " "
-	default:
-		p.preLit += lit
-	}
-	*body = b
-}
-
-func (p *parserSrc) funcClosing(tok token.Token) {
-	if p.mainFlag == true {
-		p.posFuncSig = 8
-	} else if tok != token.IDENT && p.cnt.paren == 0 {
-		if i := p.funcDecls.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
-			p.funcDecls[i] = p.tmpFuncDecl
-		} else {
-			p.funcDecls = append(p.funcDecls, p.tmpFuncDecl)
-		}
-		p.tmpFuncDecl = funcDecl{}
-		p.posFuncSig = 0
-	}
-	p.mainFlag = false
-}
-
 func (s *funcDecls) searchFuncDecl(name string) int {
 	for i, fnc := range *s {
 		if fnc.name == name {
@@ -898,13 +836,6 @@ func (s *funcDecls) searchFuncDecl(name string) int {
 		}
 	}
 	return -1
-}
-
-func isSliceRBrack(tok, preToken token.Token) bool {
-	if tok == token.RBRACK && preToken == token.LBRACK {
-		return true
-	}
-	return false
 }
 
 func isClosedParen(str string) bool {
@@ -922,6 +853,20 @@ func litSemicolon(lit string) string {
 		s = lit
 	}
 	return s
+}
+
+func removeEmptyLine(sline *[]string) {
+	s := *sline
+	var r []int
+	for i, item := range s {
+		if item == "" {
+			r = append(r, i)
+		}
+	}
+	for i := len(r) - 1; i >= 0; i-- {
+		s = append(s[:r[i]], s[r[i]+1:]...)
+	}
+	*sline = s
 }
 
 func removePrintStmt(slice *[]string) {
