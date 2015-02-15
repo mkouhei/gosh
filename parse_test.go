@@ -300,9 +300,10 @@ func TestParseImportFail(t *testing.T) {
 	imptQ := make(chan imptSpec, 1)
 	consumeChan(imptQ)
 
-	lines := []string{"import fmt"}
+	s := `import fmt
+`
 
-	for _, l := range lines {
+	for _, l := range strings.SplitAfter(s, "\n") {
 		p.parseLine([]byte(l), imptQ)
 	}
 
@@ -315,15 +316,13 @@ func TestParseMultipleImport(t *testing.T) {
 	p := parserSrc{}
 	imptQ := make(chan imptSpec, 4)
 
-	lines := []string{`import "fmt"`,
-		`import "io"`,
-		`import (`,
-		`str "strings"`,
-		`"os"`,
-		`)`,
-	}
+	s := `import "fmt"
+import (
+str "strings"
+"os"
+)`
 
-	for _, l := range lines {
+	for _, l := range strings.SplitAfter(s, "\n") {
 		p.parseLine([]byte(l), imptQ)
 	}
 
@@ -341,14 +340,14 @@ func TestParseDuplicateImport(t *testing.T) {
 	p := parserSrc{}
 	imptQ := make(chan imptSpec, 2)
 
-	lines := []string{`import "fmt"`,
-		`import "bytes"`,
-		`import "fmt"`,
-		`import "bytes"`,
-		`import "fmt"`,
-	}
+	s := `import "fmt"
+import "bytes"
+import "fmt"
+import "bytes"
+import "fmt"
+`
 
-	for _, l := range lines {
+	for _, l := range strings.SplitAfter(s, "\n") {
 		p.parseLine([]byte(l), imptQ)
 	}
 	el := []imptSpec{
