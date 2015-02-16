@@ -18,8 +18,8 @@ package main
 */
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -29,7 +29,7 @@ func TestNewEnv(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if e.tmpPath != fmt.Sprintf("%s/%s", e.bldDir, tmpname) {
+	if e.tmpPath != filepath.Join(e.bldDir, tmpname) {
 		t.Fatal("error initialize")
 	}
 	if e.goPath != e.bldDir {

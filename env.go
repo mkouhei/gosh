@@ -18,8 +18,8 @@ package main
 */
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
 )
 
 type env struct {
@@ -36,7 +36,7 @@ func newEnv(debug bool) env {
 	// New shell environment
 	e := env{}
 	e.bldDir = bldDir()
-	e.tmpPath = fmt.Sprintf("%s/%s", e.bldDir, tmpname)
+	e.tmpPath = filepath.Join(e.bldDir, tmpname)
 	e.goPath = e.bldDir
 	e.debug = debug
 	e.parserSrc = parserSrc{}
