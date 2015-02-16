@@ -519,6 +519,7 @@ func (p *parserSrc) appendFuncDecl() {
 	if p.tmpFuncDecl.name == "main" {
 		p.main = p.tmpFuncDecl.body
 		p.mainFlag = true
+		p.mainHist = nil
 	} else if i := p.funcDecls.searchFuncDecl(p.tmpFuncDecl.name); i != -1 {
 		p.funcDecls[i] = p.tmpFuncDecl
 	} else {
