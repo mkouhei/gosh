@@ -47,15 +47,39 @@ Install the follow packages
 * golang
 * golang-go.tools
 
+Set ``GOPATH`` and ``PATH``,::
 
-In the case using Golang not-distribution package,
-execute next command.::
+  $ install -d /path/to/gopath
+  $ export GOPATH=/path/to/gopath
+  $ export PATH=${GOPATH}/bin:$PATH
 
-  $ go get code.google.com/p/go.tools/cmd/goimports
-
-Set ``GOPATH``, and execute follows.::
+Install ``Gosh`` to ``GOPATH``.
 
   $ go get github.com/mkouhei/gosh
+
+
+OS X
+~~~~
+
+Install the follow packages with `Homebrew <http://brew.sh/>`_.
+
+* Go
+* Mercurial (with Homebrew)
+
+Set ``GOPATH`` and ``PATH``,::
+
+  $ install -d /path/to/gopath
+  $ export GOPATH=/path/to/gopath
+  $ export PATH=${GOPATH}/bin:$PATH
+
+Install the ``goimport``,::
+
+  $ go get code.google.com/p/go.tools/cmd/goimport
+
+Install the ``Gosh``,::
+
+  $ go get github.com/mkouhei/gosh
+
   
 Basic usage
 -----------
