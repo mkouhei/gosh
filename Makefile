@@ -61,7 +61,6 @@ clean:
 	@rm -f _build/$(BIN)
 
 format:
-	go get code.google.com/p/go.tools/cmd/goimports
 	for src in $(SRC); do \
 		gofmt -w $$src ;\
 		goimports -w $$src; \
@@ -69,7 +68,10 @@ format:
 
 
 test: prebuild
+	go get -u code.google.com/p/go.tools/cmd/goimports
 	go get -u github.com/golang/lint/golint
+	go get -u golang.org/x/tools/cmd/vet
+	go get -u golang.org/x/tools/cmd/cover
 	golint
 	go vet
 	go test -v -covermode=count -coverprofile=c.out $(GOPKG)
