@@ -484,13 +484,6 @@ func (c *cnt) isOutOfBrace(tok token.Token) bool {
 	return false
 }
 
-func (p *parserSrc) isOutOfParen(tok token.Token) bool {
-	if tok == token.RPAREN && p.cnt.paren == 0 {
-		return true
-	}
-	return false
-}
-
 func (p *parserSrc) parseFunc(tok token.Token, lit string) bool {
 	switch {
 	case len(p.queue) == 0 && tok == token.FUNC:
