@@ -435,7 +435,7 @@ func TestParseLine(t *testing.T) {
 func TestOmit(t *testing.T) {
 	p := parserSrc{}
 	imptQ := make(chan imptSpec, 1)
-	lines := strings.Split(mainOmit, "\n")
+	lines := strings.SplitAfter(mainOmit, "\n")
 
 	for _, l := range lines {
 		p.parseLine([]byte(l), imptQ)
