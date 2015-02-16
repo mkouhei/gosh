@@ -25,6 +25,8 @@ export GOPATH
 PATH := $(CURDIR)/_build/bin:$(PATH)
 export PATH
 
+# "FLAGS=" when no update package
+FLAGS := -u
 
 all: precheck clean test format build
 
@@ -68,10 +70,10 @@ format:
 
 
 test: prebuild
-	go get -u code.google.com/p/go.tools/cmd/goimports
-	go get -u github.com/golang/lint/golint
-	go get -u golang.org/x/tools/cmd/vet
-	go get -u golang.org/x/tools/cmd/cover
+	go get $(FLAGS) code.google.com/p/go.tools/cmd/goimports
+	go get $(FLAGS) github.com/golang/lint/golint
+	go get $(FLAGS) golang.org/x/tools/cmd/vet
+	go get $(FLAGS) golang.org/x/tools/cmd/cover
 	golint
 	go vet
 	go test -v -covermode=count -coverprofile=c.out $(GOPKG)
