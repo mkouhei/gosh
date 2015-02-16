@@ -69,7 +69,7 @@ format:
 
 
 test: prebuild
-	go get github.com/golang/lint/golint
+	go get -u github.com/golang/lint/golint
 	golint
 	go vet
 	go test -v -covermode=count -coverprofile=c.out $(GOPKG)
