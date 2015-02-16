@@ -174,11 +174,12 @@ func isOpenedParen(str string) bool {
 }
 
 func rmQuot(lit string) string {
+	s := lit
 	re := regexp.MustCompile(`"(.|\S+|[\S/]+)"`)
-	if len(re.FindStringSubmatch(lit)) == 0 {
-		return lit
+	if len(re.FindStringSubmatch(lit)) != 0 {
+		s = re.FindStringSubmatch(lit)[1]
 	}
-	return re.FindStringSubmatch(lit)[1]
+	return s
 }
 
 func rmParen(lit string) string {
