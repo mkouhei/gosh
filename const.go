@@ -18,8 +18,10 @@ package main
 */
 
 const (
+	// release version
+	version = "0.2.3"
+
 	prefix  = "gosh-"
 	tmpname = "gosh_tmp.go"
 	dirPerm = 0755
-	version = "0.2.3"
 )
