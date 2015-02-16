@@ -23,7 +23,7 @@ import (
 )
 
 var goVer string
-var version string
+var ver string
 var showVersion = flag.Bool("version", false, "showVersion")
 
 var license = `Gosh %s
@@ -36,7 +36,7 @@ There is NO WARRANTY, to the extent permitted by law.
 func run(d bool) {
 	e := newEnv(d)
 	fmt.Println(goVersion(goVer))
-	fmt.Printf(license, version)
+	fmt.Printf(license, ver)
 	e.shell(nil)
 }
 
@@ -47,8 +47,11 @@ func main() {
 	if *c {
 		cleanDirs()
 	}
+	if ver == "" {
+		ver = version
+	}
 	if *showVersion {
-		fmt.Printf("version: %s\n", version)
+		fmt.Printf("version: %s\n", ver)
 		return
 	}
 	run(*d)

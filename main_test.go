@@ -27,13 +27,13 @@ func Example_MainVersion() {
 	os.Args = append(os.Args, "-c")
 	main()
 	// Output:
-	// version:
+	// version: 0.2.3
 	time.Sleep(time.Microsecond)
 }
 
 func Example_Run() {
 	goVer = "go version goX.X.X\n"
-	version = "x.x.x"
+	ver = "x.x.x"
 	run(false)
 	// Output:
 	// go version goX.X.X

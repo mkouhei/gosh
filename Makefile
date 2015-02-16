@@ -42,10 +42,10 @@ prebuild:
 
 
 build: prebuild
-	go build -ldflags "-X main.version $(shell git describe --always)" -o _build/$(BIN)
+	go build -ldflags "-X main.ver $(shell git describe --always)" -o _build/$(BIN)
 
 build-only:
-	go build -ldflags "-X main.version $(shell git describe --always)" -o _build/$(BIN)
+	go build -ldflags "-X main.ver $(shell git describe --always)" -o _build/$(BIN)
 
 prebuild-docs:
 	virtualenv _build/venv
