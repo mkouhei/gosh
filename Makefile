@@ -75,7 +75,7 @@ test: prebuild
 	go get $(FLAGS) github.com/golang/lint/golint
 	go get $(FLAGS) golang.org/x/tools/cmd/vet
 	go get $(FLAGS) golang.org/x/tools/cmd/cover
-	golint
+	_build/bin/golint
 	go vet
 	go test -v -covermode=count -coverprofile=c.out $(GOPKG)
 	go tool cover $(FUNC)=c.out
