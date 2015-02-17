@@ -89,11 +89,7 @@ type parserSrc struct {
 	main      []string
 	mainHist  []string
 
-	funcName    string
-	tFlag       bool
 	mainFlag    bool
-	preToken    token.Token
-	preLit      string
 	tmpFuncDecl funcDecl
 	tmpTypeDecl typeDecl
 
@@ -220,7 +216,6 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 				return true
 			}
 		}
-		p.preToken = tok
 
 		if p.mainFlag {
 			p.mainFlag = false
