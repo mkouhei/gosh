@@ -18,8 +18,11 @@ package main
 */
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 type env struct {
@@ -30,6 +33,35 @@ type env struct {
 
 	parserSrc parserSrc
 	readFlag  int32
+}
+
+func (e *env) chkDeps() {
+	if _, err := exec.LookPath("goimports"); err != nil {
+		imptQ := make(chan imptSpec, 1)
+		e.goGet(imptQ)
+		imptQ <- imptSpec{goimports, "goimports"}
+		os.Setenv("PATH", fmt.Sprintf("%s:%s", filepath.Join(e.bldDir, "bin"), os.Getenv("PATH")))
+		checkInst()
+	}
+}
+
+func checkInst() {
+	var d time.Duration
+	d = 2
+	for true {
+		if _, err := exec.LookPath("goimports"); err != nil {
+			if d == 2 {
+				fmt.Printf(`Pleese wait for installing "goimports".`)
+			} else {
+				fmt.Printf(".")
+			}
+			time.Sleep(time.Second * d)
+			d++
+		} else {
+			fmt.Println()
+			break
+		}
+	}
 }
 
 func newEnv(debug bool) env {

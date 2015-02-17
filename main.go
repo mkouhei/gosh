@@ -35,6 +35,7 @@ There is NO WARRANTY, to the extent permitted by law.
 
 func run(d bool) {
 	e := newEnv(d)
+	e.chkDeps()
 	fmt.Println(goVersion(goVer))
 	fmt.Printf(license, ver)
 	e.shell(nil)
