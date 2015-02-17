@@ -48,7 +48,7 @@ func Example_CheckInst() {
 	p := os.Getenv("PATH")
 	os.Setenv("PATH", "")
 	go checkInst()
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 	d := bldDir()
 	t := filepath.Join(d, "goimports")
 	f, _ := os.OpenFile(t, os.O_CREATE, 0600)
@@ -57,5 +57,5 @@ func Example_CheckInst() {
 	f.Close()
 	os.Setenv("PATH", p)
 	// Output:
-	// Pleese wait for installing "goimports"..
+	// Pleese wait for installing "goimports".
 }
