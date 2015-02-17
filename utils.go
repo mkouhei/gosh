@@ -47,7 +47,9 @@ func cleanDir(targetDir string) error {
 
 func cleanDirs() {
 	// cleanup all build directories
-	lists, _ := filepath.Glob(fmt.Sprintf("/tmp/%s*", prefix))
+	f, _ := ioutil.TempDir("", prefix)
+	os.Chdir(filepath.Dir(f))
+	lists, _ := filepath.Glob(fmt.Sprintf("%s*", prefix))
 	for _, l := range lists {
 		cleanDir(l)
 	}
