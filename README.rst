@@ -36,6 +36,11 @@ Requirements
 * Golang >= 1.2
 * `goimports <http://godoc.org/code.google.com/p/go.tools/cmd/goimports>`_ command
 
+  * We recommend that you install ``goimports`` to ``$PATH`` in advance.
+  * Installing automatically if the command is not found in ``$PATH`` (>= v0.3.0).
+  * However, the time until the installation is complete in this case,
+    you will be waiting for the launch of "``Gosh``" process.
+
 Installation
 ------------
 
@@ -45,15 +50,18 @@ Debian
 Install the follow packages
 
 * golang
-* golang-go.tools
+* golang-go.tools (optional, but recommended)
 
-Set ``GOPATH`` and ``PATH``,::
+Set ``GOPATH``::
 
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
-  $ export PATH=${GOPATH}/bin:$PATH
 
-Install ``Gosh`` to ``GOPATH``.
+If you install ``goimports`` in advance (optional, but recommended),::
+
+  $ sudo apt-get install -y golang-go.tools
+
+Install ``Gosh`` to ``GOPATH``.::
 
   $ go get github.com/mkouhei/gosh
 
@@ -66,14 +74,14 @@ Install the follow packages with `Homebrew <http://brew.sh/>`_.
 * Go
 * Mercurial (with Homebrew)
 
-Set ``GOPATH`` and ``PATH``,::
+Set ``GOPATH``,::
 
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
+
+If you install ``goimports`` in advance (optional, but recommend),::
+
   $ export PATH=${GOPATH}/bin:$PATH
-
-Install the ``goimport``,::
-
   $ go get code.google.com/p/go.tools/cmd/goimport
 
 Install the ``Gosh``,::

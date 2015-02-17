@@ -4,8 +4,9 @@ History
 0.3.0 (not-release)
 ~~~~~~~~~~~~~~~~~~~
 
-* Re-declaration of type
+* Re-declaration of type.
 * Added user documentation.
+* Automatically installing ``goimports``.
 
 0.2.3 (2015-01-18)
 ~~~~~~~~~~~~~~~~~~

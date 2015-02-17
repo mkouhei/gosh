@@ -5,6 +5,17 @@
 Run Gosh
 ========
 
+Automatically installing ``goimports`` (>= v0.3.0)
+--------------------------------------------------
+
+.. note::
+
+   We recommend that you install ``goimports`` to ``$PATH`` in advance.
+
+* Installing automatically if the command is not found in ``$PATH``.
+* However, the time until the installation is complete in this case,
+  you will be waiting for the launch of "``Gosh``" process.
+
 Check version
 ---------------
 ::
