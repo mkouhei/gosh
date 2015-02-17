@@ -71,7 +71,7 @@ format:
 
 
 test: prebuild
-	go get $(FLAGS) code.google.com/p/go.tools/cmd/goimports
+	go get $(FLAGS) golang.org/x/tools/cmd/goimports
 	go get $(FLAGS) github.com/golang/lint/golint
 	go get $(FLAGS) golang.org/x/tools/cmd/vet
 	go get $(FLAGS) golang.org/x/tools/cmd/cover
