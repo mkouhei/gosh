@@ -195,6 +195,7 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(bline))
 	s.Init(file, bline, nil, scanner.ScanComments)
+	pt := tokenLit{}
 
 	for {
 		_, tok, lit := s.Scan()
@@ -212,8 +213,9 @@ func (p *parserSrc) parseLine(bline []byte, imptQ chan<- imptSpec) bool {
 		case p.parseFunc(tok, str):
 		default:
 			// omit main
-			p.parseOmit(&p.main, tok, str)
+			pt.parseOmit(&p.main, tok, str)
 			if len(p.main) > 0 && p.validateMainBody() {
+				removeEmptyLine(&p.main)
 				p.mainHist = append(p.mainHist, p.main...)
 				return true
 			}
@@ -797,30 +799,27 @@ func (p *parserSrc) mergeLines() []string {
 	return append(l, "}")
 }
 
-func (p *parserSrc) parseOmit(body *[]string, tok token.Token, lit string) {
+func (pt *tokenLit) parseOmit(body *[]string, tok token.Token, lit string) {
 	b := *body
 	switch {
 	case tok == token.SEMICOLON:
-		if p.preLit != "" {
-			b = append(b, p.preLit)
-		}
-		p.preLit = ""
-	case p.preLit == "":
-		p.preLit = lit
-	case hasLineFeedAfter(tok), p.preToken == token.RPAREN && tok == token.LBRACE:
-		p.preLit += lit
-		b = append(b, p.preLit)
-		p.preLit = ""
+		b = append(b, pt.lit)
+		pt.lit = ""
+	case hasLineFeedAfter(tok), pt.tok == token.RPAREN && tok == token.LBRACE:
+		pt.lit += lit
+		b = append(b, pt.lit)
+		pt.lit = ""
 	case hasLineFeedBefore(tok):
-		b = append(b, p.preLit)
-		p.preLit = lit
-	case hasSpaceBefore(p.preToken) && hasSpaceBefore(tok):
-		p.preLit += " " + lit
+		b = append(b, pt.lit)
+		pt.lit = lit
+	case hasSpaceBefore(pt.tok) && hasSpaceBefore(tok):
+		pt.lit += " " + lit
 	case hasSpaceAfter(tok):
-		p.preLit += lit + " "
+		pt.lit += lit + " "
 	default:
-		p.preLit += lit
+		pt.lit += lit
 	}
+	pt.tok = tok
 	*body = b
 }
 

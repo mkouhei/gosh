@@ -276,14 +276,6 @@ fmt.Println(f.test7())
 q := qux{"bye bye", 1}
 q.test8("end")
 test9("http://example.org/dummy.json")`
-
-	mainOmit = `if true {
-fmt.Println("hello")
-}
-`
-
-	mainOmitResult = `if true{fmt.Println("hello")
-}`
 )
 
 func consumeChan(imptQ <-chan imptSpec) {
@@ -435,13 +427,22 @@ func TestParseLine(t *testing.T) {
 func TestOmit(t *testing.T) {
 	p := parserSrc{}
 	imptQ := make(chan imptSpec, 1)
-	lines := strings.SplitAfter(mainOmit, "\n")
+	s := `if true {
+fmt.Println("hello")
+}
+`
+	rslt := `if true{
+fmt.Println("hello")
+}
+`
+	lines := strings.SplitAfter(s, "\n")
 
 	for _, l := range lines {
+		l += ";"
 		p.parseLine([]byte(l), imptQ)
 	}
 
-	el := strings.Split(mainOmitResult, "\n")
+	el := strings.Split(rslt, "\n")
 	if len(compare(p.main, el)) != 0 {
 		t.Fatal("parse omitted main func error")
 	}
