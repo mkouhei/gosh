@@ -21,10 +21,13 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestNewEnv(t *testing.T) {
 	e := newEnv(false)
+	e.chkDeps()
+
 	_, err := os.Stat(e.bldDir)
 	if err != nil {
 		t.Fatal(err)
@@ -39,4 +42,20 @@ func TestNewEnv(t *testing.T) {
 		t.Fatal("error initialize")
 	}
 	cleanDir(e.bldDir)
+}
+
+func Example_CheckInst() {
+	p := os.Getenv("PATH")
+	os.Setenv("PATH", "")
+	go checkInst()
+	time.Sleep(time.Second * 2)
+	d := bldDir()
+	t := filepath.Join(d, "goimports")
+	f, _ := os.OpenFile(t, os.O_CREATE, 0600)
+	f.WriteString("")
+	f.Sync()
+	f.Close()
+	os.Setenv("PATH", p)
+	// Output:
+	// Pleese wait for installing "goimports"..
 }
