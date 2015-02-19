@@ -61,7 +61,7 @@ build-docs: prebuild-docs
 	deactivate
 
 clean:
-	@rm -f _build/$(BIN)
+	@rm -rf _build/$(BIN) $(GOPATH)/src/$(GOPKG)
 
 format:
 	for src in $(SRC); do \
