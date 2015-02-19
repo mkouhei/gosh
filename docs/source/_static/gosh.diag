@@ -3,6 +3,8 @@ blockdiag {
     node_width = 60
     
     run [numbered=0, label="run Gosh", description='User executeted ``$GOPATH/bin/gosh``'];
+    goimports [numbered=0.5, label="goimports", description='Gosh executes ``go get code.google.com/p/go.tools/cmd/goimport`` if ``goimports`` command is not found'];
+    
     read [numbered=1, label="prompt", description='User is able to input commands'];
     parse [numbered=2, label="parse", description='Gosh parse from inputted command'];
     goget [numbered=3, label="go get", description='Gosh executes ``go get example.org/sompkg`` when user inputted ``import "example.org/somepkg"``'];
@@ -11,9 +13,9 @@ blockdiag {
     gorun [numbered=6, label="go run", description="Gosh executes ``go run /tmp/gosh-?????????/gosh_tmp.go``"];
     term [numbered=99, label="terminate", description="User inputted ``Ctrl+D``"];
 
+    run -> goimports -> read [style="dotted"];
     run -> read -> parse -> write -> goimpt -> gorun -> read
     run -> read -> parse -> read
-    
     group {
         orientation = portrait
         color = "#FFFFFF"
