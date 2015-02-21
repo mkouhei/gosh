@@ -50,14 +50,14 @@ Debian
 Install the follow packages
 
 * golang
-* golang-go.tools (optional, but recommended)
+* golang-go.tools (recommended)
 
 Set ``GOPATH``::
 
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
 
-If you install ``goimports`` in advance (optional, but recommended),::
+If you install ``goimports`` in advance (recommended),::
 
   $ sudo apt-get install -y golang-go.tools
 
@@ -79,7 +79,7 @@ Set ``GOPATH``,::
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
 
-If you install ``goimports`` in advance (optional, but recommend),::
+If you install ``goimports`` in advance (recommend),::
 
   $ export PATH=${GOPATH}/bin:$PATH
   $ go get code.google.com/p/go.tools/cmd/goimport
