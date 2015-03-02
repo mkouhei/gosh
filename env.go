@@ -51,7 +51,7 @@ func checkInst() {
 	for true {
 		if _, err := exec.LookPath("goimports"); err != nil {
 			if d == 2 {
-				fmt.Printf(`Pleese wait for installing "goimports".`)
+				fmt.Printf(`Please wait for installing "goimports".`)
 			} else {
 				fmt.Printf(".")
 			}
