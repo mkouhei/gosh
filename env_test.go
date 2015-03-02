@@ -57,5 +57,5 @@ func Example_CheckInst() {
 	f.Close()
 	os.Setenv("PATH", p)
 	// Output:
-	// Pleese wait for installing "goimports".
+	// Please wait for installing "goimports".
 }
