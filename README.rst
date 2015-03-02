@@ -57,11 +57,11 @@ Set ``GOPATH``::
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
 
-If you install ``goimports`` in advance (recommended),::
+If you install ``goimports`` in advance (recommended)::
 
   $ sudo apt-get install -y golang-go.tools
 
-Install ``Gosh`` to ``GOPATH``.::
+Install ``Gosh`` to ``GOPATH``::
 
   $ go get github.com/mkouhei/gosh
 
@@ -74,17 +74,17 @@ Install the follow packages with `Homebrew <http://brew.sh/>`_.
 * Go
 * Mercurial (with Homebrew)
 
-Set ``GOPATH``,::
+Set ``GOPATH``::
 
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
 
-If you install ``goimports`` in advance (recommend),::
+If you install ``goimports`` in advance (recommend)::
 
   $ export PATH=${GOPATH}/bin:$PATH
   $ go get code.google.com/p/go.tools/cmd/goimports
 
-Install the ``Gosh``,::
+Install the ``Gosh``::
 
   $ go get github.com/mkouhei/gosh
 
@@ -111,7 +111,7 @@ or::
   hello
   >>>
 
-**Note:** Enabled to omit `import` statement for standard packages.
+**Note:** Enabled to omit ``import`` statement for standard packages.
 
 Enabled to import non-standard packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,7 +140,7 @@ Example::
   2
   >>>
 
-Terminate `gosh` to reset `main` declarations or declare `func main()` without body.::
+Terminate ``Gosh`` to reset ``main`` declarations or declare ``func main()`` without body::
 
   $ $GOSH/bin/gosh
   >>> i := i
@@ -172,7 +172,7 @@ Roadmap
 -------
 
 * Tab completion
-* Enable to omit `import` statement for global(system) installed packages
+* Enable to omit ``import`` statement for global(system) installed packages
 
 License
 -------
