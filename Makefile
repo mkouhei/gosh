@@ -29,7 +29,7 @@ FLAGS := $(shell test -d $(GOPATH) && echo "-u")
 # "FUNC=-html" when generate HTML coverage report
 FUNC := -func
 
-all: precheck clean test format build
+all: precheck clean test build
 
 precheck:
 	@if [ -d .git ]; then \
@@ -63,13 +63,6 @@ build-docs: prebuild-docs
 clean:
 	@rm -rf _build/$(BIN) $(GOPATH)/src/$(GOPKG)
 
-format:
-	for src in $(SRC); do \
-		gofmt -w $$src ;\
-		goimports -w $$src; \
-	done
-
-
 test: prebuild
 	go get $(FLAGS) golang.org/x/tools/cmd/goimports
 	go get $(FLAGS) github.com/golang/lint/golint
@@ -78,7 +71,13 @@ test: prebuild
 	_build/bin/golint
 	go vet
 	go test -v -covermode=count -coverprofile=c.out $(GOPKG)
-	go tool cover $(FUNC)=c.out
-	unlink c.out
+	@if [ -f c.out ]; then \
+		go tool cover $(FUNC)=c.out; \
+		unlink c.out; \
+	fi
 	rm -f $(BIN).test main.test
 	rm -rf /tmp/gosh-*
+	for src in $(SRC); do \
+		gofmt -w $$src ;\
+		goimports -w $$src; \
+	done
