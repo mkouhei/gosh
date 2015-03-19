@@ -51,8 +51,8 @@ build-only:
 	go build -ldflags "-X main.ver $(shell git describe --always)" -o _build/$(BIN)
 
 prebuild-docs:
-	virtualenv _build/venv
-	_build/venv/bin/pip install -U Sphinx sphinxcontrib-blockdiag
+	virtualenv --clear _build/venv
+	_build/venv/bin/pip install -U -r docs/requirements.txt
 
 build-docs: prebuild-docs
 	. _build/venv/bin/activate;\
