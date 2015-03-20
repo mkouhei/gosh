@@ -26,6 +26,15 @@ PATH := $(CURDIR)/_build/bin:$(PATH)
 export PATH
 # "FLAGS=" when no update package
 FLAGS := $(shell test -d $(GOPATH) && echo "-u")
+
+ifdef FLAGS
+VENVFLAG := --clear
+PIPFLAG := -U
+else
+VENVFLAG :=
+PIPFLAG :=
+endif
+
 # "FUNC=-html" when generate HTML coverage report
 FUNC := -func
 
@@ -51,8 +60,8 @@ build-only:
 	go build -ldflags "-X main.ver $(shell git describe --always)" -o _build/$(BIN)
 
 prebuild-docs:
-	virtualenv --clear _build/venv
-	_build/venv/bin/pip install -U -r docs/requirements.txt
+	virtualenv $(VENVFLAG) _build/venv
+	_build/venv/bin/pip install $(PIPFLAG) -r docs/requirements.txt
 
 build-docs: prebuild-docs
 	. _build/venv/bin/activate;\
