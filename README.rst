@@ -47,7 +47,7 @@ Installation
 Debian
 ~~~~~~
 
-Install the follow packages
+Install the following packages::
 
 * golang
 * golang-go.tools (recommended)
@@ -57,11 +57,11 @@ Set ``GOPATH``::
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
 
-If you install ``goimports`` in advance (recommended),::
+If you install ``goimports`` in advance (recommended)::
 
   $ sudo apt-get install -y golang-go.tools
 
-Install ``Gosh`` to ``GOPATH``.::
+Install ``Gosh`` to ``GOPATH``::
 
   $ go get github.com/mkouhei/gosh
 
@@ -74,21 +74,21 @@ Install the follow packages with `Homebrew <http://brew.sh/>`_.
 * Go
 * Mercurial (with Homebrew)
 
-Set ``GOPATH``,::
+Set ``GOPATH``::
 
   $ install -d /path/to/gopath
   $ export GOPATH=/path/to/gopath
 
-If you install ``goimports`` in advance (recommend),::
+If you install ``goimports`` in advance (recommend)::
 
   $ export PATH=${GOPATH}/bin:$PATH
   $ go get code.google.com/p/go.tools/cmd/goimports
 
-Install the ``Gosh``,::
+Install the ``Gosh``::
 
   $ go get github.com/mkouhei/gosh
 
-  
+
 Basic usage
 -----------
 
@@ -111,12 +111,12 @@ or::
   hello
   >>>
 
-Enable to omit import statement related with standard libraries.
+**Note:** Enabled to omit ``import`` statement for standard packages.
 
-Enable to Import libraries of non-standard library
+Enabled to import non-standard packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For example of using the some package.::
+Example of using non-standard package::
 
   >>> import "net/http"
   >>> import "example.org/somepkg"
@@ -140,7 +140,7 @@ Example::
   2
   >>>
 
-Terminate gosh to reset main declarations, or declare func main without body.::
+Terminate ``Gosh`` to reset ``main`` declarations or declare ``func main()`` without body::
 
   $ $GOSH/bin/gosh
   >>> i := i
@@ -160,7 +160,7 @@ Limitations
 Known issues
 ~~~~~~~~~~~~
 
-Not evaluate when there are declared and not used valiables.::
+Fail to evaluate when there are declared and not used valiables.::
 
   $ $GOPATH/bin/gosh
   >>> i := 1
@@ -172,7 +172,7 @@ Roadmap
 -------
 
 * Tab completion
-* Enable to omit import statement of system global installed packages
+* Enable to omit ``import`` statement for global(system) installed packages
 
 License
 -------
