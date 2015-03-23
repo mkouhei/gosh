@@ -47,7 +47,7 @@ Installation
 Debian
 ~~~~~~
 
-Install the following packages::
+Install the following packages
 
 * golang
 * golang-go.tools (recommended)
@@ -111,10 +111,11 @@ or::
   hello
   >>>
 
-**Note:** Enabled to omit ``import`` statement for standard packages.
+.. note::
+   Enabled to omit `import` statement for standard packages.
 
 Enabled to import non-standard packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Example of using non-standard package::
 
