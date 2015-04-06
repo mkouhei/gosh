@@ -449,7 +449,7 @@ fmt.Println("hello")
 }
 
 func TestRemoveImport(t *testing.T) {
-	e := newEnv(false)
+	e := newEnv(false, "")
 	pkgs := []imptSpec{
 		imptSpec{"fmt", ""},
 		imptSpec{"os", ""},

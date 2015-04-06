@@ -20,6 +20,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -65,14 +66,24 @@ func suppressError(m string, omitFlag bool) {
 	}
 }
 
-func runCmd(printFlag, omitFlag bool, command string, args ...string) (string, error) {
+func (e *env) runCmd(printFlag, omitFlag bool, command string, args ...string) (string, error) {
 	// execute command
 	cmd := exec.Command(command, args...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
+	if e.sudo != "" {
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			suppressError(stderr.String(), omitFlag)
+			return stderr.String(), err
+		}
+		io.WriteString(stdin, fmt.Sprintf("%s\n", e.sudo))
+		stdin.Close()
+	}
 	err := cmd.Run()
+
 	if err != nil {
 		suppressError(stderr.String(), omitFlag)
 		return stderr.String(), err
@@ -110,13 +121,13 @@ func (e *env) logger(facility, msg string, err error) {
 	}
 }
 
-func goVersion(goVer string) string {
+func (e *env) goVersion(goVer string) string {
 	// get `go version'
 	if goVer != "" {
 		return goVer
 	}
 	args := []string{"version"}
-	msg, _ := runCmd(false, false, "go", args...)
+	msg, _ := e.runCmd(false, false, "go", args...)
 	return msg
 }
 

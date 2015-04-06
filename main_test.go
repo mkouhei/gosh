@@ -34,7 +34,7 @@ func Example_MainVersion() {
 func Example_Run() {
 	goVer = "go version goX.X.X\n"
 	ver = "x.x.x"
-	run(false)
+	run(false, "")
 	// Output:
 	// go version goX.X.X
 	//

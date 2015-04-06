@@ -30,6 +30,7 @@ type env struct {
 	tmpPath string
 	goPath  string
 	debug   bool
+	sudo    string
 
 	parserSrc parserSrc
 	readFlag  int32
@@ -64,13 +65,14 @@ func checkInst() {
 	}
 }
 
-func newEnv(debug bool) env {
+func newEnv(debug bool, sudo string) env {
 	// New shell environment
 	e := env{}
 	e.bldDir = bldDir()
 	e.tmpPath = filepath.Join(e.bldDir, tmpname)
 	e.goPath = e.bldDir
 	e.debug = debug
+	e.sudo = sudo
 	e.parserSrc = parserSrc{}
 	e.readFlag = 0
 

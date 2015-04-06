@@ -78,12 +78,23 @@ func (e *env) write(imptCh chan<- bool) {
 func (e *env) goRun() {
 	// execute `go run'
 	os.Chdir(e.bldDir)
-	args := []string{"run", tmpname}
+	var cmd string
+	var args []string
+
+	if e.sudo == "" {
+		cmd = "go"
+		args = []string{"run", tmpname}
+	} else {
+		cmd = "sudo"
+		args = []string{"-E", "-S", "-p", "''", "go", "run", tmpname}
+	}
+
 	omitFlag := false
 	if len(e.parserSrc.mainHist) > 0 {
 		omitFlag = true
 	}
-	if msg, err := runCmd(true, omitFlag, "go", args...); err != nil {
+
+	if msg, err := e.runCmd(true, omitFlag, cmd, args...); err != nil {
 		e.logger("go run", msg, err)
 		e.parserSrc.body = nil
 		return
@@ -106,7 +117,7 @@ func (e *env) goGet(imptQ <-chan imptSpec) {
 		for {
 			pkg := <-imptQ
 			args := []string{"get", pkg.imPath}
-			if msg, err := runCmd(true, false, "go", args...); err != nil {
+			if msg, err := e.runCmd(true, false, "go", args...); err != nil {
 				e.parserSrc.imPkgs.removeImport(msg, pkg)
 				e.logger("go get", msg, err)
 			}
@@ -118,7 +129,7 @@ func (e *env) goImports(execCh chan<- bool) {
 	// execute `goimports'
 	go func() {
 		args := []string{"-w", e.tmpPath}
-		if msg, err := runCmd(true, false, "goimports", args...); err != nil {
+		if msg, err := e.runCmd(true, false, "goimports", args...); err != nil {
 			e.logger("goimports", msg, err)
 			e.parserSrc.body = nil
 		}

@@ -25,7 +25,7 @@ import (
 )
 
 func TestNewEnv(t *testing.T) {
-	e := newEnv(false)
+	e := newEnv(false, "")
 	e.chkDeps()
 
 	_, err := os.Stat(e.bldDir)

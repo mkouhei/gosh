@@ -27,10 +27,11 @@ import (
 
 func TestRunCmd(t *testing.T) {
 	args := []string{}
-	if msg, err := runCmd(true, false, "foo", args...); err == nil {
+	e := newEnv(false, "")
+	if msg, err := e.runCmd(true, false, "foo", args...); err == nil {
 		t.Fatalf("want: <fail>: %s", msg)
 	}
-	if msg, err := runCmd(true, false, "true", args...); err != nil {
+	if msg, err := e.runCmd(true, false, "true", args...); err != nil {
 		t.Fatal(msg)
 	}
 }
@@ -63,12 +64,13 @@ func TestBldDirAndCleanDir(t *testing.T) {
 }
 
 func TestGoVersion(t *testing.T) {
-	if !strings.HasPrefix(goVersion(goVer), "go version") {
+	e := newEnv(false, "")
+	if !strings.HasPrefix(e.goVersion(goVer), "go version") {
 		t.Fatal("expecting 'go version goX.X.X os/arch'")
 	}
 
 	goVer = "go version goX.X.X"
-	if !strings.HasPrefix(goVersion(goVer), "go version") {
+	if !strings.HasPrefix(e.goVersion(goVer), "go version") {
 		t.Fatal("expecting 'go version goX.X.X os/arch'")
 	}
 }

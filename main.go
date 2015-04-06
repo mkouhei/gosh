@@ -33,10 +33,10 @@ This is free software, and you are welcome to redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 `
 
-func run(d bool) {
-	e := newEnv(d)
+func run(d bool, s string) {
+	e := newEnv(d, s)
 	e.chkDeps()
-	fmt.Println(goVersion(goVer))
+	fmt.Println(e.goVersion(goVer))
 	fmt.Printf(license, ver)
 	e.shell(nil)
 }
@@ -44,6 +44,7 @@ func run(d bool) {
 func main() {
 	d := flag.Bool("d", false, "debug mode")
 	c := flag.Bool("c", false, "cleanup all Gosh's temporary files")
+	s := flag.String("s", "", `specify sudo password for running "sudo -E go run"`)
 	flag.Parse()
 	if *c {
 		cleanDirs()
@@ -55,5 +56,5 @@ func main() {
 		fmt.Printf("version: %s\n", ver)
 		return
 	}
-	run(*d)
+	run(*d, *s)
 }

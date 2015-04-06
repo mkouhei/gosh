@@ -60,7 +60,7 @@ func main() {
 )
 
 func TestWrite(t *testing.T) {
-	e := newEnv(false)
+	e := newEnv(false, "")
 	imptCh := make(chan bool)
 	imptQ := make(chan imptSpec, 10)
 	for _, l := range strings.SplitAfter(testSrc, "\n") {
@@ -76,7 +76,7 @@ func TestWrite(t *testing.T) {
 
 func TestGoImports(t *testing.T) {
 
-	e := newEnv(true)
+	e := newEnv(true, "")
 	fp, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +114,7 @@ func TestGoImports(t *testing.T) {
 
 func TestGoImportsFail(t *testing.T) {
 
-	e := newEnv(true)
+	e := newEnv(true, "")
 	fp, _ := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	fp.WriteString(testSrc3)
 	fp.Sync()
@@ -147,7 +147,7 @@ func TestGoImportsFail(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
-	e := newEnv(false)
+	e := newEnv(false, "")
 	f, err := os.OpenFile("dummy_code", os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		t.Fatal(err)
@@ -170,7 +170,7 @@ func TestRead(t *testing.T) {
 }
 
 func ExampleGoGet() {
-	e := newEnv(false)
+	e := newEnv(false, "")
 	imptQ := make(chan imptSpec, 1)
 	imptQ <- imptSpec{"fmt", ""}
 	e.goGet(imptQ)
@@ -179,7 +179,7 @@ func ExampleGoGet() {
 }
 
 func ExampleGoRun() {
-	e := newEnv(true)
+	e := newEnv(true, "")
 	fp, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Println(err)
@@ -200,7 +200,7 @@ func ExampleGoRun() {
 }
 
 func ExampleGoRunFail() {
-	e := newEnv(false)
+	e := newEnv(false, "")
 	e.goRun()
 	// Output:
 	// [error] stat gosh_tmp.go: no such file or directory
