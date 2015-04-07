@@ -112,6 +112,7 @@ This omit ``main func`` is equivalent to the main func not following omitted.::
   >>> fmt.Println(i)
   >>> i++
   >>> }
+  >>> }
 
 But, ``fmt.Print*`` are executed only once.::
 
