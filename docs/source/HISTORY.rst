@@ -7,6 +7,7 @@ History
 * Re-declaration of type.
 * Added user documentation.
 * Automatically installing ``goimports``.
+* Added ``sudo -E go run`` option. (``-s=sudopassword``)
 
 0.2.3 (2015-01-18)
 ~~~~~~~~~~~~~~~~~~

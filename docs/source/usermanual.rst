@@ -43,6 +43,21 @@ Debug mode
 
    $GOPATH/bin/gosh -d
 
+Sudo mode (>= v0.3.0)
+---------------------
+
+.. warning::
+
+   The ``gosh`` runs ``sudo -E go run $tmppath/gosh-?????????/gosh_tmp.go`` in this mode.
+   Be careful your code, don't run the dangerous code.
+   There is no warranty for this free software.
+   See also the GPLv3 LICENSE.
+
+You can use sudo mode ``-s`` option
+when Your code requires the privilege, for example using ICMP echo request.::
+
+   $GOPATH/bin/gosh -s="sudopassword"
+
 Terminate Gosh
 ==============
 
