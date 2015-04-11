@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.	 If not, see <http://www.gnu.org/licenses/>.
 
-
-BIN := gosh
+PRJNAME = $(shell basename $(CURDIR))
+BIN := $(PRJNAME)
 SRC := *.go
-GOPKG := github.com/mkouhei/gosh/
+GOPKG := github.com/mkouhei/$(PRJNAME)/
 GOPATH := $(CURDIR)/_build
 export GOPATH
 PATH := $(CURDIR)/_build/bin:$(PATH)
