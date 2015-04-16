@@ -44,6 +44,8 @@ endif
 # "FUNC=-html" when generate HTML coverage report
 FUNC := -func
 
+-include $(wildcard *.in)
+
 all: precheck clean test build build-docs
 
 precheck:
@@ -72,7 +74,7 @@ endif
 prebuild: $(SRC)
 	go get -d -v ./...
 	install -d $(CURDIR)/_build/src/$(GOPKG)
-	cp -a $(CURDIR)/*.go $(CURDIR)/_build/src/$(GOPKG)
+	cp -a $(PREBUILD_OPTS) $(CURDIR)/*.go $(CURDIR)/_build/src/$(GOPKG)
 
 build: prebuild
 	go build -ldflags "-X main.ver $(shell git describe --always)" -o _build/$(BIN)
