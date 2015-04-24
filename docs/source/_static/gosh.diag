@@ -8,9 +8,9 @@ blockdiag {
     read [numbered=1, label="prompt", description='User is able to input commands'];
     parse [numbered=2, label="parse", description='Gosh parse from inputted command'];
     goget [numbered=3, label="go get", description='Gosh executes ``go get example.org/sompkg`` when user inputted ``import "example.org/somepkg"``'];
-    write [numbered=4, label="write", description="Gosh write ``/tmp/gosh-?????????/gosh_tmp.go`` when user inputted ``main func`` (include omitted main)"];
-    goimpt [numbered=5, label="goimport", description="Gosh executes ``goimport /tmp/gosh-?????????/gosh_tmp.go``"];
-    gorun [numbered=6, label="go run", description="Gosh executes ``go run /tmp/gosh-?????????/gosh_tmp.go``"];
+    write [numbered=4, label="write", description="Gosh write ``$tmpdir/gosh-?????????/gosh_tmp.go`` when user inputted ``main func`` (include omitted main)"];
+    goimpt [numbered=5, label="goimport", description="Gosh executes ``goimport $tmpdir/gosh-?????????/gosh_tmp.go``"];
+    gorun [numbered=6, label="go run", description="Gosh executes ``go run $tmpdir/gosh-?????????/gosh_tmp.go``"];
     term [numbered=99, label="terminate", description="User inputted ``Ctrl+D``"];
 
     run -> goimports -> read [style="dotted"];
