@@ -67,7 +67,7 @@ func TestWrite(t *testing.T) {
 		e.parserSrc.parseLine([]byte(l), imptQ)
 	}
 	e.write(imptCh)
-	time.Sleep(time.Microsecond * 10)
+	time.Sleep(time.Microsecond * 3)
 	_, err := os.Stat(e.tmpPath)
 	if err != nil {
 		t.Fatal(err)
