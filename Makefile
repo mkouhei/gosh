@@ -73,7 +73,7 @@ endif
 prebuild: $(SRC)
 	go get -d -v ./...
 	install -d $(CURDIR)/_build/src/$(GOPKG)
-	cp -a $(PREBUILD_OPTS) $(CURDIR)/*.go $(CURDIR)/_build/src/$(GOPKG)
+	cp -a $(PREBUILD_COPY_OPTS) $(CURDIR)/*.go $(CURDIR)/_build/src/$(GOPKG)
 	$(PREBUILD_CMD)
 
 build: prebuild

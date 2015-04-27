@@ -1,1 +1,1 @@
-PREBUILD_CMD :=	go get $(FLAGS) golang.org/x/tools/cmd/goimports
+PREBUILD_COPY_CMD :=	go get $(FLAGS) golang.org/x/tools/cmd/goimports
