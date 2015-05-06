@@ -21,8 +21,8 @@ ifneq ($(REPO),)
 GOPKG :=$(shell python -c 'print("$(REPO)".replace("git@", "").replace(":", "/").replace(".git", ""))')
 BIN := $(shell python -c 'print("$(GOPKG)".rsplit("/", 1)[1])')
 endif
-GOVET := $(shell go tool vet; echo $$?)
-GOCOVER := $(shell go tool cover; echo $$?)
+GOVET := $(shell go tool vet >/dev/null 2>&1; echo $$?)
+GOCOVER := $(shell go tool cover >/dev/null 2>&1; echo $$?)
 
 MSG := [usage] make REPO=\"git remote repository URL\"
 
