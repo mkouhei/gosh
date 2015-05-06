@@ -21,6 +21,8 @@ ifneq ($(REPO),)
 GOPKG :=$(shell python -c 'print("$(REPO)".replace("git@", "").replace(":", "/").replace(".git", ""))')
 BIN := $(shell python -c 'print("$(GOPKG)".rsplit("/", 1)[1])')
 endif
+GOVET := $(shell go tool vet; echo $$?)
+GOCOVER := $(shell go tool cover; echo $$?)
 
 MSG := [usage] make REPO=\"git remote repository URL\"
 
@@ -102,8 +104,12 @@ clean:
 test: prebuild
 	go get $(FLAGS) golang.org/x/tools/cmd/goimports
 	go get $(FLAGS) github.com/golang/lint/golint
+ifneq ($(GOVET),1)
 	go get $(FLAGS) golang.org/x/tools/cmd/vet
+endif
+ifneq ($(GOCOVER),1)
 	go get $(FLAGS) golang.org/x/tools/cmd/cover
+endif
 	_build/bin/golint
 	go vet
 	go test -v -covermode=count -coverprofile=c.out $(GOPKG)
