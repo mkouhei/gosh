@@ -39,7 +39,13 @@ Requirements
   * We recommend that you install ``goimports`` to ``$PATH`` in advance.
   * Installing automatically if the command is not found in ``$PATH`` (>= v0.3.0).
   * However, the time until the installation is complete in this case,
-    you will be waiting for the launch of "``Gosh``" process.
+	you will be waiting for the launch of "``Gosh``" process.
+
+for documentation
+~~~~~~~~~~~~~~~~~
+
+* libpython2.7-dev
+* libjpeg9-dev
 
 Installation
 ------------
