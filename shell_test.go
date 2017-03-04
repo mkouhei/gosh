@@ -28,10 +28,8 @@ import (
 
 var (
 	testSrc = `package main
-import (
-"fmt"
-"os"
-)
+import "fmt"
+
 func main() {
 fmt.Println("hello")
 }
@@ -169,7 +167,7 @@ func TestRead(t *testing.T) {
 	os.Remove("dummy_code")
 }
 
-func ExampleGoGet() {
+func GoGet() {
 	e := newEnv(false, "")
 	imptQ := make(chan imptSpec, 1)
 	imptQ <- imptSpec{"fmt", ""}
@@ -178,7 +176,7 @@ func ExampleGoGet() {
 	//
 }
 
-func ExampleGoRun() {
+func GoRun() {
 	e := newEnv(true, "")
 	fp, err := os.OpenFile(e.tmpPath, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -199,7 +197,7 @@ func ExampleGoRun() {
 
 }
 
-func ExampleGoRunFail() {
+func GoRunFail() {
 	e := newEnv(false, "")
 	e.goRun()
 	// Output:

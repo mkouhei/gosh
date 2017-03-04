@@ -1,25 +1,15 @@
 language: go
 sudo: false
 
-matrix:
-  include:
-    - go: "1.2"
-      before_install:
-        - go get code.google.com/p/go.tools/cmd/cover
-        - go get code.google.com/p/go.tools/cmd/goimports
-    - go: "1.3"
-      before_install:
-        - go get code.google.com/p/go.tools/cmd/cover
-        - go get code.google.com/p/go.tools/cmd/goimports
-    - go: "1.4"
-      before_install:
-        - go get golang.org/x/tools/cmd/cover
-        - go get golang.org/x/tools/cmd/goimports
-    - go: "tip"
-      before_install:
-        - go get golang.org/x/tools/cmd/cover
-        - go get golang.org/x/tools/cmd/goimports
+go:
+  - 1.5
+  - 1.6
+  - 1.7
+  - 1.8
+  - tip
+
 install:
+  - go get golang.org/x/tools/cmd/goimports
   - go get github.com/mattn/goveralls
   - go get -d -v ./...
 script:

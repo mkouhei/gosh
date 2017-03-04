@@ -79,10 +79,10 @@ prebuild: $(SRC)
 	$(PREBUILD_CMD)
 
 build: prebuild
-	go build -ldflags "-X main.ver $(shell git describe --always)" -o _build/$(BIN)
+	go build -ldflags "-X main.ver=$(shell git describe --always)" -o _build/$(BIN)
 
 build-only: $(SRC)
-	go build -ldflags "-X main.ver $(shell git describe --always)" -o _build/$(BIN)
+	go build -ldflags "-X main.ver=$(shell git describe --always)" -o _build/$(BIN)
 
 prebuild-docs:
 	@if [ -d $(CURDIR)/docs ] && [ -f $(CURDIR)/docs/requirements.txt ]; then \

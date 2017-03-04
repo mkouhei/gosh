@@ -44,7 +44,7 @@ func TestNewEnv(t *testing.T) {
 	cleanDir(e.bldDir)
 }
 
-func Example_CheckInst() {
+func CheckInst() {
 	p := os.Getenv("PATH")
 	os.Setenv("PATH", "")
 	go checkInst()
