@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-func Example_MainVersion() {
+func MainVersion() {
 	os.Args = append(os.Args, "-version")
 	os.Args = append(os.Args, "-c")
 	main()
@@ -31,7 +31,7 @@ func Example_MainVersion() {
 	time.Sleep(time.Microsecond)
 }
 
-func Example_Run() {
+func Run() {
 	goVer = "go version goX.X.X\n"
 	ver = "x.x.x"
 	run(false, "")
