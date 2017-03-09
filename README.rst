@@ -88,7 +88,7 @@ Set ``GOPATH``::
 If you install ``goimports`` in advance (recommend)::
 
   $ export PATH=${GOPATH}/bin:$PATH
-  $ go get code.google.com/p/go.tools/cmd/goimports
+  $ go get golang.org/x/tools/cmd/goimports
 
 Install the ``Gosh``::
 
