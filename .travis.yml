@@ -2,10 +2,8 @@ language: go
 sudo: false
 
 go:
-  - 1.5
-  - 1.6
-  - 1.7
-  - 1.8
+  - 1.8.6
+  - 1.9.3
   - tip
 
 install:
