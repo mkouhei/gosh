@@ -150,7 +150,7 @@ Example::
 Terminate ``Gosh`` to reset ``main`` declarations or declare ``func main()`` without body::
 
   $ $GOSH/bin/gosh
-  >>> i := i
+  >>> i := 1
   >>> fmt.Println(i)
   1
   >>> func main() {}
